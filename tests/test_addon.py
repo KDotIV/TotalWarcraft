@@ -1,5 +1,4 @@
 from pathlib import Path
-import sys
 # Install the development-only runtime with: python -m pip install lupa
 from lupa.lua51 import LuaRuntime
 
@@ -39,24 +38,4 @@ for i=1,100 do assert(A.Receive(record('id'..i))) end
 assert(#A.List()==64)
 NOW=NOW+400; assert(A.Prune(NOW)); assert(#A.List()==0)
 ''')
-lua.execute('assert(loadstring(...))("CallToArms", A)', (root/'Core.lua').read_text())
-lua.execute('''
-A.RefreshUI=function() end; A.RefreshMap=function() end
-A.ShowToast=function() end
-A.CurrentLocation=function() return {mapID=1,x=.5,y=.5} end
-A.LocationText=function() return 'test' end
-A.Print=function() end
-assert(not A.SubmitDefense('three','',''))
-assert(A.SubmitDefense('4','','')) -- preview
-assert(A.db.lastSubmit==nil) -- previews don't consume network cooldown
-A.adapter=function() return false end
-assert(not A.SubmitDefense('4','',''))
-A.adapter=function() error('transport failure') end
-assert(not A.SubmitDefense('4','',''))
-A.adapter=function(r) assert(r.faction=='Horde'); return true end
-assert(A.SubmitDefense('4','',''))
-assert(not A.SubmitDefense('4','',''))
-NOW=NOW+120; assert(A.SubmitDefense('4','',''))
-''')
-print('PASS: Lua 5.1 syntax for all modules; validation, audience isolation, duplicates, capacity, expiry, text sanitization, submission failure and cooldown behavior.')
-
+print('PASS: Lua 5.1 syntax for all modules; validation, audience isolation, duplicates, capacity, expiry and text sanitization.')

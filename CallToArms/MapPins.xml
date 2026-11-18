@@ -2,4 +2,7 @@
     <Frame name="CallToArmsMapPinTemplate" virtual="true" enableMouse="true" mixin="CallToArmsMapPinMixin">
         <Size x="28" y="28"/>
     </Frame>
+    <Frame name="CallToArmsPresencePinTemplate" virtual="true" enableMouse="true" mixin="CallToArmsPresencePinMixin">
+        <Size x="20" y="20"/>
+    </Frame>
 </Ui>

@@ -1,0 +1,154 @@
+CALL TO ARMS - MVP REVIEW AND OPENMAP INVESTIGATION
+November 18, 2026 | Source/package review; no new live WoW observations
+
+DECISION
+
+Use Lua and Blizzard addon messaging for the first usable MVP. OpenMap's map,
+fog, pins and live location sharing run inside WoW. Its public API is a Lua
+table exposed to other addons, not an HTTP API or companion process. Neither
+Python nor C# is required for this path. Python here only runs offline tests.
+
+Delivered in repository 0.5.0-alpha:
+* Existing one-action guild observer reports, scope filtering, list/toast/details
+  and crossed-swords map pins remain on CTA_REPORT1.
+* New, separate CTA_PRES1 protocol shares the consenting player's own position
+  and readable flag/combat state with an outdoor party or raid, including group
+  members from another guild. It never changes report counts or creates heat.
+* Group locations are off at login/reload. /cta presence on/off or the activity
+  panel switch controls the current session. Green plus markers show fresh peers.
+* Ten-second sends, thirty-second maximum remaining lifetime, current-roster
+  sender matching, GUID-based local deduplication, scope checks and bounded work.
+* /cta presence reports fresh peer count, peers whose local distance API checks
+  within 100 yards, and unknown-range peers. These are not confirmed fighters.
+* Optional OpenMap v1 public coordinate transforms display CTA's own native pins
+  across its stitched map in mouse mode. No copied renderer, art or dependency
+  library. Normal matching-zone behavior remains when conversion is unavailable.
+
+The initial 0.5.0 ZIP was prepared without installation. Follow-up 0.5.1 adds
+the built-in three-player diagnostic/evidence capture and validation fixes;
+see DIAGNOSTIC_TEST_0.5.1.txt for the diagnostic procedure. The current 0.5.2 build
+also adds an opt-in in-game remote test controller: REMOTE_TEST_CLI_0.5.2.txt.
+Existing live evidence belongs to 0.4.4 and earlier probes. All new behavior is
+offline-tested only. See PRESENCE_TEST.txt for the new live acceptance cases.
+
+MVP STATUS AND ORDER OF WORK
+
+1. Manual reporting acceptance remains open (PRE_LAYER_TEST_CHECKLIST.txt A-D):
+   fresh remote pins in BOTH directions, bindings, toast lifecycle/mute, normal
+   cooldown/self-echo, expiry and main UI send/receipt during combat. Do not mark
+   these passed because the older diagnostic exchanged messages in PvE combat.
+2. Validate this presence increment in party AND raid, with OpenMap enabled and
+   disabled, default opt-out, range unavailable, roster changes and expiry.
+   Cross-zone success is not a same-layer test. Check actual client realm labels.
+3. Resolve actual PvP evidence before automated heat. A PvP flag plus generic
+   combat can describe PvE; four peers or four reporters are not four fighters.
+   Need a permitted source identifying distinct player participants and fresh
+   player-versus-player actions, or an explicitly agreed estimated/manual policy.
+   The inspected Forever C_CombatLogSecure API is SecureOnly. Do not build on an
+   assumed unrestricted retail/older-Classic combat log or parse protected text.
+4. Once evidence is available, aggregate with GUID deduplication, bounded time
+   windows, physical map-aware distance and evidence class. Do not sum overlapping
+   samples, treat normalized map deltas as yards, or count pets as players.
+   Keep the four-participant threshold including 3v1; encounter radius undecided.
+5. Layer coordination still needs an in-world grouping test. Neither group
+   membership nor shared map coordinates guarantees visibility/co-location.
+   Follow-up: LAYER_COORDINATION_RESEARCH_2026-11-18.txt examines installed
+   LayerSwap and designs accept -> arrive -> join live event host -> verify.
+6. Extend location distribution to explicit guild/friend audiences if needed.
+   CTA group presence currently has no guild/whisper/Battle.net route. Existing
+   report distribution remains guild-only. Unrelated users standing nearby are
+   not automatically discovered just because they installed the same addon.
+7. Organizer verification, cross-guild/community CTAs, raid lifecycle, city heat
+   suppression/authorized exceptions, opposing-guild attribution and escalation
+   policy are still backlog. No backend bridge or verified authority exists.
+
+A useful incremental MVP is manual guild reports plus cooperative group
+locations. The broader previously agreed automatic-heat/city/community feature
+set is NOT complete. No new minimum-player detection claim is being made.
+
+OPENMAP: INSTALLED EVIDENCE
+
+Root: E:\World of Warcraft\_forever_\Interface\AddOns\OpenMap
+OpenMap.toc:19: version v0.8.10; interface 16001 (line 1).
+Map/Friends.lua SHA256:
+  8105BAFA5122EC8D4F261F837DF6D276C88862EE11BC2E8951C232F0691BBC13
+API.lua SHA256:
+  48BA9A6ACF3FEF58BDE86C863FB4474F12B8C53D86630ACDA73414DD6AAED04C
+These hashes identify the investigated installed files, not a remote branch.
+Source read only; settings and live player positions were not inspected.
+
+Map layout (observed source):
+* Map/WorldMap.lua:2 and Map/Stitch.lua:2 retain Blizzard WorldMapFrame/MapCanvas
+  and overlay stitched zone/world artwork with customized pan/zoom.
+* Map/Stitch.lua:251 maps zone rectangles via C_Map.GetMapRectOnMap into world
+  map 947, then converts into the current native host map's coordinates.
+* Map/Stitch.lua:350 uses client tiles plus packaged composites/masks/edits.
+* Map/Stitch.lua:607, 2975, 3375 reads explored-map textures and packaged reveal
+  data to hide/dim unexplored pieces. Map/WorldMap.lua:41 refreshes on exploration
+  events. This is exploration fog, not enemy concealment or line-of-sight radar.
+* Map/Stitch.lua:747,803 uses pooled internal pins; Map/Pins.lua:2 stores personal
+  pins with map, coordinates, note and color.
+
+Player tracking (observed Map/Friends.lua):
+* Zone badges use friend/guild roster zone names even without precise sharing
+  (:304,339,604). Precise dots require consenting clients sending locations.
+* Prefix OpenMapLoc, L1 TAB mapID TAB x TAB y TAB class TAB level (:257).
+  H1/H2 discover protocol-capable friends; L0 withdraws a location.
+* GUILD, character-friend WHISPER and Battle.net BNSendGameData (:224-298).
+  Live-location broadcasts do not use PARTY/RAID in this module.
+* Samples every 2s; moving sends every 10s, stationary every 60s; expires after
+  150s (:27-39). Movement threshold is 0.002 map units, not physical yards.
+* Queue coalesces per destination with a 0.5s send gap (:267). Consent is checked
+  before queued location delivery. Sharing defaults off; L0 on stop/unavailable
+  outdoor location (:645-727). Secret/unavailable positions are skipped.
+* Known friends filter whispers; Battle.net processing checks faction. GUID/name
+  deduplication and Forever realm-pool normalization avoid duplicate markers
+  (:87,348,382,424-492,544-635). Realm normalization does not identify a layer.
+* Protocol has no layer, combat action, participant evidence, encounter ID,
+  timestamp or sequence. Receipt time drives freshness; it cannot verify PvP.
+* Group dots are separate: Map/Nav.lua:25 and :533 use available native group
+  positions, then friend-sharing cache, then zone-only fallback.
+
+Other pins:
+Map/Pins.lua:19-35,198-245,340 uses prefix OpenMap and a separate P1 map/x/y/
+color/note format, <=255 bytes. Supports PARTY/RAID/GUILD/target WHISPER, 0.3s
+throttle, up to 100 received pins per batch and normal recipient confirmation.
+It does not turn personal pins into authoritative encounter evidence.
+
+Public integration (API.lua, observed):
+* major=1, version=4 (:21). WorldFromMap and MapFromWorld (:39,44), IsStitched,
+  ShowWorld, GetView, CanvasFromWorldPos, ArtTopLevel, menu and change callbacks.
+* No public arbitrary-pin collection API. CTA owns its native provider/pins and
+  uses only public coordinate transforms, not OpenMap's private PinSet helpers.
+* Stitched points may be outside 0..1 on the current native host canvas. Blizzard
+  accepts them in mouse mode but hides them in gamepad mode; CTA gates conversion
+  off for gamepad. Original report coordinates remain unchanged.
+* Native OnMapChanged refreshes when the host changes; OpenMap_StitchedChanged
+  covers stitched/native transitions. Ordinary pan/zoom moves the native canvas;
+  no extra full rebuild on each OpenMap_ViewChanged callback is needed.
+* Map/WorldMap.lua:1272 inserts managed art/icon frame levels. CTA retains managed
+  AREA_POI above both, avoiding fixed numeric levels. Live coexistence unverified.
+
+License: LICENSE.txt is MIT for code; packaged map art has separate notices in
+Media/Textures/Forever/NOTICE.md. This increment copies no OpenMap code/art.
+
+PRIMARY ONLINE REFERENCES CHECKED NOVEMBER 18
+
+OpenMap's own project and architecture (may be newer than installed files):
+https://github.com/openmap-world/openmap
+https://github.com/openmap-world/openmap/blob/main/ARCHITECTURE.md
+https://github.com/openmap-world/openmap/blob/main/docs/api.md
+
+Blizzard UI/generated API source mirrored on the client-specific forever branch:
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/CombatLogSecureDocumentation.lua
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ChatInfoDocumentation.lua
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_MapCanvas/MapCanvas_DataProviderBase.lua
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_MapCanvas/Blizzard_MapCanvas.lua
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_WorldMap/Blizzard_WorldMap.lua
+
+INVESTIGATION COVERAGE
+Answered from source: map composition, exploration fog, pins, guild/friend/group
+tracking, consent/throttles/expiry, Lua integration, MVP gaps and implementation.
+Unresolved: new in-game delivery/rendering/security behavior, a permitted actual
+PvP evidence source, same-layer validation, unaffiliated local-user discovery.

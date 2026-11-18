@@ -17,6 +17,7 @@ function A.CountText(r)
     return r.count .. (r.estimated and " estimated participants" or " reported participants")
 end
 function A.ShowDetails(r)
+    if not r or r.expiresAt <= GetServerTime() or not A.records[r.id] then return end
     if not A.details then
         local f = surface("Frame", "CallToArmsDetails", 400, 310)
         A.details = f; f:SetPoint("CENTER"); f:SetFrameStrata("DIALOG"); f:EnableMouse(true)
@@ -38,6 +39,20 @@ function A.ShowDetails(r)
         .. "\n" .. r.note
         .. "\n" .. (r.expiresAt <= GetServerTime() and "Expired report" or "Expires in " .. (r.expiresAt - GetServerTime()) .. "s"))
     f:Show()
+end
+function A.RefreshReportSurfaces()
+    local now = GetServerTime()
+    for _, f in ipairs({A.toast or false, A.details or false}) do
+        if f and f.record then
+            local r = A.records[f.record.id]
+            if not r or r.expiresAt <= now then f:Hide(); f.record=nil
+            elseif f == A.details and f:IsShown() then A.ShowDetails(r) end
+        end
+    end
+    -- A report hovered from a list row may outlive its row unless explicitly cleared.
+    if A.tooltipRecord and (not A.records[A.tooltipRecord.id] or A.tooltipRecord.expiresAt <= now) then
+        GameTooltip:Hide(); A.tooltipRecord=nil
+    end
 end
 function A.ShowToast(r)
     if not A.toast then

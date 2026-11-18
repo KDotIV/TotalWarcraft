@@ -1,5 +1,5 @@
 CALL TO ARMS - REPORT ACCEPTANCE BEFORE LAYER COORDINATION
-0.4.4-alpha | November 9, 2026
+0.5.2-alpha test target | Updated November 18, 2026
 
 Current result: map artwork is visibly fixed; two-way diagnostic transport and
 main report receipt/details have live evidence. The checks below are still open
@@ -7,7 +7,7 @@ unless a new result is recorded. See GUILD_REPORT_RESULTS_2026-11-09.txt.
 Two guildmates suffice for the core pass. Do not recruit six players for simulation.
 
 SETUP
-[ ] Both install the full CallToArms-0.4.4-alpha.zip MAIN addon. Disable the
+[ ] Both install the full CallToArms-0.5.2-alpha.zip MAIN addon. Disable the
     separate diagnostic unless capturing transport troubleshooting. /reload
     existing installations outside combat; restart for a first install.
 [ ] Capture /cta status on both: version, guild=true, messaging=true, matching
@@ -66,7 +66,8 @@ D. TEST ISOLATION AND MAP LIFECYCLE - REQUIRED CORE CHECK
 [ ] With an unexpired report, close/reopen, pan/zoom and resize the world map.
     Its zone pin stays correctly located/visible; changing to another zone or
     continent must not leave an incorrectly positioned pin. Zone-only pins are
-    expected; continent aggregation is not implemented.
+    expected without OpenMap projection. Also run PRESENCE_TEST.txt for optional
+    OpenMap projection and group locations; neither aggregates encounters.
 [ ] Normal/test pins retain readable tooltips and clicks after those transitions.
     If artwork regresses, capture /cta mapdebug and /cta pincheck separately.
     Expected map layer: PIN_FRAME_LEVEL_AREA_POI.

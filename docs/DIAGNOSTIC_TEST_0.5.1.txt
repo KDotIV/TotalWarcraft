@@ -1,0 +1,160 @@
+CALL TO ARMS 0.5.2-alpha - THREE-PLAYER LAYER / REPORT / EVIDENCE TEST
+November 18, 2026
+
+INSTALL / SCOPE
+
+Install the full main addon from CallToArms-0.5.2-alpha.zip on all three clients.
+The capture is built into CallToArms; no separate probe, backend, Python runtime,
+OpenMap or LayerSwap dependency is needed in WoW. Keep older diagnostic addons
+disabled during this test so only the main addon owns the capture. OpenMap can
+remain enabled when testing stitched-map compatibility. Conduct the baseline
+with LayerSwap hosting disabled so unrelated invitations do not affect the run.
+No existing addon settings are changed by the installer.
+
+On this PC, the target is:
+E:\World of Warcraft\_forever_\Interface\AddOns\CallToArms
+Start/restart WoW after installing new Lua/TOC entries. /cta status must say
+0.5.2-alpha. Presence and diagnostic capture both default OFF on login/reload.
+
+COMMANDS
+
+/cta layer start <label>     Begin a local layer + evidence + transport capture
+/cta layer snap <label>      Save a full snapshot and print brief group readings
+/cta layer mark <text>       Save your manual observation, explicitly labeled MANUAL
+/cta layer                  Show capture status and command help
+/cta layer stop             Stop capture; keep the log
+/cta layer export           Open a copyable log (Ctrl+A, Ctrl+C)
+/cta layer clear            Stop and erase the local diagnostic log
+/cta evidence               Explain current combat-attribution/evidence capability
+/cta presence on/off        Opt in/out of real group location sharing
+
+Labels and notes follow the existing slash parser's lowercase normalization.
+Use the same descriptive test label on all clients; each run also has its own
+server-time suffix. Every log row includes server seconds and local uptime.
+Each tester exports their own perspective; no automatic diagnostic broadcast or
+reciprocal visibility claim is sent. Ordinary presence/report traffic is separate.
+
+THE THREE-PLAYER RUN
+
+A = reporter/inviting leader, B = arriving responder, C = participant remaining
+at the reported encounter. Use actual in-world observation to establish the
+starting situation, not matching/different LayerSwap letters alone.
+
+1. Put A and C together near the report location in the same zone as B. B should
+   initially be unable to see them despite standing at the agreed location on
+   another layer. If that cannot be established, record the limitation.
+2. Everyone: /cta status, then /cta layer start layer-test1.
+   Everyone: /cta layer snap before-invite.
+   Add observations, e.g. /cta layer mark i can see alice but not bob.
+   Capture before joining is useful: solo clients still record self/target/focus.
+3. A invites B using the game UI; B accepts normally. C stays at the encounter.
+   Do not change leaders or leave automatically. The addon performs no invites,
+   accepts, group departures, protected refresh clicks or NPC/nameplate scanning.
+4. Everyone: /cta layer snap after-join. If the world-refresh UI appears, record
+   it with a mark, use Blizzard's normal Refresh Now when available, and then
+   /cta layer snap after-refresh. If unavailable, mark that fact and keep waiting.
+5. Each player checks the other TWO players in the actual world, not only party
+   frames/map dots. Target/focus visible players where useful; take another snap
+   and mark which players you can see. Record whether A moved away from C, B
+   joined A/C, everyone moved, or the outcome remains unknown.
+6. Everyone: /cta layer stop, then /cta layer export. Save each export as a text
+   file with test label and player name. Repeat the direction/leader variant as
+   a new labeled run, without discarding the first run unless already exported.
+7. Also test delayed/cancelled refresh, zone crossing, combat, leader changes,
+   logout/disconnect and deliberate group departure. A transfer event or lack of
+   a phase icon never automatically changes the diagnostic into "synced".
+
+CAPTURE CONTENT / INTERPRETATION
+
+Snapshots: self, available party/raid tokens (bounded 40), target and focus.
+Each includes plain-readable GUID; UnitFullName and both UnitName returns;
+exists/connected/player/leader; map; UnitInPartyShard; UnitPhaseReason; visibility;
+distance squared + checked flag; PvP flag/generic combat; hostility; whether
+target matches that unit; and age of any fresh CTA presence record.
+Distance is squared yards only when checked=true. Visibility=false alone can
+mean out of range, loading, stealth or another phase; it is not a layer verdict.
+nil phase is not proof of co-location. Secret/error/unavailable are explicit.
+
+Events include SHARD_TRANSFER, imminent/cancelled variants, group roster/join/
+leave/leader/invite, zone/world, unit phase/connection, combat entry/exit, target/
+focus changes and game-rule changes. Unsupported event registration is recorded.
+GetEvictionTimeRemaining is read only. There is no numeric layer-ID inference.
+
+Snapshots run at most once a second during event bursts, otherwise every five
+seconds. Capture ends after 15 minutes or logout. Log retains the latest 1200
+rows, max 1600 bytes each; the dropped counter discloses truncation. Large raids
+will overwrite earlier rows sooner than a three-player run: export short runs.
+Capture does not resume after reload. Existing saved rows remain available.
+
+REPORT / PRESENCE VALIDATION IN THE SAME CAPTURE
+
+* Everyone /cta presence on. After grouping, wait at least ten seconds, inspect
+  green markers and /cta presence, and snap. PRESENCE_SEND/PRESENCE_RECEIVE record
+  route/result or sender/GUID and timing. A send acceptance
+  is not a remote acknowledgement. Presence matching rejects ambiguous aliases;
+  selected rejects are logged at most once per reason per five seconds.
+* Raw name formats in snapshots help diagnose Forever first/surname/realm issues.
+  Only actual roster-derived aliases are accepted; realm pools are not guessed.
+* For guild-report tests, use two players who share a guild. Both /cta test on,
+  use the report binding/macro once, then inspect toast/details/remote pin in both
+  directions. Capture logs REPORT_ACTION/SEND/RECEIVE with the report's wire ID.
+* Repeat with test OFF: unknown fight size, 120-second send cooldown, no duplicate
+  on self echo. Check mute, toast disappearance, five-minute expiry and cleanup
+  of open details/hover tooltip. New code hides stale report surfaces on the sweep.
+* Disconnect/leave/opt out and check peer expiry; then verify missing/unknown
+  range is not counted nearby. Use OpenMap on/off and native zone changes.
+* Continue all open cases from PRE_LAYER_TEST_CHECKLIST.txt and PRESENCE_TEST.txt.
+  This instrumented build does not turn those unrun live cases into passes.
+
+PVP EVIDENCE COMPARISON
+
+Use separately labeled captures with test mode OFF:
+  /cta layer start idle-flagged
+  /cta layer start pve-flagged
+  /cta layer start actual-pvp
+Stop/export each run. Use actual player-versus-player combat only when available;
+otherwise mark it deferred. Add manual notes describing the actual activity and
+who was present, but do not treat those notes as automatically verified events.
+
+The capture aggregates UNIT_COMBAT event occurrence/action on self/group/target/
+focus and UNIT_SPELLCAST_SENT/SUCCEEDED occurrences. It does NOT inspect damage
+amounts, spell targets, cast GUIDs or secret payloads, and never calls secure
+combat-log or combat-text readers. No enemy/world scan is performed. Event work
+is capped at 200 occurrences/second and excess is counted as EVIDENCE_DROPPED.
+All those observations have attribution=unknown: UNIT_COMBAT provides no attacker,
+and casting/targeting/being flagged does not establish a successful PvP action.
+
+Reliable automatic participant count remains unknown. This build supplies a
+repeatable way to measure available signals and contrast PvE/PvP/bystanders; it
+does not emit confirmed heat, count observers as fighters or add synthetic people.
+The current public-source investigation has not established a usable source of
+fresh, attributable player-versus-player actions on this client. If no such source
+is available, an explicitly labeled manual/estimated product policy is still needed.
+
+PERSISTENCE / SHARING RESULTS
+
+CallToArmsDiagnosticsDB is a separate table in the main addon's SavedVariables.
+WoW writes it on normal logout/reload to:
+  _forever_/WTF/Account/<account>/SavedVariables/CallToArms.lua
+It is not written live while playing. Export is immediately copyable without
+reload. Logs contain observed player identifiers, positions and your notes;
+share the relevant test exports, not unrelated account files. /cta layer clear
+erases the retained capture, saved on the next normal logout/reload.
+
+SOURCES CHECKED NOVEMBER 18
+
+Blizzard's client-specific generated API source, mirrored on the forever branch:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua
+UNIT_COMBAT has affected unit/action/flag/secret amount/school but no attacker.
+UNIT_SPELLCAST_SENT has conditional-secret target; the capture ignores it.
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/CombatLogSecureDocumentation.lua
+C_CombatLogSecure is SecureOnly; it is not called.
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/CombatTextDocumentation.lua
+Combat-text event information is SecretReturns; it is not called.
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/DamageMeterDocumentation.lua
+Combat session readers are secret in combat; not used as real-time PvP evidence.
+
+Offline checks: Lua 5.1 compilation and seven test scripts cover the existing
+report/presence paths plus independent three-client logs, phase/transfer events,
+secret/error/missing data, bounded evidence/logs, export, timeout, protocol traces,
+Forever aliases, map failures and stale UI cleanup. Live acceptance remains OPEN.

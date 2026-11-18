@@ -1,5 +1,6 @@
 local _, A = ...
 local TEMPLATE = "CallToArmsMapPinTemplate"
+local PRESENCE_TEMPLATE = "CallToArmsPresencePinTemplate"
 
 local function drawSwords(owner)
     owner.strokes = {}
@@ -40,11 +41,11 @@ function CallToArmsMapPinMixin:OnLoad()
     self:SetAlphaLimits(1, 1, 1)
     drawSwords(self)
 end
-function CallToArmsMapPinMixin:OnAcquired(r)
+function CallToArmsMapPinMixin:OnAcquired(r, x, y)
     self.record = r
     local c = r.test and A.testColor or A.colors[r.kind]
     colorSwords(self, c)
-    self:SetPosition(r.x, r.y)
+    self:SetPosition(x or r.x, y or r.y)
 end
 function CallToArmsMapPinMixin:OnReleased()
     if self:IsMouseOver() then GameTooltip:Hide() end
@@ -54,19 +55,79 @@ end
 function CallToArmsMapPinMixin:OnMouseEnter()
     if self.record then A.Tooltip(self, self.record) end
 end
-function CallToArmsMapPinMixin:OnMouseLeave() GameTooltip:Hide() end
+function CallToArmsMapPinMixin:OnMouseLeave() GameTooltip:Hide(); A.tooltipRecord=nil end
 function CallToArmsMapPinMixin:OnMouseClickAction(button)
     if button == "LeftButton" and self.record then A.ShowDetails(self.record) end
 end
 
+-- A green plus distinguishes cooperative locations from report swords.
+CallToArmsPresencePinMixin = CreateFromMixins(MapCanvasPinMixin)
+function CallToArmsPresencePinMixin:OnLoad()
+    self:UseFrameLevelType("PIN_FRAME_LEVEL_AREA_POI")
+    self:SetScalingLimits(1, 1, 1); self:SetAlphaLimits(1, 1, 1)
+    local marker = self:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    marker:SetPoint("CENTER"); marker:SetText("+"); marker:SetTextColor(.3, 1, .6)
+    self.marker = marker
+end
+function CallToArmsPresencePinMixin:OnAcquired(p, x, y)
+    self.presence = p; self:SetPosition(x or p.x, y or p.y)
+end
+function CallToArmsPresencePinMixin:OnReleased()
+    if self:IsMouseOver() then GameTooltip:Hide() end
+    self.presence = nil; MapCanvasPinMixin.OnReleased(self)
+end
+function CallToArmsPresencePinMixin:OnMouseEnter()
+    A.tooltipRecord = nil
+    local p = self.presence
+    if not p or p.expiresAt <= GetServerTime() then return end
+    local function state(v) return v == "1" and "yes" or v == "0" and "no" or "unknown" end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:AddLine("CTA group member: " .. A.CleanText(p.name, 128), .3, 1, .6)
+    GameTooltip:AddLine(A.LocationText(p), 1, 1, 1)
+    GameTooltip:AddLine("Shared PvP flag: " .. state(p.flagged) .. " | Combat: " .. state(p.combat), 1, 1, 1)
+    GameTooltip:AddLine("Presence only; not confirmed PvP. Layer unknown.", .8, .8, .8, true)
+    GameTooltip:AddLine("Position age: " .. math.max(0, GetServerTime() - p.updatedAt) .. "s", .7, .7, .7)
+    GameTooltip:Show()
+end
+function CallToArmsPresencePinMixin:OnMouseLeave() GameTooltip:Hide() end
+
+local function apiCall(fn, ...)
+    if type(fn) ~= "function" then return end
+    local ok, a, b = pcall(fn, ...)
+    if not ok or (issecretvalue and (issecretvalue(a) or issecretvalue(b))) then return end
+    return a, b
+end
+local function finite(v) return type(v) == "number" and v == v and math.abs(v) < math.huge end
+function A.MapPosition(r, hostMap)
+    local api = OpenMapAPI
+    -- Native gamepad positioning hides pins outside the host map's 0..1 bounds.
+    local gamepad = InputUtil and apiCall(InputUtil.IsGamepadUIEnabled)
+    if api and api.major == 1 and gamepad ~= true and apiCall(api.IsStitched) == true then
+        local u, v = apiCall(api.WorldFromMap, r.mapID, r.x, r.y)
+        if finite(u) and finite(v) then
+            local x, y = apiCall(api.MapFromWorld, hostMap, u, v)
+            if finite(x) and finite(y) then return x, y end
+        end
+    end
+    if r.mapID == hostMap then return r.x, r.y end
+end
+
 local Provider = CreateFromMixins(MapCanvasDataProviderMixin)
-function Provider:RemoveAllData() self:GetMap():RemoveAllPinsByTemplate(TEMPLATE) end
+function Provider:RemoveAllData()
+    self:GetMap():RemoveAllPinsByTemplate(TEMPLATE)
+    self:GetMap():RemoveAllPinsByTemplate(PRESENCE_TEMPLATE)
+end
 function Provider:RefreshAllData()
     self:RemoveAllData()
     local map = self:GetMap()
     if not map:IsShown() then return end
     for _, r in ipairs(A.List()) do
-        if r.mapID == map:GetMapID() then map:AcquirePin(TEMPLATE, r) end
+        local x, y = A.MapPosition(r, map:GetMapID())
+        if x and y then map:AcquirePin(TEMPLATE, r, x, y) end
+    end
+    for _, p in ipairs(A.PresenceList and A.PresenceList() or {}) do
+        local x, y = A.MapPosition(p, map:GetMapID())
+        if x and y then map:AcquirePin(PRESENCE_TEMPLATE, p, x, y) end
     end
 end
 
@@ -77,11 +138,12 @@ end
 
 function A.CurrentLocation()
     if not C_Map or not C_Map.GetBestMapForUnit or not C_Map.GetPlayerMapPosition then return end
-    local id = C_Map.GetBestMapForUnit("player")
-    local pos = id and C_Map.GetPlayerMapPosition(id, "player")
+    local id = apiCall(C_Map.GetBestMapForUnit, "player")
+    if not finite(id) or id < 1 or id > 100000 or id % 1 ~= 0 then return end
+    local pos = apiCall(C_Map.GetPlayerMapPosition, id, "player")
     if not pos then return end
-    local x, y = pos:GetXY()
-    if issecretvalue and (issecretvalue(x) or issecretvalue(y)) then return end
+    local x, y = apiCall(function() return pos:GetXY() end)
+    if not finite(x) or not finite(y) or x < 0 or x > 1 or y < 0 or y > 1 then return end
     return {mapID = id, x = x, y = y}
 end
 
@@ -98,6 +160,14 @@ function A.RefreshMap()
 end
 
 function A.AttachMap()
+    local api = OpenMapAPI
+    if not A.openMapCallbacks and api and api.major == 1 and type(api.RegisterCallback) == "function" then
+        local function refresh() A.RefreshMap() end
+        local ok = pcall(function()
+            api.RegisterCallback(A, "OpenMap_StitchedChanged", refresh)
+        end)
+        A.openMapCallbacks = ok
+    end
     if A.mapAttached or not WorldMapFrame or not WorldMapFrame.AddDataProvider
         or not WorldMapFrame.AcquirePin or not WorldMapFrame.RemoveAllPinsByTemplate then return end
     A.mapProvider = CreateFromMixins(Provider)

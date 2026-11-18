@@ -1,0 +1,236 @@
+CALL TO ARMS - LAYER-SWAP RESEARCH AND ARRIVAL REQUIREMENT
+November 18, 2026 | Research/design only; not implemented in 0.5.0
+
+USER REQUIREMENT
+
+After accepting a CTA AND reaching the zone where it was reported, help the
+responder join the actual encounter's layer. Accepting a report or entering its
+zone must not by itself display "synced". Preserve the manual-report acceptance
+gate before implementing the group/layer lifecycle. The completed 0.5.0 presence
+work remains independent: it supplies cooperative positions, not layer proof.
+
+FINDING
+
+LayerSwap coordinates grouping; it does not directly select an official unique
+layer ID. It infers labels from nearby NPC GUIDs, finds potential hosts, sends
+invitations, waits for the player to accept, and observes transfer events and
+new NPC readings. Its own code describes ambiguous layer labels and cases in
+which the host moves toward the guest. This cannot guarantee exact targeting.
+
+CTA should target a live reporter/designated encounter host, then verify current
+co-location after arrival. It should not use /ls swap B or "any different layer"
+as a substitute. No backend is required for this cooperative flow, but the game
+controls transfer eligibility/direction/timing. A backend would not remove that.
+
+INSTALLED ARTIFACT / EVIDENCE BOUNDARY
+
+Root: E:\World of Warcraft\_forever_\Interface\AddOns\LayerSwap
+LayerSwap.toc:1-5: version 1.14.33; interface 11509,16001,20506; Adam5288.
+The Lua header still says 1.14.14; TOC supplies the installed package version.
+LayerSwap.lua SHA256:
+  572F411D7E8BEEC64098AA7480BDAFBAEF35439BB1A0D290D650C1C1EE92B353
+All numbered references below are in that installed LayerSwap.lua.
+Read-only source inspection, not execution or independent live validation.
+Historical observations in its comments are the author's, not new CTA results.
+No installed addons, user settings or SavedVariables were changed/read for this.
+
+WHAT THE LAYER LABEL MEANS
+
+1888-1900: reads accessible Creature/Vehicle GUIDs, excluding readable controlled
+summons, and extracts server-zoneUID. It is not a player GUID or an official
+world-layer lookup. Individual spawned NPC instances have GUIDs; some components
+are shared by creatures hosted in the same world instance. The addon infers a
+relationship from those components, not from the NPC's name/species alone.
+
+22-35: on Forever, cross-player comparisons use only the server component. The
+author observed different second components between clients on the SAME layer.
+1714-1736 and 1685-1696: DIFFERENT layers can also share the server component.
+Within one login, a changed second component after a transfer can support a local
+before/after inference. It is not a reliable cross-player identifier. Matching
+labels are therefore insufficient proof of co-location; a transfer event alone
+does not establish arrival on the intended reporter's layer either.
+
+1503-1514,1531-1557,1827-1840,6105-6125: A/B/etc. are local discovery-order labels,
+with zone and last-seen state, expiring after an hour without sightings. They
+are not the same numbering for all addon users. State may survive reload.
+
+1564-1568,1888-1969: the latest code can provisionally accept one creature after
+quiet periods, then uses more observations for agreement/correction and majority
+among recent votes. It rejects known stale units after transfers/borders. This
+is heuristic corroboration, not an authoritative identifier.
+
+No exported stable API for current layer or requestSwap was found. Layer/current/
+requestSwap are local variables; SavedVariables are private implementation state.
+Do not depend on their layout, invoke internal closures or read them as authority.
+
+HOW IT FINDS AND JOINS HOSTS
+
+2874-2880,3020-3032,3282-3317,3395,3622-3658: current Forever flow uses
+C_FriendList.SendWho for the current map, then class filters on later requests,
+with zone-name fallback. Results supply names for hidden addon WHISPER requests
+under prefix LayerSwap. Compatible receivers return inferred layer/zone/hosting
+state. This suggests a possible future discovery mechanism; it is NOT a complete
+nearby-player census, combat detector, same-layer directory or implemented CTA
+route. Availability, result truncation, scope and traffic need separate validation.
+
+102-144,3343-3358: search result bound 50, at most 49 targets, initial burst eight,
+throttled one-second rounds up to 45. Known responders prioritized, nonresponders
+normally skipped for six hours. Guild fallback is configurable. 72-100: legacy
+channel/chat paths remain but the current default Forever flow does not join its
+old hub. These constants are LayerSwap choices, not guaranteed game API budgets.
+
+593-620,1134-1189,2150-2161: requests contain current zone and desired/excluded
+inferred layer. Hosts in another zone are rejected. Desired matching uses the
+same lossy key, so even a specifically requested label is not exact targeting.
+3759-3765,6267-6275: /ls swap B selects the requester's remembered current-zone
+entry, not another player's universally meaningful layer B.
+
+751-772: host invokes C_PartyInfo.InviteUnit (legacy fallback) via pcall.
+4372-4373,5857-5897: UI tells the requester to accept. The entire installed file
+contains no AcceptGroup/AcceptInvite call. Invite observation is not acceptance.
+5898-5950: GROUP_JOINED starts re-observation and checks after joining.
+5993-6082: SHARD_TRANSFER_IMMINENT, SHARD_TRANSFER, SHARD_TRANSFER_CANCELLED and
+GetEvictionTimeRemaining update countdowns and invalidate old readings. The
+implementation does not call a force-refresh or numeric shard-selection API.
+2964-2999: UnitPhaseReason and UnitInPartyShard are logged diagnostically, not
+used as the success verdict. Their usefulness for CTA must be measured live.
+
+CONSTRAINTS THAT MATTER FOR A PVP EVENT
+
+* 727-748: host is solo or leads a party consisting of its LayerSwap guests;
+  five-player cap, not a raid or unrelated group, not actively listed in LFG.
+  An already-grouped requester is refused. This is a temporary hop design,
+  not proof that the same approach scales to a large ongoing PvP raid.
+* 650-707: default hosting pause in combat and six seconds afterward. This is
+  addon policy, not proof that every underlying invite API is combat-protected.
+* 41-45,185-194: one-second spacing, 60s same-player cooldown, and six invitations
+  per ten minutes on restricted Forever. Do not assume unlimited mass invites.
+* 196-205: the host can move toward the guest instead of the guest reaching the
+  host. The addon detects suspected cases and avoids that guest for 30 minutes;
+  it cannot prevent the move. CTA must retain the encounter's location, not
+  silently redefine the event as wherever the host was moved.
+* 145-153,1633-1662: default auto-leave may leave a recognized host shortly after
+  transfer. Source comments describe retained layers and reversions. CTA should
+  retain intentional encounter groups until the player chooses to leave.
+* 5993-6082: zone changes invalidate comparisons; zone-border transfer events do
+  not demonstrate a successful encounter sync. Pending/cancelled refreshes matter.
+* 6085-6096: blocked actions are logged/reported as requiring a click. Successful
+  pcall only means Lua did not throw, not that an invitation or transfer succeeded.
+
+PROPOSED CTA FLOW (DESIGN, NOT SHIPPED)
+
+Accepted -> Traveling -> Arrived in report zone -> Host revalidated -> Invite
+requested -> Group joined -> Refresh pending (if any) -> Verifying -> At encounter
+
+1. Accept stores report/event ID, original zone/position, current host identity,
+   event/host revision and expiry. This is local intent, not participation proof
+   and not consent to leave an existing party or accept arbitrary invitations.
+2. On arrival, revalidate the event with a still-present reporter or designated
+   anchor. Today's five-minute observer report can expire during travel; future
+   rendezvous state needs explicit renewal/revalidation, not an indefinite TTL.
+3. Request the designated host's group only. If reporter is not the leader, a
+   leader must be freshly verified at the same encounter. Requests/replies need
+   report-bound nonces, sender/roster checks, expiry, cooldowns and cancellation.
+   A peer advertisement is not verified organizer authorization.
+4. Honor Blizzard invitation/confirmation UI and restricted-action rules. Leave
+   existing groups only through deliberate user action. Full party/raid, host
+   busy/in combat, stale report or host departure have explicit waiting/failure
+   states. Never silently rotate through unrelated hosts or mass-invite peers.
+5. Observe pending refresh/transfer/cancellation. Guide the player to Blizzard's
+   refresh UI when applicable; do not automate an unverified protected click.
+6. Verify in the report zone against the designated host/anchor: readable group
+   shard/phase signals plus fresh in-world visibility/proximity, preferably both
+   clients' fresh evidence. Same coordinates, no phase icon, GUID-derived labels
+   or a single SHARD_TRANSFER are insufficient alone. Unknown stays unverified.
+7. Invalidate verification on reporter/host transfer, zone departure, leadership
+   change, encounter expiry/end, lost visibility/evidence or stale handshake.
+   A replacement host must be verified at the event; it is not selected by label.
+
+"At encounter" means fresh co-location evidence, not guaranteed future layer
+pinning and not proof that the responder is actually participating in PvP.
+Confirmed heat still has the separate combat-evidence requirement.
+
+NEXT LIVE EXPERIMENT, AFTER REPORT/PRESENCE ACCEPTANCE
+
+[ ] Two consenting CTA testers start in the SAME report zone but visibly apart
+    on different layers. Record actual builds and mutual visibility, not labels.
+[ ] A reports. B accepts/travels in the proposed flow. A remains the event anchor.
+[ ] Invite B into A's group; capture each client's group leader, readable phase/
+    party-shard signals, transfer/countdown events and timestamps.
+[ ] Check mutual in-world visibility near the report location after refresh.
+    Record whether A moved, B moved, both moved, or no verified movement occurred.
+[ ] Repeat with zone crossing, reporter already grouped/not leader, full party,
+    raid, combat, refresh cancellation/delay, report expiry and disconnect.
+[ ] Leave the group deliberately and test persistence/reversion separately.
+    Do not assume LayerSwap's auto-leave behavior is suitable for a CTA encounter.
+[ ] Verify target identity with actual Forever first/surname/realm formats.
+    API failures/secret values/ambiguous matching must remain unknown/rejected.
+
+SOURCES / REUSE
+
+Author's distribution page checked November 18, 2026; license All Rights Reserved:
+https://www.curseforge.com/wow/addons/layer
+Independently implement the coordination design. Do not copy LayerSwap code or
+ship it as a dependency without a suitable license. No such copying was done.
+
+Blizzard generated API declarations (forever client branch, mirrored):
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/PartyInfoDocumentation.lua
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua
+InviteUnit/RequestInviteFromUnit may require confirmation; UnitPhaseReason can
+be secret. API declarations identify candidate building blocks, not a live pass.
+
+Coverage: identification, discovery, invitation, acceptance, refresh handling,
+API integration boundary and CTA design answered from installed source.
+Unresolved: live exact-host co-location, large-group behavior, transfer direction,
+phase-signal reliability and actual combat restrictions on current clients.
+
+FOLLOW-UP: VERIFYING THE DESTINATION WITHOUT A NUMERIC LAYER ID
+
+User asked whether grouping always selects the leader's layer or the layer with
+the lowest population. A focused search of Blizzard news/forums on November 18
+did not establish an authoritative Forever rule for either. Do not turn player
+speculation or the fact that grouping often works into a guaranteed algorithm.
+LayerSwap's host-moved handling is further reason to verify the result, not to
+assume the inviter remains at the encounter. It does not reveal the server's
+selection policy or population data.
+
+New primary sources:
+https://us.forums.blizzard.com/en/wow/t/phasing-issues-with-group-still-persist-from-beta/2402367
+Kaivax's November 5 reply describes joining a party and using the world-refresh
+notification / Refresh Now to try to reach party members. It is official guidance
+for the refresh flow, not a promise of destination selection or instantaneous sync.
+
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UnitFrame/Shared/CompactUnitFrame.lua#L1377
+Blizzard's own frame code reads UnitPhaseReason and shows InOtherPhase when a
+reason is returned. It gates this on a distance threshold and a display option.
+Lines 997-1009 derive that threshold from checked UnitDistanceSquared results.
+Therefore no visible phase icon is not sufficient positive same-layer evidence.
+
+Candidate verification, to calibrate against mutual in-world visibility live:
+* Party-shard and phase signals: inspect UnitInPartyShard on self and designated
+  host plus readable UnitPhaseReason. A reported mismatch blocks verification;
+  nil/no error/true alone does not establish the exact destination.
+* Local visibility and checked proximity to the exact host GUID: use available
+  UnitIsVisible, UnitDistanceSquared and actual world target/nameplate identity.
+  Being present in the party roster alone is insufficient. False visibility can
+  also mean distance/loading/stealth etc.; report unverified, not necessarily
+  "different layer". Restricted identity/phase/comparison values stay unknown.
+* Fresh reciprocal confirmation: each client reports its LOCAL observations of
+  the other, tied to the current event/host revision and a short-lived challenge.
+  Receipt of addon messages by itself still proves no co-location.
+* Independent encounter anchor: another participant remaining at the fight can
+  corroborate that the host is still at the encounter. Otherwise host and guest
+  could meet on a different layer after the host was moved. When no independent
+  evidence exists, distinguish "with host" from "encounter revalidated".
+* Recheck/invalidate on transfer, refresh cancellation, zone/leader/host changes,
+  stale observations, disconnect or event expiry. Verification is momentary.
+
+Recommended status separation: Waiting for group / Refresh pending / Grouped,
+co-location unverified / With host / At revalidated encounter. No individual
+predicate above is currently validated as a sufficient automatic verdict.
+
+Test the invite direction both ways, with the same zone and a stationary third
+encounter anchor where available. Record which clients transfer and whether all
+can actually see one another. This can validate CTA's observed outcome checks;
+it cannot establish a universal server population-selection rule from a few
+joins. Keep the numeric NPC label as supplementary diagnostics only.

@@ -93,6 +93,7 @@ function A.Report()
 end
 
 function A.RunReport()
-    local _, message = A.Report()
+    local ok, message = A.Report()
+    if A.Trace then A.Trace("REPORT_ACTION", "accepted=" .. tostring(ok == true) .. " message=" .. A.CleanText(message, 160)) end
     A.Print(message)
 end

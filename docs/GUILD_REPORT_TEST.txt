@@ -1,5 +1,5 @@
-CALL TO ARMS 0.4.4-alpha - LIVE GUILD REPORT TEST
-November 9, 2026
+CALL TO ARMS 0.5.2-alpha - LIVE GUILD REPORT TEST
+Updated November 18, 2026; live evidence below remains from November 9
 
 Current status
 Live evidence now confirms two-way diagnostic GUILD delivery, main report
@@ -11,7 +11,7 @@ Fresh remote-origin pin/toast tests on both updated clients are still required.
 Standalone probe sends during PvE combat do not prove the main UI combat path.
 
 Install
-Both players install the CallToArms folder from CallToArms-0.4.4-alpha.zip into
+Both players install the CallToArms folder from CallToArms-0.5.2-alpha.zip into
 the active client's Interface/AddOns folder. This is the MAIN addon, not the
 CallToArmsProbe diagnostic. It requires no external libraries or service.
 Restart WoW after first installation; enable Call to Arms. The separate

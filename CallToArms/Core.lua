@@ -1,11 +1,15 @@
 local name, A = ...
+A.release = "0.5.2-alpha"
 function A.Print(message) print("|cffedbf69Call to Arms:|r " .. message) end
 
 function A.Changed()
+    if A.RefreshReportSurfaces then A.RefreshReportSurfaces() end
     A.RefreshUI(); A.RefreshMap()
     if not A.timer and next(A.records) then
         A.timer = C_Timer.NewTicker(15, function()
-            A.Prune(GetServerTime()); A.RefreshUI(); A.RefreshMap()
+            A.Prune(GetServerTime())
+            if A.RefreshReportSurfaces then A.RefreshReportSurfaces() end
+            A.RefreshUI(); A.RefreshMap()
             if not next(A.records) then A.timer:Cancel(); A.timer = nil end
         end)
     end
@@ -31,38 +35,6 @@ function A.SetTestMode(enabled)
     A.Changed()
     A.Print(A.testMode and "TEST MODE ON for this session. /cta report sends simulated guild reports."
         or "Test mode off; simulated reports cleared and incoming tests ignored.")
-end
-
-function A.SubmitDefense(count, opposition, note)
-    count = tonumber(count)
-    if not count or count ~= math.floor(count) or count < 4 or count > 1000 then
-        return false, "Enter a participant estimate from 4 to 1000."
-    end
-    local now = GetServerTime()
-    if now - (A.db.lastSubmit or 0) < 120 then return false, "Please wait before issuing another alert." end
-    local loc = A.CurrentLocation()
-    if not loc then return false, "Current location unavailable." end
-    local r = {
-        version = 1, id = "local:" .. now, kind = "defense", mapID = loc.mapID,
-        x = loc.x, y = loc.y, faction = UnitFactionGroup("player"), ruleset = A.db.ruleset,
-        title = "Defensive Call to Arms", count = count, estimated = true,
-        reporter = UnitName("player"), opposition = A.CleanText(opposition, 64),
-        note = A.CleanText(note, 160), updatedAt = now, expiresAt = now + 300,
-    }
-    if not A.adapter then
-        r.demo = true
-        local ok, reason = A.Receive(r)
-        if not ok then return false, reason end
-        A.Print("Local preview created. Nothing was sent.")
-        return true, "Preview created"
-    end
-    -- Contract: return true only when accepted for delivery; server acknowledgement
-    -- must arrive through Receive. No optimistic public alert or hidden retry queue.
-    local safe, accepted = pcall(A.adapter, r)
-    if not safe or accepted ~= true then return false, "Delivery unavailable. Please try again later." end
-    A.db.lastSubmit = now
-    A.Print("Request submitted; awaiting delivery confirmation.")
-    return true, "Submitted"
 end
 
 function A.Demo()
@@ -96,6 +68,9 @@ events:SetScript("OnEvent", function(_, event, addon)
         A.testMode = false
         if A.RefreshScope then A.RefreshScope() end
         if A.InitGuildTransport then A.InitGuildTransport() end
+        if A.InitPresence then A.InitPresence() end
+        if A.InitDiagnostics then A.InitDiagnostics() end
+        if A.InitControl then A.InitControl() end
         CallToArms = {
             Report = A.RunReport,
             Receive = A.Receive,
@@ -109,15 +84,28 @@ events:SetScript("OnEvent", function(_, event, addon)
         BINDING_HEADER_CALLTOARMS = "Call to Arms"
         BINDING_NAME_CALLTOARMS_REPORT = "Report PvP at my location"
         SlashCmdList.CALLTOARMS = function(command)
-            command = command:lower():match("^%s*(.-)%s*$")
+            local input = command:match("^%s*(.-)%s*$")
+            command = input:lower()
             if command == "report" then A.RunReport()
+            elseif command == "control" then A.ControlCommand("")
+            elseif command:match("^control ") then A.ControlCommand(input:sub(9))
+            elseif command == "remote" then A.RemoteCommand("")
+            elseif command:match("^remote ") then A.RemoteCommand(input:sub(8))
+            elseif command == "layer" then A.LayerCommand("")
+            elseif command:match("^layer ") then A.LayerCommand(command:sub(7))
+            elseif command == "evidence" then A.Print(A.EvidenceStatus())
+            elseif command == "presence on" then A.SetPresenceEnabled(true)
+            elseif command == "presence off" then A.SetPresenceEnabled(false)
+            elseif command == "presence" or command == "presence status" then A.PrintPresenceStatus()
             elseif command == "test on" then A.SetTestMode(true)
             elseif command == "test off" then A.SetTestMode(false)
             elseif command == "status" then
                 if A.RefreshScope then A.RefreshScope() end
-                A.Print("0.4.4-alpha | guild=" .. tostring(IsInGuild()) .. " | messaging=" .. tostring(A.guildReady == true)
+                A.Print(A.release .. " | guild=" .. tostring(IsInGuild()) .. " | messaging=" .. tostring(A.guildReady == true)
                     .. " | ruleset=" .. (A.scopeRuleset or "UNKNOWN - network disabled")
-                    .. " | region=" .. tostring(A.scopeRegion) .. " | test=" .. tostring(A.testMode == true))
+                    .. " | region=" .. tostring(A.scopeRegion) .. " | test=" .. tostring(A.testMode == true)
+                    .. " | presence=" .. tostring(A.presenceEnabled == true)
+                    .. " | capture=" .. tostring(A.DiagnosticActive and A.DiagnosticActive() or false))
             elseif command == "mapdebug" then A.MapDebug()
             elseif command == "pincheck" then A.PinCheck()
             elseif command == "demo" then A.Demo()
@@ -129,7 +117,7 @@ events:SetScript("OnEvent", function(_, event, addon)
         end
     elseif event == "GAME_RULES_CHANGED" then
         if A.db and A.RefreshScope then A.RefreshScope() end
-    elseif event == "PLAYER_LOGIN" or (event == "ADDON_LOADED" and addon == "Blizzard_WorldMap") then
+    elseif event == "PLAYER_LOGIN" or (event == "ADDON_LOADED" and (addon == "Blizzard_WorldMap" or addon == "OpenMap")) then
         if A.db and A.RefreshScope then A.RefreshScope() end
         A.AttachMap()
     end

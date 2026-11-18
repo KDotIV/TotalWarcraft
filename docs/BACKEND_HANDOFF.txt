@@ -1,5 +1,74 @@
 CALL TO ARMS - BACKEND AND ADDON HANDOFF
-Current main addon: 0.4.4-alpha | Diagnostics: 0.3.0 | November 9, 2026
+Current main addon + built-in diagnostics: 0.5.2-alpha | Standalone probe: 0.3.0 | November 18, 2026
+
+0.5.2 REMOTE TEST CONTROLLER
+
+Control.lua provides /cta control allow/off and /cta remote First Surname <verb>.
+Session-only explicit authorization; nine fixed verbs over targeted CTA_CTL1
+addon whispers. Replies match sender/nonce, 30-second timeout, no retries,
+five-second command throttle and bounded replay protection. Reports require
+test mode and the default guild adapter; they never create real combat evidence.
+Other verbs toggle addon test/presence or capture snapshots/status. No external
+bridge or protected game actions. See REMOTE_TEST_CLI_0.5.2.txt. Seven offline
+test scripts pass; live acceptance of presence/diagnostics/controller remains open.
+
+Installed November 18, 2026 at 16:07 UTC into
+E:\World of Warcraft\_forever_\Interface\AddOns\CallToArms.
+Installer backed up the prior addon and hash-verified all 17 source files.
+Backup: releases/installed-backups/CallToArms-before-0.5.2-alpha-20261118-160728.zip.
+Release: releases/CallToArms-0.5.2-alpha.zip (17 files, byte-verified against source).
+SHA256: d96fca5bd0078529d821d55a7c474783ff8c32b6b48b638d58be0afd0e4357dd.
+WoW restart and live acceptance are still required. No live remote commands
+were sent during development; tests used independent mocked Lua clients.
+
+0.5.1 TESTING INCREMENT
+
+Diagnostics.lua adds /cta layer start/snap/mark/stop/export/clear and /cta evidence.
+It captures all three testers independently: phase, party-shard, visibility,
+checked distance, leadership, raw name forms, transfer/refresh events and report/
+presence traces. Local SavedVariables log only; 1200 rows, 15-minute capture cap,
+explicit restricted/error states. No automatic layer-verification verdict.
+UNIT_COMBAT and cast-event occurrences are bounded, unattributed diagnostic
+context; secure combat log/text APIs are not called. Reliable PvP evidence is
+still unresolved and cannot generate heat. See DIAGNOSTIC_TEST_0.5.1.txt.
+
+Validation fixes: preserve real Forever first/surname aliases tied to roster
+GUIDs, reject ambiguous/self aliases, guard missing/secret/nonfinite map data,
+and close expired report details/toasts/tooltips during cleanup. Seven offline test
+scripts pass; live cases remain open. Package: releases/CallToArms-0.5.2-alpha.zip.
+
+Redundancy review: removed the unreachable legacy estimate composer, its edit
+helper and SubmitDefense submission path. The supported /cta report flow and
+its binding/API remain the single user submission path. Model display support
+for defense/raid and the documented transport hook remain for future adapters.
+The unused historical TGA/generator and closed probe experiments are retained
+as historical artifacts; none is a runtime dependency of the current renderer.
+
+0. NOVEMBER 18 INCREMENT (OFFLINE VALIDATED ONLY)
+
+Presence.lua adds session-only opt-in outdoor PARTY/RAID self-location sharing
+under CTA_PRES1, separate from reports, report counts and heat. Green plus map
+markers, ten-second send attempts, thirty-second expiry, current-roster sender
+matching/GUID deduplication, scope checks and restricted-data guards are built.
+Use /cta presence on/off/status or the activity panel's Group locations switch.
+Both recipients and senders opt in. Defaults OFF after reload/login. No presence
+history, automatic invites, layer transfer or PvP combat evidence is added.
+
+Map.lua optionally uses OpenMapAPI major 1 to project CTA's own native report
+and peer pins into the stitched map. Mouse mode only; gamepad/failed conversion
+falls back to matching-zone pins. Managed AREA_POI and native pooling remain.
+The full OpenMap renderer, art, friends protocol and fog are not copied.
+
+Protocol/acceptance: PRESENCE_TEST.txt. MVP/research: MVP_REVIEW_2026-11-18.txt.
+Presence is not proof of PvP activity or same-layer visibility. Existing report
+wire/cooldown behavior below is unchanged. New tests pass offline; no new live
+acceptance has been recorded. First presence package was 0.5.0; use 0.5.2 now.
+
+Layer follow-up: LAYER_COORDINATION_RESEARCH_2026-11-18.txt records installed
+LayerSwap 1.14.33. User requirement: accept CTA, reach report zone, then coordinate
+with the event's live host and verify co-location. Its NPC-derived layer labels
+are heuristic and can collide; do not use them as global IDs or "synced" proof.
+No layer flow or automatic invitation is implemented in this release.
 
 1. CURRENT DECISION
 
@@ -63,7 +132,8 @@ and fog. Pin pooling, normalized positions and mouse handlers stay native.
 The regression test asserts relative ordering above those overlays.
 Artwork uses six foreground line strokes plus outlines; the old bundled TGA is
 not used by the current renderer. No new asset download is needed for this fix.
-Pins appear on their matching zone map; continent/world aggregation is not built.
+Pins normally appear on their matching zone map; optional OpenMap projection is
+new in 0.5.0. Encounter/heat aggregation is not built.
 Details and tooltips remain attached to the same report. See MAP_PIN_FIX_0.4.4.txt.
 
 4. CURRENT USER FLOW AND BOUNDS
@@ -240,7 +310,8 @@ passes. Broader product work above is a backlog, not already-delivered behavior.
 
 Layer is currently always unknown. Guild delivery and coordinates do not prove
 co-location. Contacting the reporter for a group invite is manual guidance only;
-there are no automated invites/whispers, layer IDs or forced world refreshes.
+there are no automated layer invitations, layer IDs or forced world refreshes.
+The opt-in remote test CLI uses separate addon whispers, not a layer coordinator.
 After the report gate, test grouping and any Blizzard-provided refresh flow
 with mutual in-world visibility as the success criterion. Do not advertise
 guaranteed layer transfer or infer a numeric layer from unrelated identifiers.

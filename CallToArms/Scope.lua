@@ -23,6 +23,7 @@ function A.RefreshScope()
     if ruleset and A.db then A.db.ruleset = ruleset end
     if changed then
         A.records = {}
+        if A.ClearPresence then A.ClearPresence() end
         if A.toast then A.toast:Hide() end
         if A.details then A.details:Hide() end
         if A.Changed then A.Changed() end

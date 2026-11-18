@@ -1,0 +1,119 @@
+CALL TO ARMS 0.5.2-alpha - IN-GAME REMOTE TEST CLI
+November 18, 2026
+
+Install the full CallToArms-0.5.2-alpha.zip on your client and each tester's
+client. Restart WoW and check /cta status. No companion app, Python, C# backend,
+OpenMap, LayerSwap or separate probe is required. All commands below are typed
+in WoW chat. Your controller character and the tester must both be online.
+
+QUICK START
+
+The tester runs this once each session, using YOUR full character name:
+  /cta control allow YourFirst YourSurname
+
+Then YOU run these, substituting the TESTER'S full character name:
+  /cta remote TesterFirst TesterSurname status
+  /cta remote TesterFirst TesterSurname test-on
+  /cta remote TesterFirst TesterSurname report
+
+Wait at least FIVE seconds between remote commands. Wait TEN seconds between
+simulated reports on a given tester. Each command prints OK/FAILED with a short
+result, or times out after 30 seconds. No automatic retry is sent.
+
+For the report to appear on YOUR client, you must also run /cta test on locally
+and share the tester's guild, faction, ruleset and region. Other guild recipients
+must opt into test mode too. The report originates at the tester's current map
+position and is labeled [TEST]. An OK report reply confirms local acceptance
+and guild dispatch, not that another client received/rendered the report.
+
+For a test from your own character, /cta test on then /cta report is sufficient.
+Remote commands reduce repeated tester input; another online WoW client is
+still necessary to exercise real network delivery. They cannot create players.
+
+SUPPORTED VERBS
+
+status         Reply with version, test/presence/capture state, report/peer counts.
+test-on        Enable simulated reports and reception of others' test reports.
+test-off       Stop simulation and clear that client's simulated report records.
+presence-on    Enable session-only outdoor party/raid self-location sharing.
+presence-off   Stop sharing and clear local peer markers; remote peers expire.
+report         Submit a simulated guild report, using the normal report pipeline.
+capture-start  Start a local bounded layer/evidence capture labeled remote-test.
+capture-stop   Stop capture and retain its log.
+snapshot       Record one local phase/visibility snapshot, even without a ticker.
+
+Example diagnostic session (wait five seconds between each remote command):
+  /cta remote TesterFirst TesterSurname capture-start
+  /cta remote TesterFirst TesterSurname presence-on
+  /cta remote TesterFirst TesterSurname snapshot
+  /cta remote TesterFirst TesterSurname status
+  /cta remote TesterFirst TesterSurname capture-stop
+  /cta remote TesterFirst TesterSurname presence-off
+  /cta remote TesterFirst TesterSurname test-off
+
+Repeat for each tester. Presence needs an outdoor HOME party/raid and opt-in at
+both ends; enabling it solo sets the preference but does not send locations.
+Remote control itself uses addon WHISPER and does not require a shared guild or
+group. It still requires matching faction/ruleset/region and available messaging.
+
+AUTHORIZATION / ENDING THE SESSION
+
+/cta control                       Show the currently authorized controller.
+/cta control allow First Surname   Replace it with exactly one controller.
+/cta control off                   Revoke access; stop test/presence/capture.
+
+Authorization never persists across login/reload. Installing CTA does not grant
+control. The tester can revoke it at any time. Remote commands cannot grant
+another controller, run arbitrary Lua, change actual PvP flags, move a character,
+accept invitations, refresh the world, change protected settings or export logs
+over the network. Only the nine verbs above are accepted. Remote real reports
+are disabled, and reports require the built-in guild transport and test mode ON.
+
+Use the full in-game First Surname, with spaces, without quotation marks.
+The parser preserves the name. Matching accepts space/hyphen separators and the
+known local-realm suffix; it never guesses realm pools or authorizes by first name
+alone. A wrong surname or unknown realm suffix does not match. Cross-realm name
+formats and whisper restrictions still need live acceptance on this client.
+
+If no reply arrives, check online status, authorization after reload, exact name,
+/cta status on both clients, matching scope and the five-second command interval.
+A send accepted by the game is not proof that the recipient received it.
+If you lose a reply to a report, inspect the existing test record before retrying;
+a newly issued command is a new request and may create another report later.
+
+WHAT STILL NEEDS TESTER INPUT
+
+Players must join/accept groups, travel and use any Blizzard refresh UI normally.
+Three-player layer validation still requires each person to check actual mutual
+visibility at the encounter. Commands cannot prove that everyone sees each other.
+Export each tester's local capture with /cta layer export, or collect the main
+CallToArms.lua SavedVariables after normal logout/reload. See
+DIAGNOSTIC_TEST_0.5.1.txt (updated for 0.5.2) for the full capture procedure.
+Presence, combat flags and casting remain context, not confirmed PvP evidence.
+
+WIRE / VALIDATION
+
+Prefix CTA_CTL1, targeted WHISPER only. Tab-delimited, at most 255 bytes.
+Request: 1, Q, nonce, serverTime, faction(H/A), ruleset, region, verb.
+Reply:   1, A, nonce, serverTime, success(1/0), sanitized result (140 bytes).
+Requests must be fresh (-30/+5 seconds), scope-matched and from the authorized
+sender. Nonces are deduplicated for 60 seconds; receiver rate is one per five
+seconds. Invalid/unauthorized/replayed/burst requests are silently dropped.
+Replies must match a pending nonce and target, expire after 30 seconds and cannot
+execute commands. Pending requests and replay history are bounded. This uses the
+sender identity supplied by WoW; it is not an authenticated external API bridge.
+CONTROL_SEND/REQUEST/REPLY traces are included when local capture is running.
+
+Offline Lua 5.1 tests cover denial/revocation, exact names, scope/channel/shape,
+replays, forged/late replies, timeouts, failed sends, throttling, toggles,
+captures, simulated-only reports and refusal of custom transports. Seven main
+test scripts pass. No live acceptance is claimed for the new controller yet.
+
+SOURCES
+
+Blizzard-generated client API source mirrored on the forever branch:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ChatInfoDocumentation.lua
+SendAddonMessage has a target argument; CHAT_MSG_ADDON supplies the actual sender.
+Installed LayerSwap 1.14.33: LayerSwap.lua lines 8-9, 261-270, 2288-2292, 3628.
+Its source documents Forever's First Surname format and targeted addon whispers.
+CTA's controller is independently implemented; no LayerSwap code is bundled.

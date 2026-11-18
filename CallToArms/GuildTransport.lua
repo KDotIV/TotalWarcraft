@@ -92,8 +92,10 @@ function A.GuildSend(r)
     local ok, result = pcall(C_ChatInfo.SendAddonMessage, PREFIX, packet, "GUILD")
     local success = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.Success or 0
     if not ok or secret(result) or (result ~= success and result ~= true) then
+        if A.Trace then A.Trace("REPORT_SEND", "rejected/unconfirmed") end
         return false, "Guild send rejected or unconfirmed. No automatic retry."
     end
+    if A.Trace then A.Trace("REPORT_SEND", "accepted id=" .. decoded.id .. " remoteAck=false") end
     -- Show the accepted submission locally. The same wire ID deduplicates self echo.
     local displayed = pcall(A.Receive, decoded)
     if not displayed then A.Print("Guild send accepted, but the local display failed. Check Lua errors before retrying.") end
@@ -121,6 +123,7 @@ function A.OnGuildMessage(prefix, packet, route, sender)
     if size >= 128 and not rates[rateKey] then return end
     local accepted = A.Receive(r)
     if accepted then
+        if A.Trace then A.Trace("REPORT_RECEIVE", "id=" .. r.id .. " sender=" .. A.CleanText(sender,128) .. " test=" .. tostring(r.test)) end
         rates[rateKey] = now
         A.Print((r.test and "[TEST] " or "") .. "Guild report received from " .. A.CleanText(sender,64) .. ".")
     end

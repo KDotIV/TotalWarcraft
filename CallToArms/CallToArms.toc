@@ -2,12 +2,16 @@
 ## Title: Call to Arms
 ## Notes: Lightweight faction activity map and Call to Arms frontend.
 ## Author: Call to Arms
-## Version: 0.4.4-alpha
+## Version: 0.5.2-alpha
 ## Dependencies: Blizzard_MapCanvas
-## SavedVariables: CallToArmsDB
+## OptionalDeps: OpenMap
+## SavedVariables: CallToArmsDB, CallToArmsDiagnosticsDB
 Model.lua
 Scope.lua
 GuildTransport.lua
+Presence.lua
+Diagnostics.lua
+Control.lua
 UI.lua
 Map.lua
 MapPins.xml

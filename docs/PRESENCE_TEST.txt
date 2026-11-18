@@ -1,0 +1,100 @@
+CALL TO ARMS 0.5.2-alpha - GROUP LOCATIONS
+November 18, 2026 | Offline checks passed; all live cases below are OPEN
+
+Install both testers' main addons from releases/CallToArms-0.5.2-alpha.zip.
+No companion/backend or OpenMap installation is required. Reload outside combat
+after an update; restart on first installation. Keep prior report acceptance
+checks in PRE_LAYER_TEST_CHECKLIST.txt; presence does not replace that gate.
+
+COMMANDS / EXPECTATIONS
+/cta presence on      Share location + readable flag/combat state this session
+/cta presence off     Stop sending/receiving and clear local peer markers
+/cta presence        Status, fresh peers, checked within 100yd, unknown range
+/cta                 Group locations switch at the bottom of the activity panel
+/cta status          Release, guild reports, scope, test and presence state
+
+Both players must opt in, in the same outdoor party/raid. These messages can
+reach group members from other guilds; report messages are still guild-only.
+Green plus markers are other opted-in group members. No local self-marker or
+presence toast is generated. Hover shows identity, shared status, position age
+and the explicit "not confirmed PvP / layer unknown" limitation.
+
+LIVE ACCEPTANCE
+[ ] Login/reload defaults OFF, with no presence traffic; command and panel agree.
+[ ] A opts in, B stays off: B shows no CTA peer markers. B then opts in; within
+    about ten seconds both see the other in the matching zone, with correct name
+    and coordinates. Repeat in both directions without needing a shared guild.
+[ ] Move; verify updates about every ten seconds. Stand still; updates continue
+    at that interval. Source positions are self-reported, not exact enemy pins.
+[ ] Presence does not add report/list/toast records, turn bystanders into fighters,
+    change /cta report fight size, or create heat, even with >=4 flagged members.
+[ ] /cta presence checks the 100yd boundary only if a trustworthy distance reference
+    is available; unreadable distance appears as unknown. No complete census claim.
+[ ] Leave/disband, change roster, go offline, opt out and reload. Departed peers
+    disappear on roster refresh; old positions expire within 30s of the last valid
+    update (allow up to the 10s UI sweep). Off/reload clears local markers at once.
+[ ] Toggle on/off quickly and simulate unavailable coordinates without modifying
+    game state: no rapid resend or hidden retry backlog. /cta presence reports the
+    last attempted send, not a remote acknowledgement.
+[ ] Repeat in a raid. One marker per distinct non-self roster GUID, maximum 39.
+[ ] Enter a dungeon/battleground/arena: no location send/display in instances.
+    Return outdoors; sharing resumes only if the session toggle remains enabled.
+[ ] Run normal/test reports alongside sharing; simulated reports do not change
+    the real presence flags. Test off removes test reports, not real peer sharing.
+[ ] Send/receive while each client is in PvE combat, then actual PvP if available.
+    Check errors/blocked actions and visibility. Generic combat is not PvP proof.
+[ ] Test with OpenMap disabled: zone pins, show/hide, resize and map transitions.
+[ ] With OpenMap v0.8.10 or compatible major-1 API in mouse mode: cross-zone report
+    swords and peer markers stay correctly placed through pan, zoom, resize and
+    underlying host-map changes; hover location retains the ORIGINAL zone coords.
+[ ] Switch OpenMap stitched/native mode. No duplicate/misplaced/stuck pins.
+[ ] Gamepad UI: matching-zone fallback only; no promised stitched cross-zone pins.
+[ ] Test permitted different scopes where possible. Record unavailable matrix
+    cases as deferred; addon-side filtering is not transport confidentiality.
+
+WIRE / IMPLEMENTATION REFERENCE
+Prefix CTA_PRES1, exactly ten tab-separated fields, <=255 bytes:
+  1 version: 1
+  2 updatedAt: integer Unix seconds, now-29 through now+5
+  3 mapID: integer 1..100000
+  4 x: integer 0..10000 (rounded normalized coordinate * 10000)
+  5 y: integer 0..10000
+  6 faction: H or A, matching receiver
+  7 ruleset: matching detected receiver scope
+  8 region: integer 1..99, matching receiver
+  9 PvP flag: 0 / 1 / ? (unreadable)
+ 10 generic combat: 0 / 1 / ? (unreadable)
+
+HOME PARTY or RAID only, never GUILD/WHISPER/INSTANCE_CHAT. No relay, chunking,
+queue, recipient discovery, acknowledgement, text parsing or external transport.
+Packets contain no claimed name/GUID/count; identity comes from CHAT_MSG_ADDON
+sender resolved against UnitFullName and GUID of current group roster tokens.
+Realm normalization strips spaces and adds local realm for unqualified senders.
+0.5.1 also accepts actual Forever UnitName first/surname aliases with space/hyphen
+separators. Ambiguous/self aliases are rejected; it does not guess aliases between
+Forever realm pools. Test real realm labels and capture /cta layer snapshots.
+Recipient consent is required. Packets are still group broadcasts; the scope
+filter is not confidentiality or independent verification of shared state.
+
+Each sender attempts at most once per 10 seconds, including failed attempts.
+Recipients reject same/older timestamps and updates <5 seconds apart per peer.
+Global budget: 80 messages, refill 8/second; identity/store bounded by 40 roster
+tokens. Peer expiry=min(updatedAt+30,receiptServerTime+30). Self echo excluded.
+Ticker only exists while sharing is enabled. No persisted location history.
+Opt-out sends no withdrawal; remote stale dots age out. Roster events and the
+ten-second tick refresh membership; leaving a group removes inaccessible peers.
+
+Missing/secret/error APIs skip data. Readable self flags may accompany a position;
+otherwise they use ?. A distance unknown is not zero/nearby. No yard distance is
+inferred from normalized coordinates; no layer ID or battle center is inferred.
+
+Run offline with a Python environment containing lupa:
+  python tests/test_addon.py
+  python tests/test_reporting.py
+  python tests/test_identity.py
+  python tests/test_guild_reports.py
+  python tests/test_presence.py
+  python tests/test_diagnostics.py
+Mock tests cover separate clients, defaults, roster identity, packet/scope/time
+rejection, duplicates, raid bound, throttling, expiry, API failures/secrets, marker
+pooling and OpenMap transforms/fallback. They do not prove live game behavior.
