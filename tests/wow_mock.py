@@ -46,6 +46,8 @@ function methods:SetTexture(path)
  assert(not path:find('CrossedSwords',1,true),'Report pins must not load file textures')
  self.texture=path
 end
+function methods:GetTexture() return self.texture end
+function methods:SetTexCoord(...) self.texCoord={...} end
 function methods:SetPoint(...) self.point={...} end
 function methods:SetSize(w,h) self.w=w; self.h=h end
 function methods:SetWidth(w) self.w=w end

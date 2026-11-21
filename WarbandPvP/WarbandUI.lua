@@ -116,7 +116,7 @@ function A.ShowWarbands()
         button(f,"Recruitment",302,-628,248,A.ShowFinder)
         f:HookScript("OnShow",A.RefreshWarbandUI)
     end
-    W.panel:Show(); A.RefreshWarbandUI(); A.FinderSearch()
+    W.panel:Show(); A.RefreshWarbandUI()
 end
 function A.ShowWarbandWatches()
     if not W.watchPanel then
@@ -167,7 +167,7 @@ function A.RefreshWarbandUI()
         f.page:SetText(W.page.." / "..pages); f.empty:SetShown(#list==0)
         for i,row in ipairs(f.rows) do
             local r=list[(W.page-1)*3+i]; row.record=r; row:SetShown(r~=nil)
-            if r then row.title:SetText(A.WarbandDisplayTitle(r).." | "..r.status); row.meta:SetText(A.LocationText(r).."\n"..r.count.." WBP clients | "..r.owner) end
+            if r then row.title:SetText(A.WarbandDisplayTitle(r).." | "..r.status); row.meta:SetText(A.LocationText(r).."\n"..r.count.." TotalWarcraft clients | "..r.owner) end
         end
         local chosen
         for _,invite in pairs(W.invites) do if invite.untilAt>GetTime() and (not chosen or invite.name<chosen.name) then chosen=invite end end
@@ -206,9 +206,9 @@ function A.ShowFinder()
         f.status=label(f,30,-166,520); f.status:SetHeight(52)
         f.toggle=button(f,"",30,-226,248,function() A.SetFinderEnabled(not A.db.finderEnabled) end)
         button(f,"Search warbands",302,-226,248,function()
-            if not W.enabled then A.SetWarbandsEnabled(true) else local _,msg=A.FinderSearch(); A.Print(msg) end
+            local _,msg=A.FinderSearch(); A.Print(msg)
         end)
-        label(f,30,-270,520):SetText("Choose the activity that describes your outdoor PvP group.\nThis publishes a normal listing visible to other Finder users.")
+        label(f,30,-270,520):SetText("Search lists warbands; click Join to request membership.\nPublic listings follow the rally zone under Competitive.")
         f.selected=label(f,30,-310,520,"GameFontNormal")
         f.rows={}
         for i=1,5 do
@@ -237,7 +237,7 @@ function A.RefreshFinderUI()
     f.toggle:SetText(A.db.finderEnabled and "Public recruitment: ON" or "Public recruitment: OFF")
     local selected="None"
     for _,c in ipairs(choices) do if c.id==A.db.finderActivity then selected=c.name end end
-    f.selected:SetText("Selected: "..selected); f.page:SetText(F.page.." / "..pages); f.empty:SetShown(#choices==0)
+    f.selected:SetText("Search activity: "..selected); f.page:SetText(F.page.." / "..pages); f.empty:SetShown(#choices==0)
     for i,row in ipairs(f.rows) do
         local c=choices[(F.page-1)*5+i]; row.activity=c and c.id; row:SetShown(c~=nil)
         if c then row:SetText((c.id==A.db.finderActivity and "> " or "")..c.name..(c.manual and " *" or "")) end

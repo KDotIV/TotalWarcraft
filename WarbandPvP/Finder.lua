@@ -1,6 +1,6 @@
 local _,A=...
 local P,W=A.WB,A.warbands
-local F={pending={},probed={},choices={},status="Choose a recruitment activity in Warband-PvP."}
+local F={pending={},probed={},choices={},status="Recruitment idle. Start a warband, or explicitly search for one to join."}
 A.finder=F
 -- Finder is a public recruitment directory, never a world-layer selector.
 -- All identity/UUID data travels over our scoped addon protocol, not listing text.
@@ -52,7 +52,7 @@ function A.FinderChoices(refresh)
                     local name=field(info,"fullName")
                     if field(info,"categoryID")==category and type(name)=="string" and #name>0 and #name<=160 then
                         seen[id]=true
-                        choices[#choices+1]={id=id,category=category,name=A.CleanText(name,100),
+                        choices[#choices+1]={id=id,category=category,name=A.CleanText(name,100),zoneName=name,
                             manual=field(ci,"autoChooseActivity")~=false}
                     end
                 end
@@ -65,16 +65,34 @@ end
 local function selection()
     for _,c in ipairs(A.FinderChoices()) do if c.id==A.db.finderActivity then return c end end
 end
+local function zoneChoice(mapID)
+    local name=field(P.Read(C_Map and C_Map.GetMapInfo,mapID),"name")
+    if type(name)~="string" or name=="" then return nil,"Rally zone unavailable; public posting paused." end
+    local match
+    -- Exact localized native zone name, only in Forever's Competitive category.
+    -- Activity mapID is not assumed to be a UI map ID. No fuzzy zone guesses.
+    for _,c in ipairs(A.FinderChoices()) do
+        if c.category==118 and c.zoneName==name then
+            if match then return nil,"Multiple Competitive entries for "..A.CleanText(name,80).."; public posting paused." end
+            match=c
+        end
+    end
+    if match then return match end
+    return nil,"No Competitive listing for "..A.CleanText(name,80).."; public posting paused."
+end
 local function party()
     if not live() then return end
     local info=A.WarbandNativeInfo()
     if not info or info.mode=="member" or info.count>=5 then return end
     local h,m=W.host,W.member
-    if h and h.recruiting then return {id=h.id,session=W.session,owner=h.owner,slot=1} end
+    if h and h.recruiting then
+        local loc=h.mode=="follow" and A.CurrentLocation() or h.rally
+        return {id=h.id,session=W.session,owner=h.owner,slot=1,mapID=loc and loc.mapID}
+    end
     local r=m and W.records[m.id]
     if m and m.untilAt>GetTime() and P.Key(m.host)==P.Key(P.UnitName("player"))
         and r and r.session==m.session and r.expiresAt>GetServerTime() and r.recruiting then
-        return {id=m.id,session=m.session,owner=m.owner,slot=m.slot}
+        return {id=m.id,session=m.session,owner=m.owner,slot=m.slot,mapID=r.mapID}
     end
 end
 -- Refuse to touch unreadable entries. Observe a stable content fingerprint, not
@@ -108,18 +126,18 @@ local function reconcile(created)
     local op=F.operation
     if op then
         if op.kind=="update" and created==true then
-            F.operation=nil; F.owned=nil; status("Finder listing replaced; Warband-PvP released control."); return
+            F.operation=nil; F.owned=nil; status("Finder listing replaced; TotalWarcraft released control."); return
         end
         if op.kind=="remove" and has==false then F.operation=nil; F.owned=nil; status("Recruitment listing removed.")
         elseif op.kind~="remove" and has==true and fp and id==op.activity and field(entry,"comment")==""
             and field(entry,"autoAccept")==false and field(entry,"privateGroup")==false
             and field(entry,"isCrossFactionListing")==false then
             F.owned={fingerprint=fp,activity=id,warband=op.warband}; F.operation=nil
-            status("Recruitment listing active; joins stay in Warband-PvP.")
+            status("Listed in "..(op.zoneName or "the rally zone").."; joins stay in TotalWarcraft.")
         end
     elseif F.owned and (created==true or has==false or (fp and fp~=F.owned.fingerprint)) then
         F.owned=nil
-        status(has==false and "Recruitment listing closed." or "Existing listing changed; Warband-PvP released control.")
+        status(has==false and "Recruitment listing closed." or "Existing listing changed; TotalWarcraft released control.")
     end
 end
 function A.FinderSync(retry)
@@ -131,17 +149,23 @@ function A.FinderSync(retry)
             if kind=="D" or kind=="F" then W.queue[key]=nil end
         end
     end
+    local p=party()
+    if A.db.finderEnabled~=true then p=nil end
+    -- Discovery alone is not consent to recruit. An idle addon does not inspect
+    -- native listings, enumerate activities, or react to combat/roster changes.
+    -- Finish cleanup only for a listing this session actually owns/created.
+    if not p and not F.owned and not F.operation then return end
     reconcile()
     if F.operation then return end
-    local p=party(); local chosen=selection()
-    if A.db.finderEnabled~=true then p=nil end
+    local chosen,zoneReason
+    if p then chosen,zoneReason=zoneChoice(p.mapID) end
     local has,entry=active(); local fp=fingerprint(entry)
     if has==nil or (has and not fp) then status("Recruitment state unavailable; known contacts still work."); return end
     if F.owned and has and fp~=F.owned.fingerprint then F.owned=nil end
     if has and not F.owned then status("Your existing Finder listing is left under your control."); return end
     local shouldRemove=F.owned and (not p or not chosen or chosen.manual or F.owned.warband~=p.id)
     local key=shouldRemove and ("remove:"..F.owned.fingerprint)
-        or p and chosen and (p.id..":"..chosen.id) or "idle"
+        or p and chosen and (p.id..":"..chosen.id..":"..tostring(chosen.manual)) or "idle"
     if not retry and F.attemptKey==key then return end
     if retry and F.lastAttempt and GetTime()-F.lastAttempt<5 then status("Wait a few seconds before retrying recruitment."); return end
     if P.Read(InCombatLockdown)~=false then status("Recruitment waits until combat ends."); return end
@@ -157,15 +181,16 @@ function A.FinderSync(retry)
         status(A.db.finderEnabled and "Recruitment ready when you lead a warband party with space." or "Public recruitment off; known contacts still work.")
         return
     end
-    if not chosen then status("Choose a suitable PvP / Custom activity in Recruitment."); return end
+    if not chosen then status(zoneReason or "Rally zone unavailable; public posting paused."); return end
     if chosen.manual then status("This activity needs manual Finder text; background posting unavailable."); return end
     if F.owned and F.owned.activity==chosen.id then return end
+    if F.lastAttempt and GetTime()-F.lastAttempt<5 then return end
     F.attemptKey=key; F.lastAttempt=GetTime()
-    if not available() then status("Finder unavailable; use known contacts in Warband-PvP."); return end
+    if not available() then status("Finder unavailable; use known contacts in TotalWarcraft."); return end
     -- Clear through the supported API only. Never set/paste protected edit boxes.
     if not call("ClearCreationTextFields") then status("Listing text unavailable; background posting blocked."); return end
     local kind=F.owned and "update" or "create"
-    F.operation={kind=kind,activity=chosen.id,warband=p.id,at=GetTime()}
+    F.operation={kind=kind,activity=chosen.id,zoneName=chosen.name,warband=p.id,at=GetTime()}
     local ok,value=call(kind=="update" and "UpdateListing" or "CreateListing",{
         activityIDs={chosen.id},isAutoAccept=false,isCrossFactionListing=false,isPrivateGroup=false,
         newPlayerFriendly=false,generalPlaystyle=0,voiceMode=0})
@@ -182,21 +207,25 @@ end
 function A.SelectFinderActivity(id)
     if F.operation then return false,"Wait for the current listing operation." end
     for _,c in ipairs(A.FinderChoices()) do if c.id==id then
-        A.db.finderActivity=id; F.attemptKey=nil; A.FinderSync(true)
-        return true,c.manual and "Selected for discovery; this category cannot be posted in the background." or "Recruitment activity selected."
+        A.db.finderActivity=id
+        return true,"Search activity selected. Public listings follow your warband's rally zone."
     end end
     return false,"That activity is not available on this client."
 end
 function A.FinderSearch()
+    -- Called only by the explicit Search button or /tw find. Search results
+    -- subscribe to listings; neither this path nor a result handler joins them.
+    if not W.enabled then A.SetWarbandsEnabled(true) end
     if not live() or A.db.finderEnabled~=true then return false,"Enable discovery and public recruitment first." end
     local c=selection()
+    if not c then local loc=A.CurrentLocation(); c=zoneChoice(loc and loc.mapID) end
     if not c then return false,"Choose a suitable activity in Recruitment first." end
     if F.search or (F.lastSearch and GetTime()-F.lastSearch<30) then return false,"Recruitment searches are limited to once every 30 seconds." end
     if P.Read(InCombatLockdown)~=false then return false,"Search after combat." end
     F.search={activity=c.id,untilAt=GetTime()+12}; F.lastSearch=GetTime()
     local ok=call("Search",c.category,0,0,nil,false,nil,{c.id})
     if not ok then F.search=nil; status("Recruitment search blocked; retry here when available."); return false,F.status end
-    status("Searching for Warband-PvP party leaders."); return true,F.status
+    status("Searching for TotalWarcraft party leaders."); return true,F.status
 end
 local function results()
     local search=F.search; F.search=nil
@@ -222,13 +251,15 @@ local function results()
             end
         end
     end
-    status(probes>0 and "Checking fresh Warband-PvP affiliations; open the warband board." or "No new eligible leaders found; known contacts still work.")
+    status(probes>0 and "Checking fresh TotalWarcraft affiliations; open the warband board." or "No new eligible leaders found; known contacts still work.")
 end
 function A.OnFinderDiscovery(f,sender,key)
     if not live() or A.db.finderEnabled~=true then return end
     if f[2]=="D" then
-        local p=party(); local has,entry=active(); local fp=fingerprint(entry)
-        if not p or not F.owned or F.operation or has~=true or fp~=F.owned.fingerprint or F.owned.warband~=p.id then return end
+        local p=party()
+        if not p or not F.owned or F.operation then return end
+        local has,entry=active(); local fp=fingerprint(entry)
+        if has~=true or fp~=F.owned.fingerprint or F.owned.warband~=p.id then return end
         local rate=W.rates[key]
         if not rate or (rate.finderAt and GetTime()-rate.finderAt<30) then return end
         rate.finderAt=GetTime()
@@ -266,6 +297,6 @@ function A.InitFinder()
     F.events:SetScript("OnEvent",function(_,e,created)
         if e=="LFG_LIST_SEARCH_RESULTS_RECEIVED" then results()
         elseif e=="LFG_LIST_SEARCH_FAILED" and F.search then F.search=nil; status("Recruitment search failed; retry here.")
-        elseif e=="LFG_LIST_ACTIVE_ENTRY_UPDATE" then reconcile(created) end
+        elseif e=="LFG_LIST_ACTIVE_ENTRY_UPDATE" and (F.owned or F.operation) then reconcile(created) end
     end)
 end

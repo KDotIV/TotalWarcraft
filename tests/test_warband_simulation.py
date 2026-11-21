@@ -12,7 +12,7 @@ bob=net.add('Bob Two', 'B')
 carol=net.add('Carol Three', 'C')
 observer=net.add('Normal Observer')
 report_tester=net.add('Report Tester')
-# Can test from one real party, or solo: only the WBP feature's roster input changes.
+# Can test from one real party, or solo: only the TotalWarcraft feature's roster input changes.
 net.party('Alice One',['Alice One','Bob Two','Carol Three'])
 for lua in (observer,report_tester):
     say(lua,'on')

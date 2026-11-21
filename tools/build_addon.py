@@ -7,11 +7,11 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "WarbandPvP"
-VERSION = "0.7.1-alpha"
+VERSION = "0.7.4"
 PRODUCTION = ["Model.lua", "Theme.lua", "Windows.lua", "Scope.lua", "GuildTransport.lua",
               "Presence.lua", "SessionLog.lua", "WarbandProtocol.lua", "Warbands.lua", "Finder.lua",
-              "Scouting.lua", "ScoutingUI.lua", "WarbandUI.lua", "UI.lua", "Map.lua", "MapPins.xml", "Report.lua",
-              "Notifications.lua", "Core.lua", "Bindings.xml", "README.txt", "LICENSE.txt"]
+              "Scouting.lua", "ScoutingUI.lua", "WarbandUI.lua", "UI.lua", "Help.lua", "Activity.lua", "Map.lua", "MapPins.xml", "Report.lua", "AutoReports.lua",
+              "Notifications.lua", "Core.lua", "Bindings.xml", "README.txt", "CHANGELOG.txt", "LICENSE.txt"]
 DEVELOPMENT = ["Diagnostics.lua", "Control.lua", "WarbandSimulation.lua", "Development.lua", "WARBAND_TESTING.txt"]
 
 def compile_lua(text, flavor):
@@ -49,18 +49,23 @@ def build(flavor="release"):
         path = SOURCE / relative
         if path.is_symlink() or not path.is_file():
             raise ValueError(f"Missing/unsafe build input: {relative}")
-        data[relative] = (compile_lua(path.read_text(encoding="utf-8"), flavor).encode()
-                          if path.suffix == ".lua" else path.read_bytes())
-    toc = ["## Interface: 16001", "## Title: Warband-PvP" + (" (Developer)" if flavor == "dev" else ""),
+        if path.suffix == ".lua":
+            data[relative] = compile_lua(path.read_text(encoding="utf-8"), flavor).encode()
+        elif path.suffix in (".txt", ".xml", ".toc"):
+            # Stable archives across Windows development and Linux Actions runners.
+            data[relative] = path.read_text(encoding="utf-8").encode()
+        else:
+            data[relative] = path.read_bytes()
+    toc = ["## Interface: 16001", "## Title: TotalWarcraft" + (" (Developer)" if flavor == "dev" else ""),
            "## Notes: Form parties to seek out world PvP or rally your faction against enemy attacks.",
            "## X-Curse-Project-ID: 1819796",
-           "## Author: Warband-PvP", "## Version: " + version,
+           "## Author: TotalWarcraft", "## Version: " + version,
            "## Dependencies: Blizzard_MapCanvas", "## OptionalDeps: OpenMap",
            "## SavedVariables: WarbandPvPDB" + (", WarbandPvPDiagnosticsDB" if flavor == "dev" else ""), "Build.lua"]
     toc += [f for f in files if f.endswith((".lua", ".xml")) and f != "Bindings.xml"]
     data["Build.lua"] = f'local _, A = ...\nA.release = "{version}"\nA.buildFlavor = "{flavor}"\n'.encode()
     data["WarbandPvP.toc"] = ("\n".join(toc) + "\n").encode()
-    out = ROOT / "releases" / f"WarbandPvP-{VERSION}-{flavor}"
+    out = ROOT / "releases" / f"TotalWarcraft-{VERSION}-{flavor}"
     stage = out / "WarbandPvP"
     stage.mkdir(parents=True, exist_ok=True)
     for old in stage.rglob("*"):

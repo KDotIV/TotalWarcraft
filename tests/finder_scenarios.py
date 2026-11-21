@@ -5,6 +5,7 @@ MOCK = r'''
 ACTIVE=nil; DESIRED=nil; RESULTS={}; creates=0; updates=0; removes=0; searches=0
 function finderEvent(event,arg) A.finder.events.scripts.OnEvent(nil,event,arg) end
 local function entry(data)
+ assert(data.isAutoAccept==false and data.isCrossFactionListing==false and data.isPrivateGroup==false)
  return {activityIDs=data.activityIDs,name='Outdoor PvP',comment='',voiceChat='',voiceMode=0,
   autoAccept=false,privateGroup=false,isCrossFactionListing=false,newPlayerFriendly=false}
 end
@@ -17,7 +18,7 @@ C_LFGList={
  GetAvailableCategories=function() return {2,118,120} end,
  GetAvailableActivities=function(c) return c==118 and {1001,1002} or {1003} end,
  GetLfgCategoryInfo=function(c) return {autoChooseActivity=c==120} end,
- GetActivityInfoTable=function(id) return {categoryID=id==1003 and 120 or 118,fullName='Activity '..id} end,
+ GetActivityInfoTable=function(id) return {categoryID=id==1003 and 120 or 118,fullName='Zone '..(id-1000)} end,
  HasActiveEntryInfo=function() return ACTIVE~=nil end,
  GetActiveEntryInfo=function() return ACTIVE end,
  ClearCreationTextFields=function() end,
@@ -59,7 +60,7 @@ def check_finder():
     peer.execute('A.warbands.enabled=true')
     discover(peer, 'Host One')
     net.advance(17)
-    peer.execute("assert(#A.WarbandList()==1 and A.warbands.watches['host-one'].expectedID); assert(A.JoinWarband(A.WarbandList()[1].id))")
+    peer.execute("assert(#A.WarbandList()==1 and A.warbands.watches['host-one'].expectedID); assert(not A.warbands.join and not A.warbands.member and #invited==0); assert(A.JoinWarband(A.WarbandList()[1].id))")
     net.advance(4)
     host.execute("assert(#invited==1 and invited[1]=='Peer Two'); assert(A.warbands.invites['peer-two'])")
     peer.execute("assert(A.warbands.member and not IsInGroup()); assert(A.WarbandArrival(A.WarbandList()[1]):find('waiting for native party',1,true))")
@@ -69,8 +70,8 @@ def check_finder():
     net.advance(2)
     host.execute("assert(not A.warbands.invites['peer-two'])")
     peer.execute("assert(A.WarbandArrival(A.WarbandList()[1]):find('unverified',1,true))")
-    # Owned listings update only after a new activity is chosen; full parties delist.
-    host.execute('assert(A.SelectFinderActivity(1002)); assert(updates==1); finishListing(); assert(A.finder.owned.activity==1002)')
+    # Search selection cannot redirect the listing. Follow-mode rally moves can.
+    host.execute('assert(A.SelectFinderActivity(1002)); assert(updates==0); MAP=2; A.FinderSync(); assert(updates==1); finishListing(); assert(A.finder.owned.activity==1002)')
     net.party('Host One', ['Host One', 'Peer Two', 'Helper Three', 'Helper Four', 'Helper Five'])
     net.advance(2)
     host.execute('assert(removes==1); finishListing(); assert(not A.finder.owned)')
@@ -111,12 +112,14 @@ for i=1,60 do CLOCK=CLOCK+1; A.FinderTick() end
 assert(creates==3)
 -- Categories requiring a protected manual comment never attempt a background post.
 assert(A.SelectFinderActivity(1003)); assert(creates==3)
+C_LFGList.GetLfgCategoryInfo=function() return {autoChooseActivity=true} end
+A.finder.choicesAt=nil; A.FinderSync(); assert(creates==3)
 assert(A.finder.status:find('manual',1,true))
 -- UI stays within the shared non-overlapping navigator.
 A.ShowWarbands(); A.ShowFinder(); assert(A.finder.panel:IsShown() and not A.warbands.panel:IsShown())
 A.BackWindow(); assert(A.warbands.panel:IsShown() and not A.finder.panel:IsShown())
 ''')
-    # Malicious/expired replies and non-WBP leaders do not populate the board.
+    # Malicious/expired replies and non-TotalWarcraft leaders do not populate the board.
     loner = client('Loner Six'); loner.execute(WORLD); install(loner)
     loner.execute(r'''
 A.warbands.enabled=true
@@ -147,10 +150,11 @@ def check_delegated_recruitment():
         install(lua)
     net.party('Root One',['Root One','A One','B Two','C Three','D Four'])
     net.party('Captain Two',['Captain Two','Helper Five'])
+    captain.execute('MAP=2')  # captain travels elsewhere; listing must use root rally
     root.execute("assert(A.StartWarband('Multiple parties')); assert(creates==0)")
     say(captain,'watch Root One'); net.advance(17)
     captain.execute('assert(A.JoinWarband(A.WarbandList()[1].id))'); net.advance(4)
-    captain.execute('assert(A.warbands.member.slot==2 and creates==1); finishListing()')
+    captain.execute('assert(A.warbands.member.slot==2 and creates==1 and DESIRED.activityIDs[1]==1001); finishListing()')
     # A coordinator cannot trigger arbitrary automatic native invitations alone.
     forged=root.eval("A.WB.Request('I',A.warbands.host.id,A.warbands.session,A.WB.UUID(),{2,'Unconsenting Player'})")
     captain.globals().A.OnWarbandMessage('WBP_WB1',forged,'WHISPER','Root One')
@@ -164,3 +168,82 @@ def check_delegated_recruitment():
     recruit.execute("assert(A.warbands.member.slot==2 and A.warbands.member.host=='Captain Two'); assert(not IsInGroup())")
     root.execute('A.LeaveWarband()'); net.advance(4)
     captain.execute('assert(removes==1); finishListing(); assert(not A.finder.owned)')
+
+
+def check_idle_and_consent(client):
+    from warband_network import WORLD
+    idle=client('Idle Observer'); idle.execute(WORLD); install(idle)
+    idle.execute(r'''
+local calls=0
+for key,fn in pairs(C_LFGList) do C_LFGList[key]=function(...) calls=calls+1; return fn(...) end end
+A.ShowHome(); A.ShowWarbands(); A.SetWarbandsEnabled(true)
+for i=1,300 do
+ CLOCK=CLOCK+1
+ InCombatLockdown=function() return i%2==0 end
+ finderEvent('LFG_LIST_ACTIVE_ENTRY_UPDATE',true)
+ A.WarbandTick()
+end
+assert(calls==0 and creates==0 and updates==0 and removes==0 and searches==0 and #invited==0)
+A.OnFinderDiscovery({'1','D'},'Unrelated Player','unrelated-player'); assert(calls==0)
+A.warbands.invites['random-player']={name='Random Player',consented=true,slot=1,untilAt=CLOCK+30}
+assert(not A.InviteWarbandMember('Random Player')); assert(#invited==0)
+InCombatLockdown=function() return false end
+assert(A.FinderSearch()); assert(searches==1 and not A.warbands.join and not A.warbands.member)
+-- Passive attribution observes other workflows without blocking/redirecting them.
+function hooksecurefunc(t,key,after)
+ local original=t[key]; t[key]=function(...) local result=original(...); after(...); return result end
+end
+A.InitSessionLog(); C_PartyInfo.InviteUnit('LayerSwap Guest')
+assert(invited[1]=='LayerSwap Guest' and A.SessionLogText():find('NATIVE_INVITE_CALL',1,true))
+assert(A.SessionLogText():find('origin unverified',1,true))
+''')
+    net=Network(); host=net.add('Host One'); peer=net.add('Peer Two')
+    for lua in (host,peer): install(lua)
+    host.execute("assert(A.StartWarband('Consent patrol')); finishListing(); InCombatLockdown=function() return true end")
+    peer.execute('A.SetWarbandsEnabled(true)'); net.advance(17)
+    peer.execute('assert(A.JoinWarband(A.WarbandList()[1].id))'); net.advance(4)
+    host.execute(r'''
+local W=A.warbands; local key='peer-two'; local invite=W.invites[key]
+assert(invite and W.inviteConsents[key] and #invited==0)
+InCombatLockdown=function() return false end
+local consent=W.inviteConsents[key]; W.inviteConsents[key]=nil
+assert(not A.InviteWarbandMember('Peer Two') and #invited==0)
+W.inviteConsents[key]=consent; local session=consent.memberSession; consent.memberSession='stale'
+assert(not A.InviteWarbandMember('Peer Two') and #invited==0)
+consent.memberSession=session; consent.untilAt=CLOCK-1
+assert(not A.InviteWarbandMember('Peer Two') and #invited==0)
+consent.untilAt=CLOCK+30; invite.session='stale'
+assert(not A.InviteWarbandMember('Peer Two') and #invited==0)
+invite.session=W.session; W.invites[key]=invite; W.inviteConsents[key]=consent
+InCombatLockdown=function() return true end
+A.LeaveWarband(); InCombatLockdown=function() return false end
+CLOCK=CLOCK+1; A.WarbandTick(); assert(#invited==0 and not next(W.invites))
+''')
+
+
+def check_rally_zone(client):
+    from warband_network import WORLD
+    lua=client('Zone Leader'); lua.execute(WORLD); install(lua)
+    lua.execute(r'''
+A.db.finderActivity=nil
+assert(A.StartWarband('Zone patrol')); assert(DESIRED.activityIDs[1]==1001); finishListing()
+-- A fixed rally wins even when the host travels to another zone.
+A.WarbandCommand('rally'); MAP=2; CLOCK=CLOCK+16; A.FinderSync()
+assert(updates==0 and A.finder.owned.activity==1001)
+A.WarbandCommand('rally'); A.FinderSync(); assert(updates==1); finishListing()
+assert(A.finder.owned.activity==1002)
+-- Unavailable zones remove only our old listing; never choose an unrelated activity.
+MAP=999; A.WarbandCommand('rally'); CLOCK=CLOCK+16; A.FinderSync()
+assert(removes==1); finishListing(); A.FinderSync()
+assert(A.finder.status:find('No Competitive listing',1,true) and creates==1)
+-- Ambiguous native names are not guessed. Localized exact names do work.
+C_LFGList.GetActivityInfoTable=function(id) return {categoryID=118,fullName='Tal des Schlingendorntals'} end
+C_Map.GetMapInfo=function() return {name='Tal des Schlingendorntals'} end
+A.finder.choicesAt=nil; A.FinderSync(); assert(creates==1 and A.finder.status:find('Multiple',1,true))
+C_LFGList.GetAvailableActivities=function(c) return c==118 and {1002} or {} end
+A.finder.choicesAt=nil; CLOCK=CLOCK+6; A.FinderSync()
+assert(creates==2 and DESIRED.activityIDs[1]==1002); finishListing()
+-- Another addon/native UI taking over the party is respected.
+PARTY={PLAYER,'Layer Host'}; nativeLeader='Layer Host'; CLOCK=CLOCK+6; A.FinderSync()
+assert(removes==2); finishListing(); assert(not A.finder.owned)
+''')

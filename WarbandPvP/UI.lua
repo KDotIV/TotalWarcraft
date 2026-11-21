@@ -5,17 +5,21 @@ A.colors.heat={1,.42,.20}; A.colors.defense={.35,.75,1}; A.colors.raid={1,.76,.2
 A.testColor={.8,.45,1}
 --@enddev
 local label,button=A.Label,A.Button
-function A.Tooltip(owner, r)
+function A.Tooltip(owner, r, activity)
     if r.expiresAt <= GetServerTime() then return end
     A.tooltipRecord = r
     GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
     GameTooltip:AddLine(A.DisplayTitle(r), 1, .82, .35)
     GameTooltip:AddLine(A.LocationText(r), 1, 1, 1)
-    GameTooltip:AddLine(A.CountText(r), 1, 1, 1)
+    if activity and activity.label~="" then GameTooltip:AddLine(activity.label,1,.35,.18) end
+    local count,scout=A.CountText(r),A.ScoutSummary(r)
+    if count~="" then GameTooltip:AddLine(count, 1, 1, 1) end
     if r.reporter ~= "" then GameTooltip:AddLine("Reported by: " .. r.reporter, .7, .7, .7) end
     if r.opposition ~= "" then GameTooltip:AddLine("Reported opposition: " .. r.opposition, 1, .6, .5, true) end
-    if r.note ~= "" then GameTooltip:AddLine(r.note, .8, .8, .8, true) end
-    GameTooltip:AddLine(A.ScoutSummary(r),1,.65,.3,true)
+--@dev
+    if (r.test or r.demo) and r.note ~= "" then GameTooltip:AddLine(r.note, .8, .8, .8, true) end
+--@enddev
+    if scout~="" then GameTooltip:AddLine(scout,1,.65,.3,true) end
     GameTooltip:AddLine("Expires in " .. math.max(0, r.expiresAt - GetServerTime()) .. "s", .6, .6, .6)
     GameTooltip:Show()
 end
@@ -29,23 +33,23 @@ function A.ClearReports()
 end
 function A.ShowHome()
     if not A.home then
-        local f=A.Surface("WarbandPvPHome",580,720,"WARBAND-PVP")
+        local f=A.Surface("WarbandPvPHome",580,720,"TOTALWARCRAFT")
         A.home=f
         label(f,30,-164,520,"FIELD COMMAND  /  Reports, rallies and troop movement","GameFontNormal")
         f.status=label(f,30,-194,520,""); f.status:SetHeight(50)
-        button(f,"Report PvP here",30,-258,248,A.RunReport)
+        button(f,"Create Warband",30,-258,248,A.ShowWarbands)
         button(f,"Read field reports",302,-258,248,function() A.BuildUI(); A.panel:Show() end)
-        button(f,"Warbands",30,-310,248,A.ShowWarbands)
-        button(f,"Group locations",302,-310,248,A.ShowPresence)
-        button(f,"Session journal / Export",30,-362,248,A.ShowExport)
-        button(f,"Keybindings",302,-362,248,A.ShowBindings)
+        button(f,"Group locations",30,-310,248,A.ShowPresence)
+        button(f,"Session journal / Export",302,-310,248,A.ShowExport)
+        button(f,"Keybindings",30,-362,248,A.ShowBindings)
+        button(f,"Help",302,-362,248,A.ShowHelp)
         f.mute=button(f,"",30,-414,248,function()
             A.db.muted=not A.db.muted
             if A.db.muted and A.toast then A.toast:Hide() end
             A.RefreshHome()
         end)
-        button(f,"Field guide / Status",302,-414,248,A.ShowHelp)
-        label(f,30,-478,520,"Reports are observations. Warbands show potential action.\nNeither confirms fight size or a shared layer.")
+        f.auto=button(f,"",302,-414,248,function() A.SetAutoReportsEnabled(not A.db.autoReports) end)
+        label(f,30,-478,520,"PvP reports are automatic during eligible outdoor combat.\nUse your report keybind or /tw report to report manually.")
         label(f,30,-535,520,"Discovery: guild, party, named organizers and optional recruitment.\nLocation sharing is opt-in for this session.")
         label(f,30,-594,520,"Report: crossed crimson swords   Warband: gold axe and sword\nGroup leader: numbered gold marker   Presence: jade cross")
         f:HookScript("OnShow",A.RefreshHome)
@@ -61,6 +65,7 @@ function A.RefreshHome()
     A.home.status:SetText((UnitFactionGroup("player") or "Unknown faction").." | "..(A.scopeRuleset or "Scope unavailable").." | "..A.release
         .."\n"..#A.List().." field reports | "..#A.WarbandList().." warbands | "..fresh.." sharing peers")
     A.home.mute:SetText(A.db.muted and "Alerts: muted" or "Alerts: on")
+    A.home.auto:SetText(A.db.autoReports and "Auto reports: on" or "Auto reports: off")
 end
 function A.BuildUI()
     if A.panel then return end
@@ -81,11 +86,11 @@ function A.BuildUI()
         row:SetScript("OnLeave",function() GameTooltip:Hide(); A.tooltipRecord=nil end)
         p.rows[i]=row
     end
-    p.empty=label(p,35,-270,510,"No active field reports.\n\nReport an observed fight to WBP users in your guild.\nReports expire after five minutes; fight size stays unknown.")
+    p.empty=label(p,35,-270,510,"No active field reports.\n\nEligible outdoor PvP combat creates a guild report.\nManual reports: use your report keybind or /tw report.\nReports expire after five minutes.")
     button(p,"Previous",30,-565,110,function() A.page=math.max(1,A.page-1); A.RefreshUI() end)
     p.page=label(p,240,-571,140,"")
     button(p,"Next",440,-565,110,function() A.page=A.page+1; A.RefreshUI() end)
-    button(p,"Report PvP here",30,-615,248,A.RunReport)
+    button(p,"Reporting help",30,-615,248,function() A.ShowHelp(2) end)
     button(p,"Clear local reports",302,-615,248,A.ClearReports)
     p:HookScript("OnShow",A.RefreshUI)
 end
@@ -95,7 +100,7 @@ function A.RefreshUI()
     local p=A.panel
     if not p or not p:IsShown() then return end
     local list=A.List(); local pages=math.max(1,math.ceil(#list/5)); A.page=math.min(A.page,pages)
-    p.status:SetText((A.guildReady and A.scopeRuleset and "Guild reports" or "Transport unavailable").." | Observations, not confirmed combatants")
+    p.status:SetText(A.guildReady and A.scopeRuleset and "Guild reports" or "Transport unavailable")
     p.page:SetText(A.page.." / "..pages); p.empty:SetShown(#list==0)
     for i,row in ipairs(p.rows) do
         local r=list[(A.page-1)*5+i]; row.record=r; row:SetShown(r~=nil)
@@ -106,7 +111,8 @@ function A.RefreshUI()
             --@enddev
             row.bar:SetColorTexture(c[1],c[2],c[3],1)
             row.title:SetText(A.DisplayTitle(r)); row.where:SetText(A.LocationText(r))
-            row.meta:SetText(A.CountText(r).." | "..math.ceil((r.expiresAt-GetServerTime())/60).."m left")
+            local count=A.CountText(r)
+            row.meta:SetText((count~="" and count.." | " or "")..math.ceil((r.expiresAt-GetServerTime())/60).."m left")
         end
     end
 end
@@ -133,15 +139,6 @@ function A.RefreshPresenceUI()
     if #peers==0 then rows[#rows+1]="No fresh locations. Both players must enable sharing\nand be in the same outdoor native group." end
     rows[#rows+1]="\nLayer unverified. Locations expire after 30 seconds."
     f.body:SetText(table.concat(rows,"\n"))
-end
-function A.ShowHelp()
-    if not A.helpPanel then
-        local f=A.Surface("WarbandPvPHelp",580,720,"FIELD GUIDE"); A.helpPanel=f
-        f.body=label(f,30,-164,520,""); f.body:SetSpacing(5)
-    end
-    local f=A.helpPanel
-    f.body:SetText("1. Report an observed fight with Report PvP here.\nGuild WBP users receive a five-minute map marker.\nTwo-minute cooldown; no automatic fight-size estimate.\n\n2. Open Warbands and enable discovery. Start a rally,\nor join a listing. A warband coordinates up to four normal parties.\nWBP membership is separate from WoW's party invitation.\nThe host attempts an invite; the recruit accepts it in WoW.\n\n3. Open Recruitment to choose a suitable public activity,\nsearch or retry. Native API restrictions may prevent posting.\nYou can also watch a known organizer by full character name.\n\n4. Join the assigned party and travel to the rally zone.\nThe game controls transfers; WBP cannot force or confirm a layer.\n\nShortcuts: /wb report | /wb | /wb presence on/off\n/wb show | /wb finder | /wb find | /wb export | /wb clear\nAll player features are available from the command board.\n\nStatus: "..A.release.." | "..(A.scopeRuleset or "unknown ruleset").." / "..tostring(A.scopeRegion).."\nGuild messaging: "..tostring(A.guildReady).." | Warband messaging: "..tostring(A.warbands.ready).."\nLog stays local and resets on reload/login; export before reloading.")
-    f:Show()
 end
 local actions={{"Command board","WARBANDPVP_OPEN"},{"Report PvP here","WARBANDPVP_REPORT"},{"Warbands","WARBANDPVP_WARBANDS"},{"Session export","WARBANDPVP_EXPORT"}}
 function A.AssignBinding(action,key)

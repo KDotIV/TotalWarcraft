@@ -18,7 +18,7 @@ with zipfile.ZipFile(manifest['zip']) as z:
     names = {Path(n).name for n in z.namelist()}
     assert not names.intersection({'Control.lua','Diagnostics.lua','WarbandSimulation.lua','Development.lua','WARBAND_TESTING.txt','CrossedSwords.tga'})
     code = '\n'.join(z.read(n).decode() for n in z.namelist() if n.endswith(('.lua','.txt','.toc')))
-    for forbidden in ['WBP_CTL1','WBP_WBT1','testMode','SetTestMode','simulate','synthetic','/wb demo','/wb remote','/wb layer','/wb test','SetTransport','SetWarbandSimulation']:
+    for forbidden in ['WBP_CTL1','WBP_WBT1','testMode','SetTestMode','simulate','synthetic','/tw demo','/tw remote','/tw layer','/tw test','SetTransport','SetWarbandSimulation']:
         assert forbidden not in code, forbidden
 
 def release_client(name):
@@ -32,9 +32,14 @@ def release_client(name):
     return lua
 
 alice, bob = release_client('Alice One'), release_client('Bob Two')
+from auto_report_scenarios import check_auto_reports
+from activity_scenarios import check_activity
+check_auto_reports(release_client)
+check_activity(release_client)
 from forever_compat import check_hidden_realms
 check_hidden_realms(release_client)
-assert alice.globals().SLASH_WARBANDPVP1 == '/wb'
+assert alice.globals().SLASH_WARBANDPVP1 == '/tw'
+alice.execute("assert(TotalWarcraft==WarbandPvP and SLASH_WARBANDPVP3=='/wb'); assert(BINDING_HEADER_WARBANDPVP=='TotalWarcraft')")
 alice.execute("SlashCmdList.WARBANDPVP('show'); assert(A.warbands.panel:IsShown()); A.CloseWindows()")
 alice.execute('''
 assert(A.buildFlavor=='release' and not A.SetTestMode and not A.ControlCommand and not A.SetWarbandSimulation)
@@ -88,10 +93,13 @@ import warband_network
 warband_network.client=release_client
 from scouting_scenarios import check_all_scouting
 check_all_scouting()
-from finder_scenarios import check_finder, check_finder_edges, check_delegated_recruitment
+from finder_scenarios import check_finder, check_finder_edges, check_delegated_recruitment, check_idle_and_consent
 check_finder()
 check_finder_edges(release_client)
 check_delegated_recruitment()
+check_idle_and_consent(release_client)
+from finder_scenarios import check_rally_zone
+check_rally_zone(release_client)
 net=warband_network.Network()
 host=net.add('Host One'); peer=net.add('Peer Two')
 for lua in (host, peer):

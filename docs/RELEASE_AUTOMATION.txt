@@ -1,0 +1,58 @@
+TOTALWARCRAFT - GITHUB ACTIONS / CURSEFORGE
+
+Repository: https://github.com/KDotIV/TotalWarcraft
+Project: https://www.curseforge.com/wow/addons/total-warcraft (1819796)
+
+WORKFLOW
+Pushes to main and pull requests run .github/workflows/ci.yml. The workflow
+installs the pinned Lua test runtime, runs every offline suite (including the
+physically stripped production package), and saves the production ZIP artifact.
+
+Pushing a version tag such as v0.7.5 runs .github/workflows/release.yml:
+1. Require tag == tools/build_addon.py VERSION and reject alpha/dev tags.
+2. Require WarbandPvP/CHANGELOG.txt to start with TotalWarcraft VERSION.
+3. Build the production ZIP and run every test before exposing the upload token.
+4. Fetch CurseForge's exact Forever 1.60.1 version ID (type 88568); never guess
+   another flavor/version. Upload to project 1819796 with releaseType=release
+   and automatic publication after moderation. Upload the packaged changelog.
+5. Save the file ID, public URL and archive hash in the Actions run summary and
+   artifact. Moderation and CurseForge app indexing remain external processes.
+
+The custom compiler is required to remove --@dev regions and developer-only
+modules. Raw source packaging does not understand these directives. Keep
+CurseForge Source > Automatic Packaging set to No automatic packaging to avoid
+duplicate or unfiltered tag builds. The GitHub source link stays connected.
+
+ONE-TIME CREDENTIAL
+Create a CurseForge upload token in the author account. Put it directly in
+https://github.com/KDotIV/TotalWarcraft/settings/secrets/actions/new
+Name: CF_API_TOKEN
+The GitHub connection alone does not provide this API credential. Never commit
+the token. The pipeline injects it only into the upload step, uses a header,
+refuses redirects, and never logs the credential or raw error responses.
+The workflow is not capable of uploading until that secret is configured.
+
+NEXT RELEASE
+Update VERSION, the source TOC/Core/README version, and CHANGELOG.txt. Commit the
+tested changes to main. Push a new immutable vX.Y.Z tag on that commit. No manual
+CurseForge ZIP upload is then needed. Never move/reuse release tags.
+The first planned automatic release is v0.7.4. Once uploaded, do not move its tag
+or rerun its successful publish job. Use a new version for the next release.
+
+No upload retries are automatic: a timeout may follow a successful server-side
+upload. Inspect CurseForge for an existing file before rerunning a failed job.
+Do not rerun a successful publishing job; it would create another file.
+Push ordinary fixes without a version tag when no public release is intended.
+
+LOCAL VALIDATION
+python -m pip install -r requirements-dev.txt
+python tools/run_tests.py
+python tools/publish_curseforge.py --tag v0.7.4 --check
+The --check command performs no network calls and needs no credentials.
+
+SOURCES (checked November 21, 2026)
+https://support.curseforge.com/support/solutions/articles/9000197321-curseforge-upload-api
+https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
+https://github.com/BigWigsMods/packager
+BigWigs is an established alternative and supports Forever. This repository
+retains its tested compiler and uses the documented upload API directly.

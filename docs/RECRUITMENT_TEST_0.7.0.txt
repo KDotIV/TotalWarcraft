@@ -1,3 +1,7 @@
+0.7.3 UPDATE:Use REFINEMENTS_0.7.3.txt for current acceptance. Search selection
+is separate from automatic rally-zone posting. Opening the board no longer
+searches. The procedure below records the earlier manually selected behavior.
+
 WARBAND-PVP 0.7.0-alpha - FOREVER RECRUITMENT ACCEPTANCE
 November 20, 2026
 

@@ -11,7 +11,7 @@ function A.SetTestMode(enabled)
         end
     end
     A.Changed()
-    A.Print(A.testMode and "TEST MODE ON for this session. /wb report sends simulated guild reports."
+    A.Print(A.testMode and "TEST MODE ON for this session. /tw report sends simulated guild reports."
         or "Test mode off; simulated reports/warbands cleared and incoming tests ignored.")
 end
 

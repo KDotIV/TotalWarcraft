@@ -34,7 +34,7 @@ assert get(carol, 'A.warbands.member.slot') == 2
 say(dave, f'join {wid}')
 net.advance(3)
 assert get(dave, 'A.warbands.member.slot') == 2
-assert get(dave, '#invited') == 0  # WBP join never auto-accepts/auto-invites
+assert get(dave, '#invited') == 0  # TotalWarcraft join never auto-accepts/auto-invites
 assert get(bob, 'A.warbands.invites["dave-four"] ~= nil')
 say(bob, 'invite Dave Four')
 assert get(bob, 'invited[1]') == 'Dave Four'
@@ -138,7 +138,7 @@ session = get(alice,'A.warbands.session')
 alice.execute('A.InitWarbands()')
 assert get(alice,'A.warbands.session') != session
 
-# Four existing full normal parties can share a UUID (including their 20 WBP users).
+# Four existing full normal parties can share a UUID (including their 20 TotalWarcraft users).
 big = Network()
 parties = [[f'{family} {suffix}' for suffix in ('One','Two','Three','Four','Five')]
            for family in ('Alpha','Bravo','Charlie','Delta')]

@@ -1,0 +1,20 @@
+Warband-PvP 0.7.2-alpha — WoW Forever 1.60.1
+
+- Automatic guild reports for eligible outdoor combat against a visible,
+  attackable, PvP-flagged opposing player who is also in combat.
+- Duel lifecycle/outgoing-request holds, same-faction/NPC/instance/sanctuary/FFA
+  exclusions and conservative handling of restricted API data or mid-combat reload.
+- Auto reports toggle on /wb; manual /wb report and keybind retained. Shared
+  cooldown, one automatic attempt per combat and no repeated failed sends.
+- Compact map/report tooltips: no unknown fight sizes, range gaps, Snapshot or
+  absent scouting placeholders. Positive observed counts read "N combatants".
+- Nearby reports share one pin: gradual 22–32px size/color changes, a pulsing
+  red halo for growing conflict and a gold banner for heavy reported activity.
+  Heat uses distinct recent reporters, never summed player counts or exact teams.
+- Create Warband replaces the command-board Warbands label. Manual-report button
+  removed. Nine-page Help covers features, map legend, commands, support and status.
+- /wb export includes bounded automatic-report skip/action diagnostics.
+- Release/dev packages remain physically isolated; no test controls in public ZIP.
+
+Offline validation passes; combat detection, duel behavior and native rendering
+still require the live acceptance steps in AUTO_REPORTS_UI_0.7.2.txt.

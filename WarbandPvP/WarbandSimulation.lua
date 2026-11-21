@@ -2,7 +2,7 @@ local _,A=...
 local P,W=A.WB,A.warbands
 
 local function fixtureInfo(count)
-    if A.testMode~=true then return nil,"Run /wb test on before simulating a warband party." end
+    if A.testMode~=true then return nil,"Run /tw test on before simulating a warband party." end
     if P.Read(IsInRaid)~=false or P.Read(IsInInstance)~=false then return nil,"Test outdoors and outside raids." end
     local own=P.UnitName("player")
     if not own then return nil,"Character identity unavailable." end
@@ -16,11 +16,11 @@ function A.WarbandModeStatus()
     return "LIVE"
 end
 function A.SetWarbandSimulation(arg)
-    if arg=="" or arg=="status" then return true,A.WarbandModeStatus().." | /wb simulate 1-5|off" end
+    if arg=="" or arg=="status" then return true,A.WarbandModeStatus().." | /tw simulate 1-5|off" end
     local count
     if arg~="off" then
         count=P.Integer(arg,1,5)
-        if not count then return false,"Use /wb simulate 1-5|off (count includes your real character)." end
+        if not count then return false,"Use /tw simulate 1-5|off (count includes your real character)." end
         if not W.ready or not W.testReady or not P.Scope() then return false,"Simulation messaging/scope unavailable." end
         local info,reason=fixtureInfo(count); if not info then return false,reason end
         if not P.IsSimulation() and (W.host or W.member or W.join) then
@@ -54,12 +54,12 @@ end
 
 function A.WarbandDisplayTitle(r) return (r.simulated and "[TEST] " or "")..r.title end
 function A.WarbandCountText(r)
-    if not r.simulated then return "WBP members: "..r.count.." (organizer-reported)" end
+    if not r.simulated then return "TotalWarcraft members: "..r.count.." (organizer-reported)" end
     local total,dummies=0,0
     for _,g in pairs(r.groups or {}) do if g.expiresAt>GetServerTime() then
         total=total+g.count; dummies=dummies+g.count-1
     end end
-    return "Real WBP clients: "..r.count.." | simulated roster: "..total.." slots ("..dummies.." dummy)"
+    return "Real TotalWarcraft clients: "..r.count.." | simulated roster: "..total.." slots ("..dummies.." dummy)"
 end
 function A.WarbandGroupCountText(r,g)
     return r.simulated and ("1 real + "..(g.count-1).." dummy slots") or ("roster "..g.count.." (reported)")

@@ -1,0 +1,49 @@
+TotalWarcraft 0.7.4
+November 21, 2026 - Release - WoW Forever 1.60.1
+
+RENAMED TO TOTALWARCRAFT
+- Updated the addon title, command board, keybinding category, help, messages,
+  session exports and documentation to TotalWarcraft.
+- /tw is the main command. /totalwarcraft and the existing /wb also work.
+- Existing settings, keybindings and message compatibility are preserved.
+  The internal WarbandPvP folder remains the same for seamless updates.
+- The public package excludes developer commands, dummy parties and remote
+  tester controls. A separate developer package remains available for testing.
+
+CHANGES SINCE THE PUBLISHED 0.7.1 BUILD
+- Eligible outdoor combat against a visible, hostile, opposing PvP-flagged
+  player can create a guild report automatically. Added NPC, duel, free-for-all,
+  sanctuary, instance, reload and cooldown safeguards. Reporting has a toggle;
+  manual reporting remains available through /tw report and its keybinding.
+- Condensed report tooltips and details: missing counts and scouting data are
+  omitted. Available counts read "N combatants"; no empty snapshot placeholders.
+- Recent nearby reports from different players increase pin size and a pulsing
+  red halo. Repeated reports from one player cannot amplify a hotspot. Heat
+  fades with age; pins use native crossed-weapon icons and a skull for heavy
+  activity. Activity intensity does not claim exact team sizes.
+- Updated the command board with Create Warband, automatic reporting controls
+  and a paginated Help guide covering features, commands and bug reporting.
+- Opening the board or enabling discovery no longer searches Group Finder.
+  Search warbands and /tw find list existing warbands without joining them.
+- Recruiting party leaders post in the rally zone's native Competitive entry.
+  Fixed rallies retain their destination; Follow me tracks the organizer's zone.
+  Secondary party leaders use that same rally. Unavailable or ambiguous zone
+  matches pause posting instead of selecting an unrelated activity.
+- Hardened invitation validation with active warband/session/party assignments,
+  fresh recruit confirmation and expiration checks. Existing and externally
+  edited Finder listings remain under their owner's control.
+- Added clearer invitation request/result records and passive attribution of
+  native invitation calls outside TotalWarcraft in /tw export. The export
+  cannot identify which other addon or game UI initiated those calls.
+
+COMPATIBILITY AND KNOWN LIMITS
+- Built for WoW Forever only. OpenMap is optional; native map pins remain usable
+  without it. TotalWarcraft does not change LayerSwap settings or auto-accept,
+  leave, kick, or convert native groups. LayerSwap may pause its own hosting
+  while a native Finder listing is active.
+- The game controls transfers. Warband membership, group invitations and map
+  positions do not guarantee a shared layer. No NPC GUID layer lookup is used.
+- Enemy scouting is experimental and depends on a cooperating visible enemy
+  and game-permitted delivery. Unavailable data is omitted, never fabricated.
+- Offline protocol/package checks pass; native Finder, layering, cross-faction
+  delivery and rendering remain dependent on live game behavior.

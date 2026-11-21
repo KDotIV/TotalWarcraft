@@ -1,8 +1,8 @@
-CURRENT COMMAND PREFIX: /wb. Historical filenames are retained for links.
-WARBAND-PVP 0.7.1-alpha-dev - THREE-PLAYER WARBAND TEST
+CURRENT COMMAND PREFIX: /tw. Historical filenames are retained for links.
+TOTALWARCRAFT 0.7.4-dev - THREE-PLAYER WARBAND TEST
 
-WINDOWS: only one WBP dialog is shown. Back restores the previous view.
-Drag the header to move the window. The journal is /wb export.
+WINDOWS: only one TotalWarcraft dialog is shown. Back restores the previous view.
+Drag the header to move the window. The journal is /tw export.
 
 GOAL
 
@@ -19,57 +19,57 @@ The diagnostic still samples your ACTUAL WoW party, not the simulated roster.
 
 INSTALL
 
-All three players install WarbandPvP-0.7.1-alpha-dev.zip, using its inner WarbandPvP
+All three players install WarbandPvP-0.7.4-dev.zip, using its inner WarbandPvP
 folder under the matching WoW Interface/AddOns directory. Restart WoW and run
-/wb status. Everyone must show 0.7.1-alpha-dev. Older 0.6.0 clients ignore simulated
+/tw status. Everyone must show 0.7.4-dev. Older 0.6.0 clients ignore simulated
 warbands. Use same-faction characters in matching ruleset/region, outdoors and
 outside raids/instances. You may be solo or already in one normal party: the
 fixture does not alter your actual group. No OpenMap or backend is required.
-Leave/end any LIVE WBP warband first; the simulation command will refuse to
+Leave/end any LIVE TotalWarcraft warband first; the simulation command will refuse to
 silently replace real membership. Do not invite dummy slots through WoW.
 
 YOUR CHARACTER (THE ORGANIZER)
 
 Run locally, one line at a time:
-  /wb status
-  /wb test on
-  /wb layer start warband-three
-  /wb simulate 5
-  /wb start Three Player Test
-  /wb show
+  /tw status
+  /tw test on
+  /tw layer start warband-three
+  /tw simulate 5
+  /tw start Three Player Test
+  /tw show
 
 Only YOU start this listing. The other two clients join it, each as a separate
-simulated party host. The CLI prints the UUID; /wb status shows it again.
+simulated party host. The CLI prints the UUID; /tw status shows it again.
 The listing name is displayed as [TEST] Three Player Test. Simulation enables
-test warband discovery automatically; /wb on is not additionally needed.
+test warband discovery automatically; /tw on is not additionally needed.
 
 OPTION A: YOU CONTROL THE TESTERS REMOTELY
 
 Each tester runs ONCE per login/reload, substituting your actual full name:
-  /wb control allow YourFirst YourSurname
+  /tw control allow YourFirst YourSurname
 
 Then YOU run the following for EACH tester, replacing TesterFirst TesterSurname.
 Wait at least FIVE seconds between EVERY remote command, even across testers:
-  /wb remote TesterFirst TesterSurname test-on
-  /wb remote TesterFirst TesterSurname capture-start
-  /wb remote TesterFirst TesterSurname warband-five
-  /wb remote TesterFirst TesterSurname warband-watch
+  /tw remote TesterFirst TesterSurname test-on
+  /tw remote TesterFirst TesterSurname capture-start
+  /tw remote TesterFirst TesterSurname warband-five
+  /tw remote TesterFirst TesterSurname warband-watch
 
 Wait 30 seconds for the subscription/listing to arrive, then:
-  /wb remote TesterFirst TesterSurname warband-join
+  /tw remote TesterFirst TesterSurname warband-join
 Wait at least five seconds again, then:
-  /wb remote TesterFirst TesterSurname status
+  /tw remote TesterFirst TesterSurname status
 
 Repeat for tester two. warband-watch subscribes to YOUR organizer character;
 warband-join can select only YOUR fresh test listing. It cannot join live
 warbands or execute arbitrary Lua. An OK join reply means the request was
-queued; wait for status wb=TEST/5/group2 or group3 to confirm WBP acceptance.
+queued; wait for status wb=TEST/5/group2 or group3 to confirm TotalWarcraft acceptance.
 If status still says pending, allow another 10 seconds. If none, check the
 failure on the tester and retry after the five-second command cooldown.
 If no fresh listing is available, repeat warband-watch, wait 30s, then join.
 
 Tester authorization and simulation reset on reload. Installation alone never
-grants control. Testers may run /wb control off at any time; this also stops
+grants control. Testers may run /tw control off at any time; this also stops
 their simulated membership, test mode, presence sharing and diagnostic capture.
 You can configure addon state remotely, but each tester moves their character
 and opens/observes their own map. Normal map controls are not remote commands.
@@ -77,55 +77,55 @@ and opens/observes their own map. Normal map controls are not remote commands.
 OPTION B: EACH TESTER ENTERS LOCAL COMMANDS
 
 Instead of Option A, each tester runs:
-  /wb test on
-  /wb layer start warband-three
-  /wb simulate 5
-  /wb watch YourFirst YourSurname
+  /tw test on
+  /tw layer start warband-three
+  /tw simulate 5
+  /tw watch YourFirst YourSurname
 
-Wait 30 seconds, then /wb show. Select [TEST] Three Player Test and click
+Wait 30 seconds, then /tw show. Select [TEST] Three Player Test and click
 Join test warband. For CLI-only joining, copy the organizer's UUID and use:
-  /wb join UUID
+  /tw join UUID
 
-Do NOT run /wb start on the testers: that creates different warbands.
+Do NOT run /tw start on the testers: that creates different warbands.
 No native party invitation or acceptance is needed in this simulation.
 
 VERIFY THE RESULT
 
-On all three clients, run /wb status. Expect the SAME UUID, your
+On all three clients, run /tw status. Expect the SAME UUID, your
 character organizing, and the two testers in group 2 and group 3 (join order).
 After 30-45 seconds, listing details should show:
-  Real WBP clients: 3
+  Real TotalWarcraft clients: 3
   Simulated roster: 15 slots (12 dummy)
   Group 1: 1 real + 4 dummy slots
   Group 2: 1 real + 4 dummy slots
   Group 3: 1 real + 4 dummy slots
 
-Open /wb show, select the listing, then Show rally on map. The usual
+Open /tw show, select the listing, then Show rally on map. The usual
 axe/sword/banner marker is PURPLE for tests. Hover/details/list rows say [TEST].
 Members see numbered group-host positions. Spread the three real characters
 apart on the same zone map so markers do not overlap. Each number follows its
 real tester; it does not plot four imaginary players. Check moving one tester
 into another zone: open that zone's map to see its group number. Optional
-compatible OpenMap uses WBP's existing stitched-map projection in mouse mode.
+compatible OpenMap uses TotalWarcraft's existing stitched-map projection in mouse mode.
 Allow 30-45 seconds for updates. Nothing should create a combat report or heat.
 
 YOUR OPTIONAL CHECKS
 
 At a meeting point:
-  /wb rally
+  /tw rally
 Move away: the main pin stays at the rally; group positions continue updating.
 Then restore a moving main marker:
-  /wb follow
-  /wb state roaming
+  /tw follow
+  /tw state roaming
 
 Have a tester change its displayed party size locally:
-  /wb simulate 3
+  /tw simulate 3
 Expect that group to show 1 real + 2 dummies, with 13 slots / 10 dummies overall.
 The UUID and three real memberships stay unchanged. simulate accepts 1-5.
 Remote warband-five restores the standard five-slot fixture on that tester.
 
 Ask a tester to leave, or use:
-  /wb remote TesterFirst TesterSurname warband-leave
+  /tw remote TesterFirst TesterSurname warband-leave
 That simulated group disappears on the next coordinator snapshot; the real WoW
 party stays untouched. Remote warband-join can rejoin the same test listing.
 
@@ -137,26 +137,26 @@ The existing real three-player layer/visibility test remains a separate pass.
 SAVE RESULTS AND CLEAN UP
 
 On YOUR client:
-  /wb layer snap final
-  /wb layer stop
-  /wb layer export
+  /tw layer snap final
+  /tw layer stop
+  /tw layer export
 For each tester, you can request snapshot and capture-stop remotely (5s spacing),
-but each tester exports their own log with /wb layer export. Capture is local,
+but each tester exports their own log with /tw layer export. Capture is local,
 bounded to 15 minutes / 1200 rows; no remote log export or upload is implemented.
 Record UUID, group number, actual native roster, map/pin outcome and any Lua error.
 WARBAND_* diagnostics distinguish test-prefix traffic from live traffic.
 
-On YOUR client, /wb test off ends the test listing and disables simulation.
-On each tester, /wb test off (or your remote test-off) stops simulation and clears
-test state. /wb control off additionally revokes the controller. Any lost end
+On YOUR client, /tw test off ends the test listing and disables simulation.
+On each tester, /tw test off (or your remote test-off) stops simulation and clears
+test state. /tw control off additionally revokes the controller. Any lost end
 message falls back to 90-second expiry. Native WoW parties remain unchanged.
-Use /wb on afterwards to return to live warband discovery.
+Use /tw on afterwards to return to live warband discovery.
 
 ISOLATION AND LIMITS
 
-Test traffic uses a separate prefix, WBP_WBT1, and requires BOTH /wb test on and
-/wb simulate N. Clients in normal mode ignore it, including older builds.
-Ordinary /wb test on by itself does not enable warband simulation. Test fixtures
+Test traffic uses a separate prefix, WBP_WBT1, and requires BOTH /tw test on and
+/tw simulate N. Clients in normal mode ignore it, including older builds.
+Ordinary /tw test on by itself does not enable warband simulation. Test fixtures
 never send native invitations, replace WoW roster APIs, create dummy authority,
 generate PvP heat or declare layer success. Switching modes withdraws prior test
 state; queued withdrawals retain their original prefix. Replay histories remain

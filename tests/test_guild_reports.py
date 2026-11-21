@@ -37,7 +37,7 @@ assert(r.count==4 and r.syntheticCount==2 and A.toast.shown)
 assert(A.toast.title.text:find('[TEST]',1,true))
 A.toast.scripts.OnClick(A.toast,'LeftButton')
 assert(A.details.shown and not A.toast.shown)
-assert(A.details.body.text:find('Layer: unknown',1,true))
+assert(not A.details.body.text:find('Layer: unknown',1,true))
 assert(A.details.body.text:find('2 synthetic',1,true))
 local pins=0
 for _,f in ipairs(frames) do
@@ -45,8 +45,9 @@ for _,f in ipairs(frames) do
   pins=pins+1; assert(f.record.id==r.id and #f.strokes==6)
   for _,line in ipairs(f.strokes) do
    assert(line.kind=='Line' and line.color[1]==A.testColor[1] and line.color[4]==1)
-   assert(line.thickness>=2 and line.startPoint and line.endPoint and line.shown)
+   assert(line.thickness>=2 and line.startPoint and line.endPoint and not line.shown)
   end
+  assert(f.combatIcon:IsShown() and f.combatIcon.texture:find('DualWield',1,true))
   assert(f.point[4]==250 and f.point[5]==-450)
   assert(f.normalizedX==.25 and f.normalizedY==.75 and f.frameLevelType=='PIN_FRAME_LEVEL_AREA_POI')
   assert(f.scaling[2]==1 and f.scaling[3]==1 and f.alphaLimits[2]==1)

@@ -1,0 +1,108 @@
+WARBAND-PVP 0.7.2 — NOVEMBER 21, 2026
+
+Intent
+Compact report/map text, eligible automatic PvP reports, anti-duel safeguards,
+an accessible Help guide and qualitative growing-conflict map markers.
+The user confirmed CurseForge approval. This build is prepared locally; uploading
+an update and changing the public description have not been performed this turn.
+
+Implementation / limits
+- AutoReports.lua uses safe reads and a 1-second combat-only ticker. Both player
+  and current target must be in combat; target is an existing visible, alive,
+  attackable, flagged opposing player. No combat-log access or restricted-value
+  workarounds. Missing/secret required values prevent automatic reports.
+- Require known outdoor instance state, guild membership and known non-FFA,
+  non-sanctuary rules for both units. A current-target observation cannot prove
+  exchanged damage: unrelated simultaneous combats remain a possible false positive.
+- Same-faction targets never trigger auto reports, including ordinary city-gate
+  duels. DUEL_REQUESTED / DUEL_TO_THE_DEATH_REQUESTED and a secure post-hook of
+  StartDuel hold reports for 60s; a combat-long latch extends the hold during a
+  long duel. INBOUNDS/OUTOFBOUNDS signals hold until FINISHED. FINISHED and combat
+  exit apply a 10s settling hold. A declined/ignored request expires normally.
+  A reload mid-combat waits for a known out-of-combat state, then a new combat.
+  No unsupported universal "is dueling" query is assumed. Duel events concern
+  the local player; there is no claim of detecting arbitrary strangers' duels.
+- Manual reports remain observer actions, but respect known local duel holds.
+  Accepted manual/automatic reports share the 120s cooldown. A manual report in
+  combat satisfies that combat's automatic attempt. Failed automatic sends do not
+  loop. Developer test/simulated modes never automatically emit reports.
+- Report protocol remains WBP_REPORT1/v1. Unknown/internal evidence is preserved
+  for validation but omitted from UI. Combatants means partial flagged-player
+  observations, not verified fight participants; no backend semantics changed.
+- Activity.lua groups at most the existing 64 reports. Each cluster is anchored
+  at the newest report. Same-map distance <= .035 normalized coordinates; no
+  transitive chains, inferred yard radius, centroid or cross-map/layer matching.
+  Old nearby reports are grouped visually so they cannot cover a newer hot pin.
+  Only reports <120s old add heat; each normalized native sender counts once.
+  Weight decays linearly to zero over 120s. Heat=clamp((weight-1)/3,0,1).
+  Pin size=22+10*heat; pulse requires >=2 distinct reporters and positive heat.
+  Heavy banner requires >=4 reporters and weight>=2.5. No player counts are added
+  or used to claim team sizes. Freshness refreshes on existing 15s map refresh.
+  Same coordinates may be different layers; activity is not proof of co-location.
+- Map art uses native lines/textures, not external assets. Halo rings have an
+  eased two-second pulse, throttled to 20 updates/sec while the pin is shown.
+  Pool release clears scripts/art; a reused cold pin never inherits glow/banner.
+- Tooltip: title, location, optional activity label, optional N combatants,
+  reporter, optional known enemy warband, expiry. No extra instructional blocks.
+- Help.lua uses the existing one-window navigator, four topic shortcuts and
+  Previous/Next. Support provides the GitHub issue link, status and export advice.
+
+Validation
+15 source/offline suites, including new auto-report and activity/UI scenarios.
+The new scenarios also execute against the physically stripped production ZIP.
+Coverage includes native sender deduplication, distant/old/cross-map isolation,
+non-transitive clustering, fading, pooled cleanup, compact field omission,
+duel lifecycle/outgoing hooks, mid-combat reload, restrictions, toggle persistence,
+manual suppression, failed sends, cooldown and delivery into another Lua client.
+Existing protocol/security, scouting, recruitment, windows and developer tests
+remain required. Mocks do not establish live WoW API behavior or visual fidelity.
+
+Visual references
+docs/assets/activity-preview.html — actual Lua pin geometry and tooltip text.
+docs/assets/ui-layout-preview.html — actual Lua frame positions, approximate fonts.
+Screenshots: activity-preview-0.7.2.jpg and command-board-preview-0.7.2.jpg.
+These are offline layout references, not WoW captures.
+
+Live acceptance (before a CurseForge update)
+1. Restart Forever after installation. Open /wb: Create Warband, Help and Auto
+   reports controls visible; no Report PvP here button on the command board.
+   Check Help navigation, copy issue link and Back. Set a manual-report keybind.
+2. Keep test mode and simulated party mode OFF for real automatic-report checks.
+   In a guild, fight an NPC: no report. Target a flagged idle enemy: no report.
+3. Receive a duel outside a city, fight beyond 60s, cancel/finish and wait.
+   Repeat as the initiator, including /duel; no automatic report or heat marker.
+   A manual report during the hold should return the pause explanation.
+   Reload during a duel: no automatic report until combat ends and a new fight.
+4. Engage a flagged opposing player outdoors while targeting them. If all public
+   checks are readable, one guild report appears. Verify on a second WBP client.
+   Remain in combat >120s: no repeat. End and re-enter inside the shared cooldown:
+   no immediate duplicate. Toggle auto off: manual keybind still works.
+5. Repeat in an instance, FFA area and sanctuary where possible: no auto report.
+   Use /wb export before reload; REPORT_AUTO_SKIP records changing skip reasons.
+6. Gather distinct guild reporters in the same map area. One isolated report:
+   small swords; two fresh reporters: modest growth and red pulse; four fresh:
+   larger swords and gold banner. Repeated traffic from one sender adds no heat.
+   Move reports apart / change zones; unrelated markers must stay independent.
+7. Leave markers without new reports. Glow/banner fade before the five-minute
+   report expiration. Pan/zoom, close/reopen the map and check with OpenMap.
+   Check that the glow remains behind the swords and pins stay above map fog.
+8. Hover with no readable count or scouting: only compact existing fields.
+   Known positive count reads N combatants. No Snapshot/unknown/no-scouting text.
+
+Sources inspected (Forever branch, November 21; branch may evolve)
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua
+  UnitAffectingCombat, UnitIsPlayer, UnitIsPVP, UnitCanAttack, UnitIsVisible,
+  UnitIsPVPFreeForAll, UnitIsPVPSanctuary and secret-value restrictions.
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/DuelInfoDocumentation.lua
+  Supported duel lifecycle events; no callable state-query functions listed.
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_UnitPopupShared/UnitPopupSharedButtonMixins.lua
+  Blizzard's own duel menu calls StartDuel; WBP only post-hooks it.
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/CombatLogDocumentation.lua
+  Restricted combat log is not used for auto-report detection.
+
+Installation receipt
+Installed 0.7.2-alpha-dev at 16:56 UTC November 21, 2026, 33 hash-verified files.
+E:\World of Warcraft\_forever_\Interface\AddOns\WarbandPvP
+Backup: releases/installed-backups/WarbandPvP-before-0.7.2-alpha-dev-20261121-165519.zip
+Release ZIP SHA-256: 42ffea074b3993b771932a1c9be173ca2aef567d1fb0d6553edb69d9ec55b558
+Dev ZIP SHA-256: bbea90b7da11d72d1ff18ddfef6b1ded7efead3328d12fe19521c8b6aee715cf

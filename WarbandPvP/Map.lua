@@ -4,7 +4,7 @@ local PRESENCE_TEMPLATE = "WarbandPvPPresencePinTemplate"
 local WARBAND_TEMPLATE, GROUP_TEMPLATE = "WarbandPvPWarbandPinTemplate", "WarbandPvPWarbandGroupPinTemplate"
 
 local function drawSwords(owner)
-    owner.strokes = {}
+    owner.strokes = {}; owner.swordLines={}
     if type(owner.CreateLine) ~= "function" then
         owner.fallback = owner:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
         owner.fallback:SetPoint("CENTER"); owner.fallback:SetText("X")
@@ -22,15 +22,74 @@ local function drawSwords(owner)
             line:SetEndPoint("TOPLEFT", owner, s[3], -s[4])
             line:SetThickness(s[5] + (pass == 1 and 2 or 0))
             line:SetColorTexture(pass == 1 and .02 or 1, pass == 1 and .02 or 1, pass == 1 and .02 or 1, 1)
+            owner.swordLines[#owner.swordLines+1]={line=line,segment=s,outline=pass==1}
             if pass == 2 then owner.strokes[#owner.strokes+1] = line end
             line:Show()
         end
     end
 end
 
+local function sizeSwords(owner,size)
+    owner:SetSize(size,size)
+    local scale=size/28
+    for _,item in ipairs(owner.swordLines) do
+        local s,line=item.segment,item.line
+        line:SetStartPoint("TOPLEFT",owner,s[1]*scale,-s[2]*scale)
+        line:SetEndPoint("TOPLEFT",owner,s[3]*scale,-s[4]*scale)
+        line:SetThickness(math.max(2,s[5]*scale)+(item.outline and 2 or 0))
+    end
+end
+
+local function activityArt(owner)
+    if owner.glow or type(owner.CreateLine)~="function" then return end
+    -- Concentric native line rings form a soft red halo. No external textures,
+    -- timer per ring or animation work on hidden/released pins.
+    owner.glow=CreateFrame("Frame",nil,owner); owner.glow:SetAllPoints(owner)
+    owner.glow:EnableMouse(false); owner.glow:SetFrameLevel(owner:GetFrameLevel())
+    for ring=1,5 do
+        local radius=10+ring*3
+        for i=0,23 do
+            local a,b=i*math.pi/12,(i+1)*math.pi/12
+            local line=owner.glow:CreateLine(nil,"BACKGROUND")
+            line:SetStartPoint("CENTER",owner,math.cos(a)*radius,math.sin(a)*radius)
+            line:SetEndPoint("CENTER",owner,math.cos(b)*radius,math.sin(b)*radius)
+            line:SetThickness(5); line:SetColorTexture(.9,.025,.015,.6*(6-ring)/5)
+        end
+    end
+    owner.battleEmblem=owner:CreateTexture(nil,"OVERLAY")
+    owner.battleEmblem:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_8")
+    owner.battleEmblem:SetSize(14,14); owner.battleEmblem:SetPoint("BOTTOM",owner,"TOP",0,-4)
+end
+
+local function pulse(owner,elapsed)
+    owner.pulseElapsed=(owner.pulseElapsed or 0)+elapsed
+    if owner.pulseElapsed<.05 then return end
+    owner.pulseElapsed=0
+    local c=owner.activity
+    if not c or owner.record.expiresAt<=GetServerTime() or GetServerTime()-owner.record.updatedAt>=120 then
+        owner.glow:Hide(); owner.battleEmblem:Hide(); owner:SetScript("OnUpdate",nil); return
+    end
+    owner.glow:SetAlpha((.48+.22*math.sin(GetTime()*math.pi))*(.5+.5*c.heat))
+end
+
 local function colorSwords(owner, c)
     for _, line in ipairs(owner.strokes) do line:SetColorTexture(c[1],c[2],c[3],1); line:Show() end
     if owner.fallback then owner.fallback:SetTextColor(c[1],c[2],c[3]); owner.fallback:Show() end
+end
+
+local function combatIcon(owner,heavy,c)
+    if not owner.combatIcon then
+        owner.combatIcon=owner:CreateTexture(nil,"ARTWORK")
+        owner.combatIcon:SetAllPoints(owner); owner.combatIcon:SetTexCoord(.07,.93,.07,.93)
+    end
+    local texture=heavy and "Interface\\Icons\\Ability_Warrior_OffensiveStance" or "Interface\\Icons\\Ability_DualWield"
+    local ok,result=pcall(owner.combatIcon.SetTexture,owner.combatIcon,texture)
+    local loaded=ok and result~=false and A.WB.Read(owner.combatIcon.GetTexture,owner.combatIcon)~=nil
+    owner.combatIcon:SetShown(loaded)
+    -- Preserve the full-color heavy battle emblem. Smaller swords carry a red tint.
+    owner.combatIcon:SetVertexColor(1,heavy and 1 or .68+c[2]*.3,heavy and 1 or .62+c[3]*.3,1)
+    for _,item in ipairs(owner.swordLines) do item.line:SetShown(not loaded) end
+    if owner.fallback then owner.fallback:SetShown(not loaded) end
 end
 
 WarbandPvPMapPinMixin = CreateFromMixins(MapCanvasPinMixin)
@@ -43,21 +102,38 @@ function WarbandPvPMapPinMixin:OnLoad()
     drawSwords(self)
 end
 function WarbandPvPMapPinMixin:OnAcquired(r, x, y)
+    local activity=r.record and r or nil
+    r=activity and activity.record or r
+    self.activity=activity
     self.record = r
 --@dev
     local c = r.test and A.testColor or A.colors[r.kind]
 --@enddev
 --@release     local c = A.colors[r.kind]
-    colorSwords(self, c)
+    local heat=activity and activity.heat or 0
+    if heat>0 then c={c[1]+(1-c[1])*heat,c[2]*(1-.65*heat),c[3]*(1-.75*heat)} end
+    colorSwords(self, c); sizeSwords(self,activity and activity.size or 22)
+    combatIcon(self,activity and activity.heavy,c)
+    local glowing=activity and activity.pulse
+    if glowing then activityArt(self) end
+    if self.glow then
+        self.glow:SetShown(glowing==true)
+        self.battleEmblem:SetShown(activity and activity.heavy==true)
+        self.pulseElapsed=0
+        self:SetScript("OnUpdate",glowing and pulse or nil)
+        if glowing then pulse(self,.05) end
+    end
     self:SetPosition(x or r.x, y or r.y)
 end
 function WarbandPvPMapPinMixin:OnReleased()
     if self:IsMouseOver() then GameTooltip:Hide() end
-    self.record = nil
+    self.record = nil; self.activity=nil; self:SetScript("OnUpdate",nil)
+    if self.combatIcon then self.combatIcon:Hide() end
+    if self.glow then self.glow:Hide(); self.battleEmblem:Hide() end
     MapCanvasPinMixin.OnReleased(self)
 end
 function WarbandPvPMapPinMixin:OnMouseEnter()
-    if self.record then A.Tooltip(self, self.record) end
+    if self.record then A.Tooltip(self, self.record,self.activity) end
 end
 function WarbandPvPMapPinMixin:OnMouseLeave() GameTooltip:Hide(); A.tooltipRecord=nil end
 function WarbandPvPMapPinMixin:OnMouseClickAction(button)
@@ -86,7 +162,7 @@ function WarbandPvPPresencePinMixin:OnMouseEnter()
     if not p or p.expiresAt <= GetServerTime() then return end
     local function state(v) return v == "1" and "yes" or v == "0" and "no" or "unknown" end
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:AddLine("WBP group member: " .. A.CleanText(p.name, 128), .3, 1, .6)
+    GameTooltip:AddLine("TotalWarcraft group member: " .. A.CleanText(p.name, 128), .3, 1, .6)
     GameTooltip:AddLine(A.LocationText(p), 1, 1, 1)
     GameTooltip:AddLine("Shared PvP flag: " .. state(p.flagged) .. " | Combat: " .. state(p.combat), 1, 1, 1)
     GameTooltip:AddLine("Presence only; not confirmed PvP. Layer unknown.", .8, .8, .8, true)
@@ -167,9 +243,10 @@ function Provider:RefreshAllData()
     self:RemoveAllData()
     local map = self:GetMap()
     if not map:IsShown() then return end
-    for _, r in ipairs(A.List()) do
+    for _, activity in ipairs(A.ReportClusters()) do
+        local r=activity.record
         local x, y = A.MapPosition(r, map:GetMapID())
-        if x and y then map:AcquirePin(TEMPLATE, r, x, y) end
+        if x and y then map:AcquirePin(TEMPLATE, activity, x, y) end
     end
     for _, p in ipairs(A.PresenceList and A.PresenceList() or {}) do
         local x, y = A.MapPosition(p, map:GetMapID())
@@ -265,7 +342,7 @@ function A.PinCheck()
         symbol:SetSize(28,28); symbol:SetPoint("CENTER",0,-5)
         drawSwords(symbol); colorSwords(symbol,A.testColor)
         local hint = f:CreateFontString(nil,"OVERLAY","GameFontHighlightSmall")
-        hint:SetPoint("BOTTOM",0,10); hint:SetText("/wb pincheck to close")
+        hint:SetPoint("BOTTOM",0,10); hint:SetText("/tw pincheck to close")
         A.RegisterWindow(f); f:Hide(); A.pinCheck = f
     end
     A.pinCheck:SetShown(not A.pinCheck:IsShown())

@@ -1,5 +1,5 @@
-Warband-PvP
-Copyright (c) 2026 Warband-PvP contributors. All Rights Reserved.
+TotalWarcraft
+Copyright (c) 2026 TotalWarcraft contributors. All Rights Reserved.
 
 Permission is granted to download, install, and use this addon free of charge
 for personal gameplay. No permission is granted to redistribute, sublicense,

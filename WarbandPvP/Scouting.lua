@@ -196,10 +196,10 @@ function A.ClearScouting()
 end
 function A.ScoutSummary(r)
     local s=r and r.scout
-    if not s then return "Enemy warband: unknown (no scouting snapshot)." end
-    if s.state=="pending" then return "Enemy warband: awaiting a reply from "..s.enemy.."." end
-    if s.state=="known" and s.expiresAt>GetServerTime() then return "Enemy warband: "..s.title.." | "..s.members.." WBP members (reported)." end
-    return s.state=="expired" and "Enemy scouting snapshot expired; current affiliation unknown." or "Enemy warband: unknown; no usable response."
+    if s and s.state=="known" and s.expiresAt>GetServerTime() then
+        return "Enemy warband: "..s.title.." | "..s.members.." members (reported)"
+    end
+    return ""
 end
 function A.InitScouting()
     local result=P.Read(C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix,PREFIX)

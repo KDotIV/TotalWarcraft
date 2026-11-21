@@ -1,0 +1,86 @@
+WARBAND-PVP 0.7.3-alpha - November 21, 2026
+
+User identified LayerSwap hosting as the origin of the unexpected invitation.
+The supplied 0.7.1 log alone did not attribute it to WBP. Keep the safeguards
+independently of that attribution; do not describe this as a proven WBP invite bug.
+
+CHANGES
+Idle Finder no longer inspects native entries, enumerates activities or produces
+combat/roster recruitment messages. Opening the board and enabling discovery do
+not search. Explicit Search and /wb find list verified WBP affiliations only;
+they cannot join, apply to, or automatically accept a native group.
+
+Every WBP invitation now requires active membership/hosting, matching UUID,
+coordinator session, assigned party, fresh recruit consent and unexpired leases.
+Root-host consent also matches the recruit session. Native group leadership,
+space, combat restrictions, throttles and developer isolation still apply.
+The journal records a request BEFORE the native call, then its result. A passive
+secure post-hook identifies calls outside WBP without identifying their origin
+or changing the native function's behavior. No chat content or automatic upload.
+
+Public listing activity follows the rally's exact localized fullName within
+Forever category 118 (Competitive). Fixed rallies retain the destination as the
+host travels; Follow me uses the organizer's current map; secondary party hosts
+use the organizer's current snapshot map. Search selection is separate. Missing,
+ambiguous, unreadable or manual-only matches never post to an unrelated activity.
+Ownership fingerprints prevent editing/removing another listing. No raw mapID
+is assumed to equal an activity ID or instance map ID. Different zone spellings
+not exposed identically by the client fail closed and need a live API sample.
+
+Report pins reference built-in Ability_DualWield / Ability_Warrior_OffensiveStance
+and UI-RaidTargetingIcon_8. Native red halo and 22-32 pixel sizing remain. Missing
+base artwork falls back to vector swords. Tooltips stay known-only; density is
+recent independent reports, never inferred team sizes or summed combatants.
+No WoW texture files are redistributed. Offline browser preview approximates
+the tint/crop and skull, and embeds public icon references for review only.
+
+COEXISTENCE / LAYER RESEARCH
+Installed LayerSwap.toc identifies version 1.14.43, inspected read-only.
+LayerSwap.lua lines 37-55 describe the author's observed build 71037 change:
+creature-derived IDs no longer form a shared cross-client layer directory.
+The author removed specific-layer selection on affected Forever builds.
+Lines 782-795 pause LayerSwap hosting when listed in native Group Finder or
+queued in Dungeon Finder. This is LayerSwap policy, not a WBP override.
+Its ordinary InviteUnit path is at line 841. Grouping remains the transfer
+mechanism; the server determines the result. LayerSwap also has a temporary
+host-token heuristic after observed moves; this is cooperative history, not
+an authoritative layer ID or a way to pin four independent parties together.
+
+WBP never accepts/declines, leaves, kicks or converts native groups. It does not
+call LayerSwap or change its settings. It observes actual leadership/capacity
+and leaves foreign/edited listings alone. Public recruitment OFF allows WBP
+known-contact coordination without holding a Finder listing. Coexistence still
+needs a live test; an external addon's own auto-leave/hosting policy remains its
+responsibility. No LayerSwap code is copied or redistributed.
+
+Primary sources checked November 21:
+https://www.curseforge.com/wow/addons/layer
+Author description explicitly separates Forever swap requests from the removed
+layer directory and says the change occurred November 20. This is author-reported
+behavior, not our direct test of the hotfix or a guarantee of every transfer.
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/LFGListInfoDocumentation.lua
+Native listing, activity info and search APIs. Listing restrictions remain.
+Original PTR developer announcement link (content inaccessible this session):
+https://discord.com/channels/327414731654692866/1572759655438876702/1572759655438876702
+Prior reproduced-announcement audit: GUID_SECURITY_REVIEW_2026-11-20.txt.
+
+LIVE ACCEPTANCE
+1. Restart WoW. /wb export should say 0.7.3-alpha-dev. Before starting a warband,
+   open /wb show, fight NPCs, and change zones/groups: no background WBP Finder
+   activity or WBP invitation attempts. Other addons may still act independently.
+2. /wb finder -> Search warbands: existing warbands appear; no membership until
+   Join. An unavailable native activity must show a useful status, not guess.
+3. Start a warband in Stranglethorn, Rally here. Confirm its native listing is
+   Competitive / Stranglethorn. Travel elsewhere: fixed rally stays Stranglethorn.
+   Rally here in a new zone updates it. Follow me follows zone changes.
+4. Repeat with a delegated party leader standing in a different zone: both
+   listings use the coordinator's rally zone, not each leader's current zone.
+5. Join from a second WBP client: assigned host gets one invitation attempt;
+   recipient explicitly accepts WoW's invitation. Stop before leaving combat
+   and confirm a cancelled/expired request never invites afterward.
+6. Keep LayerSwap enabled: WBP does not alter its options or handle its invites.
+   Check /wb export attribution. Existing native listings survive WBP teardown.
+7. Review native icons in-game at normal map zoom and fog overlays; compare
+   isolated/growing/heavy reports. Empty counts and scouting remain omitted.
+8. A transfer event, same coordinates or group membership alone is not shared
+   layer proof. Confirm reciprocal visibility near the rally with live players.

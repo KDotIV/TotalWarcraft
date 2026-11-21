@@ -158,11 +158,11 @@ local function start(label)
         if pending or GetTime() - (lastSnapshot or 0) >= 5 then flushEvidence(); snapshot("sample") end
     end)
     A.diagnosticTicker = ticker
-    A.Print("Layer/evidence capture started for up to 15 minutes. Each tester runs this command. /wb layer export to copy.")
+    A.Print("Layer/evidence capture started for up to 15 minutes. Each tester runs this command. /tw layer export to copy.")
 end
 function A.DiagnosticText()
     if not db then return "Diagnostics not initialized." end
-    return "WBP diagnostics v1 | addon=" .. (A.release or "unknown") .. " | dropped=" .. db.dropped
+    return "TotalWarcraft diagnostics v1 | addon=" .. (A.release or "unknown") .. " | dropped=" .. db.dropped
         .. "\nLocal observations; merge all testers' exports by server time and run label. Not proof of layer/PvP by itself.\n"
         .. "NPC/object GUIDs are opaque session-local observations; do not compare them across clients to infer a layer.\n"
         .. table.concat(db.entries, "\n")
@@ -174,7 +174,7 @@ local function export()
         f:SetSize(760,480); f:SetPoint("CENTER"); f:SetFrameStrata("DIALOG"); f:SetClampedToScreen(true)
         f:SetBackdrop({bgFile="Interface\\Buttons\\WHITE8X8"}); f:SetBackdropColor(.04,.05,.07,.98)
         local title = f:CreateFontString(nil,"OVERLAY","GameFontNormal")
-        title:SetPoint("TOPLEFT",16,-14); title:SetText("WBP diagnostics - Ctrl+A, Ctrl+C to copy; Escape to close")
+        title:SetPoint("TOPLEFT",16,-14); title:SetText("TotalWarcraft diagnostics - Ctrl+A, Ctrl+C to copy; Escape to close")
         local close = CreateFrame("Button",nil,f,"UIPanelCloseButton"); close:SetPoint("TOPRIGHT")
         local scroll = CreateFrame("ScrollFrame",nil,f,"UIPanelScrollFrameTemplate")
         scroll:SetPoint("TOPLEFT",16,-42); scroll:SetPoint("BOTTOMRIGHT",-32,16)
@@ -191,7 +191,7 @@ end
 function A.LayerCommand(input)
     local cmd, arg = input:match("^%s*(%S*)%s*(.-)%s*$")
     if cmd == "start" then start(arg)
-    elseif cmd == "stop" then stop("user"); A.Print("Capture stopped. /wb layer export or reload/logout to save it to disk.")
+    elseif cmd == "stop" then stop("user"); A.Print("Capture stopped. /tw layer export or reload/logout to save it to disk.")
     elseif cmd == "snap" then
         flushEvidence(); snapshot(arg); A.Print("Diagnostic snapshot recorded. Values below are observations, not a synced verdict.")
         local home = Enum and Enum.PartyCategory and Enum.PartyCategory.Home or 1
@@ -211,7 +211,7 @@ function A.LayerCommand(input)
     elseif cmd == "clear" then stop("clear"); db.entries={}; db.dropped=0; A.Print("Diagnostic log cleared.")
     else
         A.Print("Layer capture " .. (started and "ON" or "OFF") .. " | rows=" .. #db.entries .. " | dropped=" .. db.dropped)
-        A.Print("/wb layer start <run-label> | snap <label> | mark <observation> | stop | export | clear")
+        A.Print("/tw layer start <run-label> | snap <label> | mark <observation> | stop | export | clear")
     end
 end
 function A.InitDiagnostics()

@@ -1,9 +1,9 @@
 ## Interface: 16001
-## Title: Warband-PvP
+## Title: TotalWarcraft
 ## Notes: Form parties to seek out world PvP or rally your faction against enemy attacks.
 ## X-Curse-Project-ID: 1819796
-## Author: Warband-PvP
-## Version: 0.7.1-alpha-dev
+## Author: TotalWarcraft
+## Version: 0.7.4-dev
 ## Dependencies: Blizzard_MapCanvas
 ## OptionalDeps: OpenMap
 ## SavedVariables: WarbandPvPDB, WarbandPvPDiagnosticsDB
@@ -24,9 +24,12 @@ ScoutingUI.lua
 WarbandSimulation.lua
 WarbandUI.lua
 UI.lua
+Help.lua
+Activity.lua
 Map.lua
 MapPins.xml
 Report.lua
+AutoReports.lua
 Notifications.lua
 Development.lua
 Core.lua

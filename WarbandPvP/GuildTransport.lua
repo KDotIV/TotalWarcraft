@@ -34,13 +34,12 @@ function A.ReportNote(test, observed, unknown, synthetic)
     end
 --@enddev
 --@release function A.ReportNote(observed, unknown)
-    return "Observer report; fight size unknown. Snapshot: " .. observed
-        .. " flagged players within 100yd; " .. unknown .. " unknown range. Coverage incomplete."
+    return ""
 end
 
 function A.EncodeGuildReport(r)
 --@dev
-    if r.kind ~= "report" or r.demo then return nil, "Guild transport currently supports /wb report only." end
+    if r.kind ~= "report" or r.demo then return nil, "Guild transport currently supports /tw report only." end
 --@enddev
 --@release     if r.kind ~= "report" then return nil, "Only player reports are supported." end
     seq = seq + 1
@@ -109,7 +108,7 @@ end
 function A.GuildSend(r)
     if not A.RefreshScope() then return false, "Ruleset/region unavailable; network reporting disabled." end
     if not IsInGuild() then return false, "Join a guild to send reports." end
-    if not A.guildReady then return false, "Guild messaging is unavailable; use /wb status." end
+    if not A.guildReady then return false, "Guild messaging is unavailable; use /tw status." end
     local packet, reason = A.EncodeGuildReport(r)
     if not packet then return false, reason end
     -- Forever's second UnitName return is a surname; use the shared full identity.

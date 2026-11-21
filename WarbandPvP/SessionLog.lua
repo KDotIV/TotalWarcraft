@@ -20,7 +20,7 @@ function A.Trace(kind,message)
     else entries[(head+count-1)%LIMIT+1]=row; count=count+1 end
 end
 function A.SessionLogText()
-    local rows={"WBP session log v1 | addon="..(A.release or "unknown").." | flavor="..(A.buildFlavor or "dev").." | omitted="..dropped,
+    local rows={"TotalWarcraft session log v1 | addon="..(A.release or "unknown").." | flavor="..(A.buildFlavor or "dev").." | omitted="..dropped,
         "Local session only; resets on reload/login. Names and in-game locations may appear. No chat contents. No automatic upload.",
         "Observations do not prove PvP participation or a shared layer."}
     for i=0,count-1 do rows[#rows+1]=entries[(head+i-1)%LIMIT+1] end
@@ -44,6 +44,12 @@ end
 function A.InitSessionLog()
     began=GetTime(); refill=began
     A.Trace("SESSION","started; addon="..(A.release or "unknown").." player="..clean(A.WB.UnitName("player"),64))
+    -- Observe calls for attribution; never invoke or replace the native API.
+    if type(hooksecurefunc)=="function" and C_PartyInfo and type(C_PartyInfo.InviteUnit)=="function" then
+        pcall(hooksecurefunc,C_PartyInfo,"InviteUnit",function(target)
+            if not A.nativeInviteInProgress then A.Trace("NATIVE_INVITE_CALL","outside TotalWarcraft invitation flow; origin unverified; target="..clean(target,64)) end
+        end)
+    end
     local frame=CreateFrame("Frame")
     local times={}
     for _,event in ipairs({"PLAYER_LOGIN","PLAYER_LOGOUT","PLAYER_ENTERING_WORLD","ZONE_CHANGED_NEW_AREA",

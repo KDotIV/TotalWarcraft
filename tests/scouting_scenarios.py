@@ -58,13 +58,13 @@ A.BackWindow(); assert(A.details:IsShown() and not A.scouting.panel:IsShown())
     net.advance(10)
     friend.globals().A.OnScoutMessage('WBP_SCOUT1',good,'GUILD','Scout One')
     assert get(friend,'A.List()[1].scout.expiresAt')==before
-    friend.execute('A.Tooltip(UIParent,A.List()[1]); assert(A.tooltipRecord)')
+    friend.execute('A.ShowEnemyScout(A.List()[1]); A.Tooltip(UIParent,A.List()[1]); assert(A.tooltipRecord)')
     net.advance(80)
     friend.execute('assert(not A.tooltipRecord and not GameTooltip:IsShown())')
     for lua in (scout,friend):
-        lua.execute("assert(#A.List()==1 and A.List()[1].scout.state=='expired'); assert(A.ScoutSummary(A.List()[1]):find('unknown',1,true))")
+        lua.execute("assert(#A.List()==1 and A.List()[1].scout.state=='expired'); assert(A.ScoutSummary(A.List()[1])=='')")
     # Native report pin still expires normally and closes its scouting details.
-    friend.execute('A.ShowEnemyScout(A.List()[1])')
+    friend.execute('assert(not A.scouting.panel:IsShown()); A.ShowEnemyScout(A.List()[1]); assert(not A.scouting.panel:IsShown())')
     net.advance(211)
     friend.execute('A.Prune(NOW); A.RefreshReportSurfaces(); assert(not A.scouting.panel:IsShown())')
 

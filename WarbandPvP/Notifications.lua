@@ -16,11 +16,11 @@ function A.CountText(r)
     if r.test then return r.count .. " simulated participants (TEST)" end
 --@enddev
 
-    if r.countUnknown then return "Fight size unknown" end
+    if (r.observedCount or 0)>0 then return r.observedCount .. " combatants" end
 --@dev
-    return r.count .. (r.estimated and " estimated participants" or " reported participants")
+    if not r.countUnknown and (r.count or 0)>0 then return r.count .. " combatants" end
 --@enddev
---@release     return "Fight size unknown"
+    return ""
 end
 function A.ShowDetails(r)
     if not r or r.expiresAt <= GetServerTime() or not A.records[r.id] then return end
@@ -29,7 +29,7 @@ function A.ShowDetails(r)
         A.details = f
         f.title = label(f,30,-174,520,"GameFontNormalLarge")
         f.body = label(f,30,-220,520); f.body:SetSpacing(5)
-        A.Button(f,"Enemy scouting",30,-578,520,function() A.ShowEnemyScout(f.record) end)
+        f.scout=A.Button(f,"Enemy warband",30,-578,520,function() A.ShowEnemyScout(f.record) end)
         A.Button(f,"Show on map",30,-620,248,function() A.OpenMap(f.record) end)
         A.Button(f,"Rally to report",302,-620,248,function()
             if not f.record then return end
@@ -40,15 +40,17 @@ function A.ShowDetails(r)
     end
     local f = A.details; f.record = r
     f.title:SetText(A.DisplayTitle(r))
-    f.body:SetText(A.LocationText(r) .. "\n" .. A.CountText(r)
-        .. "\nReported by: " .. r.reporter
-        .. "\nRuleset: " .. r.ruleset .. " | Layer: unknown"
-        .. "\nRally to this location, or ask the reporter for a party invite."
-        .. "\nA rally marker does not prove the reporter is still there."
-        .. "\n" .. A.ScoutSummary(r)
-        .. (r.opposition ~= "" and "\nReported opposition: " .. r.opposition or "")
-        .. "\n" .. r.note
-        .. "\n" .. (r.expiresAt <= GetServerTime() and "Expired report" or "Expires in " .. (r.expiresAt - GetServerTime()) .. "s"))
+    local lines={A.LocationText(r)}
+    local count,scout=A.CountText(r),A.ScoutSummary(r)
+    if count~="" then lines[#lines+1]=count end
+    if r.reporter~="" then lines[#lines+1]="Reported by: "..r.reporter end
+    if scout~="" then lines[#lines+1]=scout end
+    if r.opposition~="" then lines[#lines+1]="Opposition: "..r.opposition end
+--@dev
+    if (r.test or r.demo) and r.note~="" then lines[#lines+1]=r.note end
+--@enddev
+    lines[#lines+1]="Expires in "..(r.expiresAt-GetServerTime()).."s"
+    f.body:SetText(table.concat(lines,"\n")); f.scout:SetShown(scout~="")
     f:Show()
 end
 function A.RefreshReportSurfaces()
@@ -83,7 +85,8 @@ function A.ShowToast(r)
     local f=A.toast; f.record=r
     f.title:SetText(A.DisplayTitle(r))
     f.location:SetText(A.LocationText(r))
-    f.hint:SetText(A.CountText(r) .. "\nClick: details   Right-click: dismiss")
+    local count=A.CountText(r)
+    f.hint:SetText((count~="" and count.."\n" or "").."Click: details   Right-click: dismiss")
     if A.toastTimer then A.toastTimer:Cancel() end
     f:Show(); A.toastTimer=C_Timer.NewTimer(10,function() f:Hide(); A.toastTimer=nil end)
 end

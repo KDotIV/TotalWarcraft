@@ -7,7 +7,7 @@ local function read(fn, ...)
     return value, extra
 end
 
--- One bounded snapshot on user input; no background scan or retained unit frames.
+-- One bounded sample per submission; no retained unit frames or continuous scan.
 --@dev
 function A.Snapshot(simulate)
 --@enddev
@@ -54,11 +54,13 @@ function A.Snapshot(simulate)
     for i = 1, 4 do inspect("party" .. i) end
     local plates = read(C_NamePlate and C_NamePlate.GetNamePlates)
     if type(plates) == "table" then
-        for i = 1, math.min(#plates, 64) do
-            local plate = plates[i]
-            if plate and (not plate.IsForbidden or not plate:IsForbidden()) then
-                local unit = plate.namePlateUnitToken
-                if not (issecretvalue and issecretvalue(unit)) and type(unit) == "string" then inspect(unit) end
+        for i = 1, 64 do
+            local plate = read(function() return plates[i] end)
+            if not plate then break end
+            local allowed = read(function() return not plate.IsForbidden or not plate:IsForbidden() end)
+            if allowed == true then
+                local unit = read(function() return plate.namePlateUnitToken end)
+                if type(unit) == "string" then inspect(unit) end
             end
         end
     end
@@ -67,7 +69,8 @@ end
 
 function A.Report()
     if not A.db then return false, "Addon is not ready." end
-    if A.RefreshScope and not A.RefreshScope() then return false, "Ruleset/region unavailable; report not sent. Run /wb status." end
+    if A.ReportBlockedByDuel and A.ReportBlockedByDuel() then return false,"Reports are paused during or just after a duel." end
+    if A.RefreshScope and not A.RefreshScope() then return false, "Ruleset/region unavailable; report not sent. Run /tw status." end
     local now = GetServerTime()
 --@dev
     local test = A.testMode == true
@@ -122,6 +125,7 @@ function A.Report()
     if test then A.lastTestSubmit = now else A.db.lastSubmit = now end
 --@enddev
 --@release     A.db.lastSubmit = now
+    if A.autoReports and read(UnitAffectingCombat,"player")==true then A.autoReports.attempted=true end
     return true, message or "Report submitted; remote delivery not confirmed."
 end
 

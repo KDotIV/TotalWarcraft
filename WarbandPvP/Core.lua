@@ -1,6 +1,6 @@
 local name, A = ...
-A.release = A.release or "0.7.1-alpha-dev"
-function A.Print(message) print("|cffedbf69Warband-PvP:|r " .. message) end
+A.release = A.release or "0.7.4-dev"
+function A.Print(message) print("|cffedbf69TotalWarcraft:|r " .. message) end
 
 function A.Changed()
     if A.RefreshReportSurfaces then A.RefreshReportSurfaces() end
@@ -53,6 +53,7 @@ events:SetScript("OnEvent", function(_, event, addon)
         A.InitSessionLog()
         A.InitFinder()
         A.InitScouting()
+        A.InitAutoReports()
         WarbandPvP = {
             Report = A.RunReport,
             Open = A.ToggleHome,
@@ -68,8 +69,12 @@ events:SetScript("OnEvent", function(_, event, addon)
 
             Version = 1,
         }
-        SLASH_WARBANDPVP1 = "/wb"
-        BINDING_HEADER_WARBANDPVP = "Warband-PvP"
+        -- Keep installation/settings/binding and wire identifiers stable for upgrades.
+        TotalWarcraft = WarbandPvP
+        SLASH_WARBANDPVP1 = "/tw"
+        SLASH_WARBANDPVP2 = "/totalwarcraft"
+        SLASH_WARBANDPVP3 = "/wb"
+        BINDING_HEADER_WARBANDPVP = "TotalWarcraft"
         BINDING_NAME_WARBANDPVP_REPORT = "Report PvP at my location"
         BINDING_NAME_WARBANDPVP_OPEN = "Open command board"
         BINDING_NAME_WARBANDPVP_WARBANDS = "Open warbands"
@@ -78,6 +83,8 @@ events:SetScript("OnEvent", function(_, event, addon)
             local input = command:match("^%s*(.-)%s*$")
             command = input:lower()
             if command == "report" then A.RunReport()
+            elseif command == "auto on" then A.SetAutoReportsEnabled(true)
+            elseif command == "auto off" then A.SetAutoReportsEnabled(false)
             elseif command == "show" then A.ShowWarbands()
             elseif command == "finder" then A.ShowFinder()
             elseif command == "find" then local _,msg=A.FinderSearch(); A.Print(msg)
@@ -86,16 +93,17 @@ events:SetScript("OnEvent", function(_, event, addon)
             elseif command == "presence off" then A.SetPresenceEnabled(false)
             elseif command == "presence" or command == "presence status" then A.PrintPresenceStatus()
             elseif command == "export" then A.ShowExport()
-            elseif command == "status" or command == "help" then A.ShowHelp()
+            elseif command == "help" then A.ShowHelp()
+            elseif command == "status" then A.ShowHelp(9)
             --@dev
             elseif A.DevelopmentCommand(command,input) then
             --@enddev
             elseif command == "clear" then
                 A.ClearReports()
             elseif command:match("^ruleset ") then
-                A.Print("Network rulesets are detected from the game; manual overrides are disabled. Use /wb status.")
+                A.Print("Network rulesets are detected from the game; manual overrides are disabled. Use /tw status.")
             elseif command == "" then A.ToggleHome()
-            else A.Print("Unknown command. Open /wb for all features and shortcuts.") end
+            else A.Print("Unknown command. Open /tw for all features and shortcuts.") end
         end
     elseif event == "GAME_RULES_CHANGED" then
         if A.db and A.RefreshScope then A.RefreshScope() end

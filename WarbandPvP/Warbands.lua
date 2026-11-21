@@ -237,7 +237,7 @@ function A.SetWarbandsEnabled(enabled)
         end
     end
     W.enabled=enabled==true and W.ready==true; changed()
-    if A.FinderSync then A.FinderSync(); if W.enabled then A.FinderSearch() end end
+    if A.FinderSync then A.FinderSync() end
 --@dev
     A.Print(W.enabled and ((P.IsSimulation() and "[TEST] " or "").."Warband discovery ON this session (guild/party and named subscriptions).") or "Warband discovery OFF.")
 --@enddev
@@ -276,9 +276,9 @@ function A.JoinWarband(id)
     W.join={id=id,session=r.session,owner=r.owner,ownerKey=r.ownerKey,nonce=nonce,memberSession=memberSession,untilAt=GetTime()+30}
     whisper(P.Request("J",id,r.session,nonce,{info.mode,info.leader,info.count,memberSession}),r.owner,"JOIN:"..id)
 --@dev
-    flush(); changed(); return true,P.IsSimulation() and "[TEST] Joining as a separate simulated party host; no native invitation." or "Joining WBP warband; native party invitations are a separate step."
+    flush(); changed(); return true,P.IsSimulation() and "[TEST] Joining as a separate simulated party host; no native invitation." or "Joining TotalWarcraft warband; native party invitations are a separate step."
 --@enddev
---@release     flush(); changed(); return true,"Joining WBP warband; native party invitations are a separate step."
+--@release     flush(); changed(); return true,"Joining TotalWarcraft warband; native party invitations are a separate step."
 end
 local function capacity(h,slot)
     local g=h.groups[slot]; if not g or g.retired then return 0 end
@@ -303,7 +303,7 @@ local function handleJoin(f,sender,key)
             else
                 slot=existing.slot; host=g.name; code="joined"
                 if key~=g.key and P.Key(f[11])~=g.key then
-                    if g.key==h.ownerKey then W.invites[key]={name=sender,slot=slot,untilAt=GetTime()+30}
+                    if g.key==h.ownerKey then W.invites[key]={name=sender,slot=slot,id=h.id,session=W.session,memberSession=f[13],untilAt=GetTime()+30}
                     else whisper(P.Request("I",h.id,W.session,P.UUID(),{slot,sender}),g.name,"INVITE:"..key) end
                 end
             end
@@ -336,7 +336,7 @@ local function handleJoin(f,sender,key)
                     host=g.name; code="joined"; h.dirty=true
                     if key~=g.key and P.Key(native)~=g.key then
                         local packet=P.Request("I",h.id,W.session,P.UUID(),{slot,sender})
-                        if g.key==h.ownerKey then W.invites[key]={name=sender,slot=slot,consented=true,untilAt=GetTime()+30}
+                        if g.key==h.ownerKey then W.invites[key]={name=sender,slot=slot,id=h.id,session=W.session,memberSession=f[13],untilAt=GetTime()+30}
                         else whisper(packet,g.name,"INVITE:"..key) end
                     end
                 end
@@ -346,13 +346,37 @@ local function handleJoin(f,sender,key)
     whisper(P.Request("R",h.id,W.session,f[5],{code,slot,host}),sender,"JOIN_REPLY:"..key)
     trace("JOIN",key.." "..code.." slot="..slot); changed()
 end
+local function inviteContext(invite,key)
+    if not W.enabled or not W.ready or not P.Scope() or not invite or invite.untilAt<=GetTime() then return end
+    local own=P.Key(P.UnitName("player"))
+    if not own then return end
+    local h,m=W.host,W.member
+    if h then
+        local recruit=h.members[key]; local g=h.groups[1]
+        return invite.id==h.id and invite.session==W.session and invite.slot==1
+            and g and g.key==own and not g.retired and recruit and recruit.slot==1
+            and recruit.session==invite.memberSession and recruit.untilAt>GetTime()
+    end
+    local r=m and W.records[m.id]
+    return m and m.untilAt>GetTime() and P.Key(m.host)==own and r and r.session==m.session
+        and r.expiresAt>GetServerTime() and invite.id==m.id and invite.session==m.session and invite.slot==m.slot
+end
+local function inviteConsent(invite,key)
+    local c=W.inviteConsents[key]
+    return c and c.untilAt>GetTime() and c.id==invite.id and c.session==invite.session and c.slot==invite.slot
+        and (not invite.memberSession or c.memberSession==invite.memberSession)
+end
 function A.InviteWarbandMember(name)
 --@dev
-    if P.IsSimulation() then return false,"[TEST] Native party invitations are disabled for simulated warbands." end
+    if P.IsSimulation() or A.testMode then return false,"[TEST] Native party invitations are disabled in test mode." end
 --@enddev
 
     local key=P.Key(name); local invite=key and W.invites[key]
-    if not invite or invite.untilAt<=GetTime() then return false,"No fresh request for that player." end
+    if not inviteContext(invite,key) then
+        if key then W.invites[key]=nil; W.inviteConsents[key]=nil end
+        return false,"No matching active warband invitation request."
+    end
+    if not inviteConsent(invite,key) then return false,"Waiting for this recruit's fresh join confirmation." end
     local info,reason=A.WarbandNativeInfo()
     if not info or info.mode=="member" or info.count>=5 then return false,reason or "You must lead a party with space." end
     if P.Read(InCombatLockdown)~=false then return false,"Use Invite after combat." end
@@ -361,16 +385,22 @@ function A.InviteWarbandMember(name)
     if P.UnitFor(invite.name) then W.invites[key]=nil; changed(); return true,"Already in your party." end
     if invite.attemptedAt and GetTime()-invite.attemptedAt<5 then return false,"Wait before retrying the invitation." end
     invite.attemptedAt=GetTime()
+    if A.Trace then A.Trace("PARTY_INVITE_REQUEST","player="..invite.name.." warband="..invite.id.." slot="..invite.slot.." consent=true") end
+    A.nativeInviteInProgress=true
     local ok,result=pcall(fn,invite.name)
+    A.nativeInviteInProgress=nil
     local accepted=ok and not (issecretvalue and issecretvalue(result)) and result~=false
-    invite.blocked=not accepted; changed()
-    if A.Trace then A.Trace("PARTY_INVITE", "player="..invite.name.." result="..(accepted and "attempted; acceptance unconfirmed" or "blocked")) end
+    invite.blocked=not accepted
+    if A.Trace then A.Trace("PARTY_INVITE", "player="..invite.name.." warband="..invite.id.." slot="..invite.slot
+        .." consent=true result="..(accepted and "attempted; acceptance unconfirmed" or "blocked")) end
+    changed()
     return accepted,accepted and "Invitation attempted; accept WoW's invitation to join the party." or "Invitation blocked. Retry here when available."
 end
 local function autoInvite()
 --@dev
     if P.IsSimulation() or A.testMode then return end
 --@enddev
+    if not W.enabled or not (W.host or W.member) then W.invites={}; W.inviteConsents={}; return end
     if P.Read(InCombatLockdown)~=false then return end
     local now=GetTime(); W.inviteAttempts=W.inviteAttempts or {}
     for key,c in pairs(W.inviteConsents) do if c.untilAt<=now then W.inviteConsents[key]=nil end end
@@ -378,12 +408,8 @@ local function autoInvite()
     if #W.inviteAttempts>=6 or (W.lastAutoInvite and now-W.lastAutoInvite<3) then return end
     local chosen
     for key,invite in pairs(W.invites) do
-        local consent=W.inviteConsents[key]
-        local root=W.host or W.member
-        local session=W.host and W.session or W.member and W.member.session
-        local allowed=invite.consented or (consent and root and consent.id==root.id and consent.session==session and consent.slot==invite.slot and consent.untilAt>now)
-        if P.UnitFor(invite.name) then W.invites[key]=nil
-        elseif allowed and not invite.attemptedAt and invite.untilAt>now and (not chosen or invite.name<chosen.name) then chosen=invite end
+        if not inviteContext(invite,key) or P.UnitFor(invite.name) then W.invites[key]=nil; W.inviteConsents[key]=nil
+        elseif inviteConsent(invite,key) and not invite.attemptedAt and (not chosen or invite.name<chosen.name) then chosen=invite end
     end
     if not chosen then return end
     local info=A.WarbandNativeInfo()
@@ -447,7 +473,7 @@ local function handleState(f,sender,key,route)
     if f[2]=="E" then
         old.closed=true; W.records[r.id]=nil
         if W.join and W.join.id==r.id and W.join.ownerKey==key then W.join=nil end
-        if W.member and W.member.id==r.id and W.member.ownerKey==key then W.member=nil; W.invites={}; A.Print("Your WBP warband ended. WoW parties remain unchanged.") end
+        if W.member and W.member.id==r.id and W.member.ownerKey==key then W.member=nil; W.invites={}; A.Print("Your TotalWarcraft warband ended. WoW parties remain unchanged.") end
     elseif f[2]=="G" then record.groups=groups
     else
         W.owners[key]={id=r.id,updatedAt=r.updatedAt,untilAt=GetTime()+190,
@@ -488,7 +514,7 @@ function A.OnWarbandMessage(prefix,packet,route,sender)
         local slot=W.host and 1 or W.member and W.member.slot
         if root and f[3]==root.id and f[4]==session and tonumber(f[10])==slot
             and P.Key(f[11])==P.Key(P.UnitName("player")) and (W.inviteConsents[key] or size(W.inviteConsents)<20) then
-            W.inviteConsents[key]={id=f[3],session=f[4],slot=slot,untilAt=now+30-math.max(0,GetServerTime()-tonumber(f[6]))}
+            W.inviteConsents[key]={id=f[3],session=f[4],memberSession=f[5],slot=slot,untilAt=now+30-math.max(0,GetServerTime()-tonumber(f[6]))}
         end
         return
     end
@@ -510,9 +536,9 @@ function A.OnWarbandMessage(prefix,packet,route,sender)
                 whisper(P.Request("V",j.id,j.session,j.memberSession,{f[11],f[12]}),f[12],"INVITE_CONSENT:"..j.id)
             end
 --@dev
-            A.Print((P.IsSimulation() and "[TEST] " or "").."Joined WBP warband, group "..f[11].." led by "..f[12]..(P.IsSimulation() and ". Dummy roster only; no native grouping or layer test." or ". Accept a normal party invitation if needed; layer unverified."))
+            A.Print((P.IsSimulation() and "[TEST] " or "").."Joined TotalWarcraft warband, group "..f[11].." led by "..f[12]..(P.IsSimulation() and ". Dummy roster only; no native grouping or layer test." or ". Accept a normal party invitation if needed; layer unverified."))
 --@enddev
---@release             A.Print("Joined WBP warband, group "..f[11].." led by "..f[12]..". Accept a normal party invitation if needed; layer unverified.")
+--@release             A.Print("Joined TotalWarcraft warband, group "..f[11].." led by "..f[12]..". Accept a normal party invitation if needed; layer unverified.")
         else A.Print("Warband join: "..A.CleanText(f[10],32)) end
         changed(); return
     end
@@ -522,7 +548,7 @@ function A.OnWarbandMessage(prefix,packet,route,sender)
 --@release     if f[2]=="I" and rootMatch(f,sender) and P.Key(W.member.host)==P.Key(P.UnitName("player")) and tonumber(f[10])==W.member.slot then
         if rate.inviteNonce~=f[5] and size(W.invites)<5 then
             rate.inviteNonce=f[5]
-            W.invites[P.Key(f[11])]={name=f[11],slot=tonumber(f[10]),untilAt=now+30-math.max(0,GetServerTime()-tonumber(f[6]))}; changed()
+            W.invites[P.Key(f[11])]={name=f[11],slot=tonumber(f[10]),id=f[3],session=f[4],untilAt=now+30-math.max(0,GetServerTime()-tonumber(f[6]))}; changed()
         end
         return
     end
@@ -593,7 +619,7 @@ function A.WarbandArrival(r)
     if not m or m.id~=r.id then return "Not a member" end
     if not r.groups or not r.groups[m.slot] then return "Group host position unavailable; layer unverified" end
     local info=A.WarbandNativeInfo()
-    if not info or P.Key(info.leader)~=P.Key(m.host) then return "Joined WBP; waiting for native party "..m.slot end
+    if not info or P.Key(info.leader)~=P.Key(m.host) then return "Joined TotalWarcraft; waiting for native party "..m.slot end
     return (W.transferPending and "World refresh pending" or "In assigned party; co-location unverified")
 end
 function A.WarbandCommand(input)
@@ -667,5 +693,5 @@ end
 
 function A.WarbandModeStatus() return "LIVE" end
 function A.WarbandDisplayTitle(r) return r.title end
-function A.WarbandCountText(r) return "WBP members: "..r.count.." (organizer-reported)" end
+function A.WarbandCountText(r) return "TotalWarcraft members: "..r.count.." (organizer-reported)" end
 function A.WarbandGroupCountText(r,g) return "roster "..g.count.." (reported)" end

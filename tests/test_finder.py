@@ -1,11 +1,14 @@
 """Run recruitment discovery/lifecycle/consent against independent source clients."""
 from wow_mock import client
-from finder_scenarios import check_finder, check_finder_edges, check_delegated_recruitment, install
+from finder_scenarios import check_finder, check_finder_edges, check_delegated_recruitment, check_idle_and_consent, install
 from warband_network import WORLD
 
 check_finder()
 check_finder_edges(client)
 check_delegated_recruitment()
+check_idle_and_consent(client)
+from finder_scenarios import check_rally_zone
+check_rally_zone(client)
 dev = client('Developer One'); dev.execute(WORLD); install(dev)
 dev.execute('''
 A.testMode=true

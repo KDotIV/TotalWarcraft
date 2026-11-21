@@ -28,14 +28,17 @@ end
 views=[('Command board','A.ShowHome()','A.home'),('Warbands','A.ShowWarbands()','A.warbands.panel'),
        ('Recruitment','A.ShowFinder()','A.finder.panel'),
        ('Field reports','A.BuildUI(); A.panel:Show()','A.panel'),('Group locations','A.ShowPresence()','A.presencePanel'),
-       ('Field guide','A.ShowHelp()','A.helpPanel'),('Bindings','A.ShowBindings()','A.bindingPanel')]
+       ('Help: reports','A.ShowHelp(2)','A.helpPanel'),('Help: support','A.ShowHelp(9)','A.helpPanel'),
+       ('Bindings','A.ShowBindings()','A.bindingPanel')]
 lua.execute('''
 A.Report(); previewReport=A.List()[1]
+previewReport.observedCount=6
 previewReport.scout={state='known',enemy='Observed Enemy',title='Roaming patrol',
  members=12,parties=3,activity='roaming',updatedAt=GetServerTime(),expiresAt=GetServerTime()+90,
  warbandID='12345678-1234-4123-8123-123456789abc'}
 ''')
-views += [('Enemy scouting','A.ShowEnemyScout(previewReport)','A.scouting.panel')]
+views += [('Field report','A.ShowDetails(previewReport)','A.details'),
+          ('Enemy scouting','A.ShowEnemyScout(previewReport)','A.scouting.panel')]
 sections=[]
 for name,command,expr in views:
     lua.execute(command)
@@ -49,9 +52,12 @@ for name,command,expr in views:
         if cls=='control': style+=f'height:{item.h}px;'
         elements.append(f'<div class="{cls}" style="{style}">{html.escape(item.text)}</div>')
     sections.append(f'<section><h2>{name}</h2><div class="panel" style="width:{frame.w}px;height:{frame.h}px">'+''.join(elements)+'</div></section>')
-document='''<!doctype html><meta charset="utf-8"><title>WBP layout reference</title>
+document='''<!doctype html><meta charset="utf-8"><title>TotalWarcraft layout reference</title>
 <style>body{background:#171512;color:#ddcba8;font:14px Arial;margin:22px}h1{font-size:20px}h2{font-size:16px}main{display:flex;gap:30px;flex-wrap:wrap}.panel{position:relative;background:url(campaign-frame-source-v1.png) center/100% 100% no-repeat}.label,.control{position:absolute;box-sizing:border-box;white-space:pre-wrap;line-height:1.35}.label{padding:0}.control{background:linear-gradient(#651c15,#330f0d);border:1px solid #ab7a3d;box-shadow:inset 0 0 0 2px #20140d;text-align:center;line-height:24px;border-radius:3px;font:13px/24px Georgia}.label:has(+.nothing){display:none}</style>
-<h1>Warband-PvP — offline layout reference</h1><p>Generated from Lua frame positions. Browser font approximation; this is not an in-game screenshot.</p><main>'''+''.join(sections)+'</main>'
+<h1>TotalWarcraft — offline layout reference</h1><p>Generated from Lua frame positions. Browser font approximation; this is not an in-game screenshot.</p><main>'''+''.join(sections)+'''</main><script>
+const view=new URLSearchParams(location.search).get('view');
+if(view) document.querySelectorAll('section').forEach(s=>{if(s.querySelector('h2').textContent!==view)s.remove()});
+</script>'''
 out=ROOT/'docs/assets/ui-layout-preview.html'
 out.write_text(document,encoding='utf-8')
 print(out)

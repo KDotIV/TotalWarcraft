@@ -28,8 +28,8 @@ A.warbands.records={}; A.BackWindow(); only(A.warbands.panel)
 -- Closing via Escape/close does not reopen previous dialogs unexpectedly.
 A.warbands.panel:Hide(); assert(A.ActiveWindow()==nil)
 A.ShowHelp(); only(A.helpPanel); A.BackWindow(); only(A.home)
--- Opening a map releases the WBP panel; no toast covers an active WBP window.
+-- Opening a map releases the TotalWarcraft panel; no toast covers an active TotalWarcraft window.
 A.OpenMap({mapID=1}); assert(A.ActiveWindow()==nil and WorldMapFrame:IsShown())
 A.ShowHome(); A.ShowToast({}); assert(not A.toast or not A.toast:IsShown()); only(A.home)
 ''')
-print('PASS: one active WBP dialog at all sizes, Back history, expired details, retained inputs, drag, close, map navigation and toast suppression.')
+print('PASS: one active TotalWarcraft dialog at all sizes, Back history, expired details, retained inputs, drag, close, map navigation and toast suppression.')

@@ -121,23 +121,23 @@ function A.ControlCommand(input)
     cmd=cmd:lower()
     if cmd=="allow" then
         local allowed=name(arg)
-        if not allowed or not A.controlReady then A.Print("Use /wb control allow First Surname while addon messaging is available."); return end
+        if not allowed or not A.controlReady then A.Print("Use /tw control allow First Surname while addon messaging is available."); return end
         controller=allowed; seen={}; lastReceived=nil
         A.Print("Remote testing authorized for " .. allowed .. " this session: simulated reports/warbands, test mode, group location sharing and local captures.")
-        A.Print("/wb control off revokes access and stops test mode, presence and capture. Reload also revokes access.")
+        A.Print("/tw control off revokes access and stops test mode, presence and capture. Reload also revokes access.")
     elseif cmd=="off" then
         controller=nil; seen={}
         A.SetTestMode(false); A.SetPresenceEnabled(false); A.LayerCommand("stop")
         A.Print("Remote testing disabled.")
     else
-        A.Print("Remote controller: " .. (controller or "none") .. " (session only). /wb control allow First Surname | off")
+        A.Print("Remote controller: " .. (controller or "none") .. " (session only). /tw control allow First Surname | off")
     end
 end
 function A.RemoteCommand(input)
     local target,verb=input:match("^%s*(.-)%s+(%S+)%s*$")
     target=name(target); verb=verb and verb:lower()
     if not target or not verbs[verb] then
-        A.Print("/wb remote First Surname <status|test-on|test-off|presence-on|presence-off|report|capture-start|capture-stop|snapshot|warband-five|warband-watch|warband-join|warband-leave>"); return
+        A.Print("/tw remote First Surname <status|test-on|test-off|presence-on|presence-off|report|capture-start|capture-stop|snapshot|warband-five|warband-watch|warband-join|warband-leave>"); return
     end
     if not A.controlReady or not A.RefreshScope() then A.Print("Remote testing messaging/scope unavailable."); return end
     local now=GetTime()

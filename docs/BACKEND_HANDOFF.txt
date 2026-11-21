@@ -1,5 +1,60 @@
 WARBAND-PVP - BACKEND AND ADDON HANDOFF
-CURRENT BUILD: 0.7.1-alpha (developer flavor installed; CurseForge submitted)
+CURRENT BUILD: 0.7.3-alpha (developer flavor installed; production ZIP prepared)
+November 21, 2026, 17:22 UTC. User identified LayerSwap as the unexpected invite
+source; no proven WBP unsolicited-invite incident. Safeguards retained regardless.
+
+Finder is idle without a recruiting warband, except explicit Search or cleanup
+of its own listing. Search never joins. Active UUID/session/slot/lease + fresh
+recruit consent required on all WBP native invite paths. Session export logs
+requests/results and passive native calls outside WBP with unverified origin.
+Exact localized Competitive activity matching follows the organizer's rally;
+search selection is independent. Fixed/follow/secondary-party cases covered.
+Report pins use built-in Dual Wield/Berserker Stance art and a raid skull;
+native red pulse, compact tooltips and vector fallback retained. No icon files
+bundled. Offline preview: docs/assets/activity-preview-0.7.3.jpg.
+
+All 15 suites pass. Finder and compiled-release suites rerun after final edits.
+Live API/rendering/LayerSwap coexistence still needs acceptance. See
+REFINEMENTS_0.7.3.txt for sources, boundaries and the test procedure.
+Installed at E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP,
+33 hash-verified files; settings and other addons unchanged.
+Backup: releases/installed-backups/WarbandPvP-before-0.7.3-alpha-dev-20261121-172230.zip
+Release SHA256: a01374f3f861b09b6f2649f9bfaf049bff8380492efe25342243587ee09fee95
+Dev SHA256: 401aee8aeab0e35369594859667af8b33d17f49710f7d3c4061679cb776a4045
+Neither Git push nor CurseForge upload performed for this refinement.
+
+PREVIOUS 0.7.2 HANDOFF (historical)
+CURRENT BUILD: 0.7.2-alpha (developer flavor installed; production ZIP prepared)
+November 21, 2026: user confirmed CurseForge project approval.
+
+Completed: compact known-only report tooltips/details, automatic eligible outdoor
+PvP guild reports, duel lifecycle/outgoing-request/mid-combat-reload safeguards,
+shared manual/auto cooldown, explicit automatic-report toggle and bounded export
+skip diagnostics. Main board: Create Warband, Help, no manual report button.
+Nine-page Help covers ordinary commands, features, limits, status and bug reports.
+
+Conflict pins cluster nearby reports, deduplicate native sender identities and
+use a fading two-minute recency weight. Native sword geometry grows 22–32 pixels,
+red halo pulses for growing conflict, gold banner marks heavy activity. Tooltips
+add one short label, never inferred teams or summed player counts. Old nearby
+reports cannot obscure a new hot cluster. All report details remain in the list.
+
+All 15 offline suites pass, including auto/activity tests against stripped release.
+Sources, design limits and pending live acceptance: AUTO_REPORTS_UI_0.7.2.txt.
+These are observations, not proof of exchanged hits, exact participants or layers.
+Source has no unrestricted combat-log/GUID workaround or hidden transport.
+
+Installed 0.7.2-alpha-dev at 16:56 UTC November 21:
+E:\World of Warcraft\_forever_\Interface\AddOns\WarbandPvP — 33 hash-verified files.
+Backup: releases/installed-backups/WarbandPvP-before-0.7.2-alpha-dev-20261121-165519.zip.
+Final refresh backup: releases/installed-backups/WarbandPvP-before-0.7.2-alpha-dev-20261121-165648.zip.
+SavedVariables unchanged. Restart WoW to load new modules.
+Production ZIP excludes developer code/commands. No 0.7.2 upload or Git push was
+performed; the public project description draft is updated locally.
+Release SHA-256: 42ffea074b3993b771932a1c9be173ca2aef567d1fb0d6553edb69d9ec55b558
+Dev SHA-256: bbea90b7da11d72d1ff18ddfef6b1ded7efead3328d12fe19521c8b6aee715cf
+
+PREVIOUS 0.7.1 HANDOFF (historical installation/publication state)
 Source is now WarbandPvP/, command prefix /wb, warband board /wb show.
 Physical release/dev separation, one-dialog navigation, campaign frame,
 command board/keybindings/session export and Forever-only scope are implemented.
