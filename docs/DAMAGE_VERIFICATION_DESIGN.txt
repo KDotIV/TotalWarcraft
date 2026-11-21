@@ -1,0 +1,147 @@
+TOTALWARCRAFT - DAMAGE VERIFICATION DESIGN
+November 21, 2026. Research/proposal only; not implemented in 0.7.5.
+
+RECOMMENDATION
+Validate post-combat C_DamageMeter unit breakdowns on the live Forever client.
+Start with the local player's DamageTaken view. A readable, positive damage
+record attributed to an identified opposing player could establish that the
+opponent damaged the reporter, even if the opponent has no addon. This is a
+promising supported path, not yet a demonstrated live capability.
+
+One-way damage is enough to establish a PvP attack; a victim need not retaliate.
+Only matching A -> B AND B -> A evidence in the same encounter establishes an
+exchange. Two combat flags, casts, health drops or matching totals do not.
+
+WHAT THE CURRENT SOURCE ACTUALLY EXPOSES
+Blizzard source mirror, Forever commit 734f065329cff4992835b01a84f210a297db91b6
+(November 20, 2026), inspected directly through GitHub on November 21:
+- C_DamageMeter.GetCombatSessionFromID and GetCombatSessionSourceFromID are
+  marked SecretWhenInCombat. This suggests an out-of-combat read path, not a
+  guarantee that every returned identity/value becomes readable everywhere.
+- DamageMeterCombatSpell includes combatSpellDetails. Its unit-details schema
+  includes unitName, unitClassFilename, isPet, isMob, classification and amount.
+  This is more useful than session totals alone. It is an aggregate breakdown,
+  not a timestamped hit-by-hit combat-log stream.
+- Blizzard's DamageMeterSpellEntryMixin reads those fields and explicitly
+  describes displaying the other unit for damage-taken rows. The direction of
+  unitName depends on the meter category; do not assume it always means victim.
+- DamageDone, DamageTaken and EnemyDamageTaken categories exist. Their live
+  coverage, player identity formatting and directional breakdowns need testing.
+  The existence of an enum is not proof that it contains useful world-PvP data.
+- Session source rows have an isLocalPlayer flag and a potentially secret GUID.
+  Unit-detail rows have a name but no declared GUID/realm/faction field. A class
+  name or short character name alone is not a globally unique player identity.
+
+This refines the earlier audit finding: totals alone cannot attribute damage,
+but current per-unit spell breakdowns are a concrete candidate. No live source
+of damage attribution was established in the audit, and 0.7.5 adds none.
+
+PROPOSED FLOW, AFTER LIVE ACCEPTANCE
+1. Keep a bounded local encounter context from normal game events: start/end,
+   zone/position, duel/instance/FFA/sanctuary exclusion state, and safely readable
+   identities/factions of visible opponents. No /who, map-wide scans or remote
+   guild-combat polling. Unknown/secret exclusion state blocks verification.
+2. On combat end, wait for the matching meter session update and inspect that
+   session by ID, starting with the local player row in DamageTaken. Read only
+   when combat has actually ended and the API reports itself available. Do not
+   toggle or reset Blizzard's meter/settings to make data appear.
+3. Accept only readable positive per-unit damage with validated category
+   semantics. Require isMob == false and isPet == false, plus an unambiguous
+   opposing-player identity from the same encounter. No NPC/pet-owner guessing.
+   Missing unit details, ambiguous names or secret values produce no verified
+   result. Never substitute overall/spell totals for a missing per-unit amount.
+4. Record direction: opponent -> local player. If DamageDone or a validated
+   EnemyDamageTaken breakdown also identifies local player -> same opponent in
+   that session, record a reciprocal exchange. Otherwise retain only one-way
+   evidence. Never require an opponent to install the addon or reply.
+5. Publish one compact observation summary through the existing permitted
+   same-faction report route. Use the encounter's recorded location/time, not
+   the player's hearth destination or graveyard. Reject encounters crossing
+   zones, instances or ambiguous transfers rather than inventing a fight point.
+   Session aggregation cannot identify the precise position of each hit; use
+   conservative locality limits and describe the point as an encounter location.
+
+SESSION INTEGRITY AND COST
+Proposed limits: one active encounter, at most 64 observed opponent identities,
+   64 source rows and 512 spell rows inspected per pass, with early exits.
+At most three deferred reads within five seconds after combat ends; stop on new
+   combat, map change, reload, timeout or success. No idle polling, combat-time
+   meter parsing or permanent per-frame work. Use session-update events to wake.
+Keep a small expiry/deduplication cache keyed by local session ID plus login
+   generation. Meter IDs are local; never use them as cross-client encounter IDs.
+Do not select Overall, blindly select the latest historical session, or reuse
+   evidence after a meter reset. Mixed/merged sessions without clear encounter
+   boundaries are ineligible; do not infer a new hit from an old cumulative total.
+Check tables and leaves for restricted values before indexing, comparisons,
+   arithmetic, formatting, logging or serialization. pcall is error handling,
+   not declassification. Do not read specIconID or other fields we do not need.
+Use an observation UUID, sender session/sequence, TTL, strict size limits and
+   replay/rate checks. Define any evidence extension as a new explicit protocol
+   version; never repurpose 0.7.5's observedCount into a verified count. A legacy
+   report cannot gain verification merely by receiving a newer-looking field.
+
+USER EXPERIENCE
+For a future verified-only automatic mode, send after supported attribution is
+available; otherwise skip the automatic report. Manual reports stay available
+and remain player observations. This removes the two-separate-NPC-fights false
+positive from the verified path at the cost of delayed/missed reports.
+Alternatively, preserving immediate observational reports and upgrading them
+later is possible, but that does not eliminate those initial false positives.
+Recommend verified-only automatic reports if the live test succeeds, with this
+latency tradeoff made clear before changing behavior in a later release.
+
+Keep map tooltips compact. Add a short positive label only when supported, such
+as "Damage observed"; do not add Unknown/No evidence/Snapshot placeholders.
+Keep provenance and directional detail in the session journal/report details.
+Heat means recent reported activity, not exact team sizes. Duplicate updates or
+several spells from one observer must not inflate heat or combatant counts.
+
+TRUST BOUNDARY
+A readable Blizzard record can support the local client's attribution decision.
+After transmission, it is still that sender's claim. UUIDs, hashes, obfuscation,
+sequence numbers and guild/roster checks cannot prove an unmodified addon or
+server-signed damage. Independent observers can corroborate, not cryptographically
+certify, a fight. This is not sufficient for automated bounty payouts/escrow.
+No nearby/involved addon client still means no observer to send such a report.
+The cancelled zero-observer remote-detection experiment remains cancelled.
+
+LIVE ACCEPTANCE BEFORE IMPLEMENTATION
+Use the existing separate dev build; any diagnostic additions must be dev-only,
+bounded and local. No new tool was installed or shipped for this proposal.
+Record the actual GetBuildInfo result, not just the source-mirror branch name.
+1. Meter availability: API existence, IsDamageMeterAvailable and per-field
+   readability after combat. Capture current session ID and local source row.
+2. NPC-only control: damage to/from an NPC must never produce player evidence.
+3. Same/opposite-faction duels: exclude the whole encounter, including its tail.
+4. One-way outdoor PvP: one opponent damages the tester, tester does not hit
+   back, then combat ends. Expect incoming damage only. Opponent needs no addon.
+5. Reciprocal PvP: both attack; separately confirm both directional breakdowns.
+6. Separate NPC fights: target an opposing flagged player who is fighting a
+   different NPC while the tester fights an NPC. No verified pair may result.
+7. Mixed NPC/player fight, pets, DoTs after target changes and death: accept
+   only attributable player damage; unknown pet owners stay unknown.
+8. Reload, stale sessions, meter disabled/reset, repeated updates, duplicate
+   names, secret fields and zone/transfer changes: fail closed without errors
+   or duplicate reports. A session total increasing is not sufficient evidence.
+9. After validating semantics, exercise synthetic cases offline, including the
+   physically stripped production build. Mocks alone cannot pass steps 1-8.
+
+OTHER CANDIDATES / LIMITS
+Combat-log events are marked restricted and C_CombatLogSecure is SecureOnly;
+   do not assume the older unrestricted CLEU approach works on Forever.
+C_CombatText.GetCurrentEventInfo has SecretReturns. A displayable combat-text
+   sentence is not permission to parse or reverse its protected content.
+Death recap is a secondary candidate for death-only evidence. Its generated
+   event schema is empty and the inspected recap UI is mainline-gated. Do not
+   assume it is available in Forever or establishes two-way damage.
+
+PRIMARY SOURCE LINKS (Blizzard source mirror, pinned to inspected revision)
+https://github.com/Gethe/wow-ui-source/blob/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_APIDocumentationGenerated/DamageMeterDocumentation.lua
+https://github.com/Gethe/wow-ui-source/blob/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_APIDocumentationGenerated/DamageMeterConstantsDocumentation.lua
+https://github.com/Gethe/wow-ui-source/blob/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_DamageMeter/DamageMeterEntry.lua
+https://github.com/Gethe/wow-ui-source/blob/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_DamageMeter/DamageMeterSourceWindow.lua
+https://github.com/Gethe/wow-ui-source/blob/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_APIDocumentationGenerated/CombatLogDocumentation.lua
+https://github.com/Gethe/wow-ui-source/blob/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_APIDocumentationGenerated/CombatLogSecureDocumentation.lua
+https://github.com/Gethe/wow-ui-source/blob/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_APIDocumentationGenerated/CombatTextDocumentation.lua
+https://github.com/Gethe/wow-ui-source/blob/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_APIDocumentationGenerated/DeathRecapDocumentation.lua
+https://github.com/Gethe/wow-ui-source/blob/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_DeathRecap/Blizzard_DeathRecap.toc

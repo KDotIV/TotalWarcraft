@@ -2,6 +2,8 @@ TOTALWARCRAFT 0.7.5 - RUNTIME AND RELIABILITY AUDIT
 November 21, 2026. Audit snapshot before the 0.7.5 publication request.
 The archive hashes and installation below describe the initial audit build;
 the final release adds publication notes to CHANGELOG.txt and has a new hash.
+See CURSEFORGE_SUBMISSION_0.7.5.txt for the later upload receipt and
+DAMAGE_VERIFICATION_DESIGN.txt for the subsequent per-unit meter research.
 
 SCOPE
 Removed the cancelled remote-zone defense detection experiment: standalone

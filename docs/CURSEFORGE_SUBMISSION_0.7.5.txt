@@ -1,0 +1,54 @@
+TOTALWARCRAFT 0.7.5 - RELEASE UPLOAD RECEIPT
+November 21, 2026, 2:05:10 PM America/New_York (19:05:10 UTC).
+
+DELIVERY
+Project: TotalWarcraft, 1819796, slug total-warcraft
+https://www.curseforge.com/wow/addons/total-warcraft
+File: 9737819, TotalWarcraft-0.7.5-release.zip
+Upload stage: Release. Game: WoW Forever 1.60.1 only.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9737819
+CurseForge accepted the upload and returned the file ID. Metadata requests
+automatic publication after moderation, with no manual-release hold.
+
+Public availability is NOT confirmed by this receipt. The initial public file
+page returned 404; subsequent web reads were unavailable/403. Browser verification
+stopped because URL policy enforcement is unsupported in the current Firefox
+window. The author-portal approval state was not read. Do not infer Approved or
+Rejected from an upload success or a 404. No duplicate upload/retry was performed.
+Check the project/file page or author portal for moderation/indexing completion.
+
+GITHUB
+Release commit: 23d77af0221ed0be79d4135763ca58f64631c82e
+Immutable tag: v0.7.5
+https://github.com/KDotIV/TotalWarcraft/tree/v0.7.5
+Publish workflow: success, all steps completed
+https://github.com/KDotIV/TotalWarcraft/actions/runs/44938988670
+Main CI: success
+https://github.com/KDotIV/TotalWarcraft/actions/runs/44938988742
+Receipt artifact: 14721240063 (release-receipt)
+Never move this tag or rerun the successful publish job; that would duplicate
+the file. A later documentation-only commit does not change this release.
+
+VALIDATION
+All 17 offline suites passed locally and in Linux CI, including the physically
+stripped production package. CHANGELOG.txt includes the runtime audit fixes,
+developer-tool exclusions and damage-evidence/live-validation limitations.
+Downloaded the workflow receipt artifact and verified its SHA256:
+37c4101f563b0fb8c36192f22c9eae465c303c6c7d44793129a6c36c1f5623f1
+Verified the artifact's release ZIP against the upload receipt and compared
+all 29 entries byte for byte with the tested local production ZIP: identical.
+The downloaded artifact is workflow evidence, not a public CDN verification.
+Uploaded Linux archive SHA256:
+f8e2e85fde850e8da9bad3808c51712b7e2ea7a1ed938dd66c3d3110bf2d05b7
+Local Windows archive SHA256:
+bb3daa03120657f2cf1c8e7076ca602bb52ae40d735707a2332b94dcaedc8e07
+The platform ZIP metadata differs; the packaged files are identical.
+
+EXCLUSIONS / COMPATIBILITY
+No developer diagnostics, remote tester controls, dummy-party simulation,
+development commands or cancelled remote-detection probe in the release.
+The separate dev build and supported test tools remain in the repository.
+Player session export and normal slash commands/keybindings remain available.
+WarbandPvP folder, SavedVariables and protocol identities remain compatible.
+No new damage-verification feature shipped. See DAMAGE_VERIFICATION_DESIGN.txt
+for the post-combat meter proposal and required live acceptance.

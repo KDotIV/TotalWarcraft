@@ -48,11 +48,14 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
-TotalWarcraft 0.7.4 is Approved and publicly available as a CurseForge Release
-for Forever 1.60.1, published by GitHub Actions on November 21, 2026:
+GitHub Actions uploaded TotalWarcraft 0.7.5 as a Release for Forever 1.60.1 on
+November 21, 2026. CurseForge returned file 9737819; public approval/availability
+has not yet been verified. See docs/CURSEFORGE_SUBMISSION_0.7.5.txt:
+https://www.curseforge.com/wow/addons/total-warcraft/files/9737819
+The last independently verified public release is 0.7.4:
 https://www.curseforge.com/wow/addons/total-warcraft/files/9736735
-See docs/CURSEFORGE_SUBMISSION_0.7.4.txt for the publication receipt and
-docs/REFINEMENTS_0.7.3.txt for current live acceptance steps.
+See docs/REFINEMENTS_0.7.3.txt for current live acceptance steps and
+docs/DAMAGE_VERIFICATION_DESIGN.txt for the proposed post-combat damage check.
 
 BUILD / INSTALL
   python -m pip install -r requirements-dev.txt

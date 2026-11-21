@@ -8,7 +8,7 @@ Pushes to main and pull requests run .github/workflows/ci.yml. The workflow
 installs the pinned Lua test runtime, runs every offline suite (including the
 physically stripped production package), and saves the production ZIP artifact.
 
-Pushing a version tag such as v0.7.5 runs .github/workflows/release.yml:
+Pushing a new version tag runs .github/workflows/release.yml:
 1. Require tag == tools/build_addon.py VERSION and reject alpha/dev tags.
 2. Require WarbandPvP/CHANGELOG.txt to start with TotalWarcraft VERSION.
 3. Build the production ZIP and run every test before exposing the upload token.
@@ -44,6 +44,12 @@ https://www.curseforge.com/wow/addons/total-warcraft/files/9736735
 Do not move its tag or rerun its successful publish job. Use a new version for
 the next release. See CURSEFORGE_SUBMISSION_0.7.4.txt for the publication receipt.
 
+The v0.7.5 workflow also succeeded on November 21, 2026:
+https://github.com/KDotIV/TotalWarcraft/actions/runs/44938988670
+CurseForge accepted Release file 9737819; public availability/approval remains
+unverified. See CURSEFORGE_SUBMISSION_0.7.5.txt. All 17 suites passed and the
+uploaded artifact's 29 files match the tested local package byte for byte.
+
 No upload retries are automatic: a timeout may follow a successful server-side
 upload. Inspect CurseForge for an existing file before rerunning a failed job.
 Do not rerun a successful publishing job; it would create another file.
@@ -52,7 +58,7 @@ Push ordinary fixes without a version tag when no public release is intended.
 LOCAL VALIDATION
 python -m pip install -r requirements-dev.txt
 python tools/run_tests.py
-python tools/publish_curseforge.py --tag v0.7.4 --check
+python tools/publish_curseforge.py --tag v0.7.5 --check
 The --check command performs no network calls and needs no credentials.
 
 SOURCES (checked November 21, 2026)

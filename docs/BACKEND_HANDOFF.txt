@@ -1,5 +1,13 @@
 TOTALWARCRAFT - BACKEND AND ADDON HANDOFF
-RELEASE CANDIDATE: 0.7.5 (validated; publication requested November 21, 2026)
+CURRENT BUILD: 0.7.5 (Release upload accepted; public availability unverified)
+GitHub tag v0.7.5 -> 23d77af0221ed0be79d4135763ca58f64631c82e. Publish and
+main CI succeeded; CurseForge accepted file 9737819 for Forever 1.60.1.
+See CURSEFORGE_SUBMISSION_0.7.5.txt. Do not rerun the successful upload.
+The initial public file page returned 404; approval/indexing was not confirmed.
+Damage verification remains a proposal: current Forever per-unit meter details
+are a promising post-combat route. See DAMAGE_VERIFICATION_DESIGN.txt for the
+source evidence, identity/secret-value limits and live acceptance requirements.
+No verification code or new diagnostic tool was added to the 0.7.5 release.
 November 21, 2026: remote-zone detection research cancelled at the user's request.
 Its standalone source, test, research notes, ZIP and installed addon were removed.
 No matching probe SavedVariables files were present. Do not resume that experiment.
