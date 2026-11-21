@@ -39,7 +39,7 @@ are not cross-client layer keys. A UUID, map position, listing, native group joi
 or transfer event does not establish arrival at the original fight. Parties-only
 is a product choice, not proof that outdoor raids cannot share a layer.
 
-Fifteen offline suites cover isolated Lua clients and the physically
+Sixteen offline suites cover isolated Lua clients and the physically
 stripped release ZIP. The two-client 0.6.1 live simulation established messaging,
 member updates and teardown; it did not validate native grouping or layer arrival.
 Finder calls and the revised 0.7 UI/invitations still require live acceptance.
