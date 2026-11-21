@@ -48,10 +48,11 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
-CurseForge project 1819796 / file 9723988 was submitted November 20, 2026;
-the user confirmed project approval on November 21. The new 0.7.4 build has
-not been uploaded. See docs/REFINEMENTS_0.7.3.txt for current acceptance steps.
-See docs/CURSEFORGE_SUBMISSION_0.7.1.txt. Alpha downloads use direct project links.
+TotalWarcraft 0.7.4 is Approved and publicly available as a CurseForge Release
+for Forever 1.60.1, published by GitHub Actions on November 21, 2026:
+https://www.curseforge.com/wow/addons/total-warcraft/files/9736735
+See docs/CURSEFORGE_SUBMISSION_0.7.4.txt for the publication receipt and
+docs/REFINEMENTS_0.7.3.txt for current live acceptance steps.
 
 BUILD / INSTALL
   python -m pip install -r requirements-dev.txt
@@ -64,7 +65,8 @@ Only one flavor is installed at once. The installer backs up and verifies files.
 The internal WarbandPvP folder and saved variables remain unchanged by the
 TotalWarcraft rename. /tw is primary; /totalwarcraft and /wb are aliases.
 GitHub Actions tests main/PRs; version tags publish compiled Release ZIPs after
-checks. See docs/RELEASE_AUTOMATION.txt for the one-time CF_API_TOKEN setup.
+checks. CF_API_TOKEN is configured and v0.7.4 completed the first successful
+automatic publication. See docs/RELEASE_AUTOMATION.txt for future releases.
 For an old CallToArms installation, tools/Migrate-LegacyInstall.ps1 verifies it
 against its original archive, backs it up, copies settings under the new variable
 names and disables only the old TOC. Run it with WoW closed and the explicit

@@ -1,0 +1,53 @@
+TOTALWARCRAFT 0.7.4 - PUBLICATION RECEIPT
+Verified November 21, 2026, 17:45 UTC (12:45 PM America/New_York).
+
+PUBLICATION
+Project: TotalWarcraft, 1819796, slug total-warcraft
+File: 9736735, TotalWarcraft-0.7.4-release.zip
+Stage: Release. Author portal status: Approved.
+Game: WoW Forever 1.60.1 only.
+Public page shows Download and Install Via App:
+https://www.curseforge.com/wow/addons/total-warcraft/files/9736735
+The public page includes the complete 0.7.4 changelog, including the previously
+unpublished 0.7.2/0.7.3 refinements. Project description uses the new branding.
+Client search/indexing was not independently tested in the CurseForge desktop app.
+
+AUTOMATED DELIVERY
+Repository: https://github.com/KDotIV/TotalWarcraft
+Tag: v0.7.4 (immutable)
+Release commit: 4c373c172db3d8d790df48525c2f5003f41a7ce0
+Successful publish run (31 seconds):
+https://github.com/KDotIV/TotalWarcraft/actions/runs/44931451638
+Successful main CI run (19 seconds):
+https://github.com/KDotIV/TotalWarcraft/actions/runs/44931450676
+CF_API_TOKEN configured by user; the credential was not read or committed.
+Version tags invoke .github/workflows/release.yml; tests must pass before upload.
+Main/PR checks use .github/workflows/ci.yml. Official actions are SHA-pinned.
+Upload metadata specifies releaseType=release and no manual publication hold.
+Native CurseForge automatic packaging is disabled; GitHub source link retained.
+This prevents duplicate builds and preserves the custom developer-code stripping.
+No manual duplicate upload was made. Never rerun this successful publishing job.
+
+PACKAGE VERIFICATION
+All 16 offline suites passed locally and in GitHub's Linux runs.
+Downloaded the public CDN ZIP and compared all 29 entries with the tested local
+production package: identical names and byte-for-byte identical file contents.
+Published Linux archive SHA256:
+6419618639f61a34edb3bfe12f3e7355d96205dab0bdda8e585d9328cfaf10e9
+Local Windows archive SHA256:
+5c4fc1fa4ff406619010eb3eafa53eed8e7649dec0392b0403063f2cbb56d119
+ZIP create_system metadata differs (Linux 3 / Windows 0); content is identical.
+Public screenshot: assets/totalwarcraft-curseforge-release-0.7.4.jpg
+
+COMPATIBILITY / INSTALLATION
+/tw is primary; /totalwarcraft and /wb remain supported.
+Internal WarbandPvP folder, SavedVariables, binding IDs and protocol prefixes
+are retained for upgrades. Only player-facing terminology is TotalWarcraft.
+Production excludes developer tests, dummy parties and remote tester controls.
+Installed 0.7.4-dev locally (34 verified files) at:
+E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP
+Backup: releases/installed-backups/WarbandPvP-before-0.7.4-dev-20261121-174009.zip
+Settings and other addons were not changed. Restart WoW to load all new modules.
+All Rights Reserved retained. Native Finder, layer arrival, cross-faction
+scouting and rendering still depend on live game behavior; offline tests do not
+establish those outcomes. See REFINEMENTS_0.7.3.txt for live acceptance steps.

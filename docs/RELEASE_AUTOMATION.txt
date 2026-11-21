@@ -30,14 +30,19 @@ Name: CF_API_TOKEN
 The GitHub connection alone does not provide this API credential. Never commit
 the token. The pipeline injects it only into the upload step, uses a header,
 refuses redirects, and never logs the credential or raw error responses.
-The workflow is not capable of uploading until that secret is configured.
+CF_API_TOKEN was configured and used successfully on November 21, 2026.
+The workflow is not capable of uploading if that secret is removed or expires.
 
 NEXT RELEASE
 Update VERSION, the source TOC/Core/README version, and CHANGELOG.txt. Commit the
 tested changes to main. Push a new immutable vX.Y.Z tag on that commit. No manual
 CurseForge ZIP upload is then needed. Never move/reuse release tags.
-The first planned automatic release is v0.7.4. Once uploaded, do not move its tag
-or rerun its successful publish job. Use a new version for the next release.
+The first automatic release, v0.7.4, succeeded on November 21, 2026:
+https://github.com/KDotIV/TotalWarcraft/actions/runs/44931451638
+CurseForge file 9736735 is Approved / Release and publicly downloadable:
+https://www.curseforge.com/wow/addons/total-warcraft/files/9736735
+Do not move its tag or rerun its successful publish job. Use a new version for
+the next release. See CURSEFORGE_SUBMISSION_0.7.4.txt for the publication receipt.
 
 No upload retries are automatic: a timeout may follow a successful server-side
 upload. Inspect CurseForge for an existing file before rerunning a failed job.

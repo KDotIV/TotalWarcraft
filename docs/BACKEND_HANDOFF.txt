@@ -1,4 +1,33 @@
-WARBAND-PVP - BACKEND AND ADDON HANDOFF
+TOTALWARCRAFT - BACKEND AND ADDON HANDOFF
+CURRENT BUILD: 0.7.4 (public Release; 0.7.4-dev installed locally)
+November 21, 2026, 17:45 UTC: CurseForge Approved / Release, Forever 1.60.1.
+Public download: https://www.curseforge.com/wow/addons/total-warcraft/files/9736735
+Project 1819796; file 9736735. Full changelog included in the ZIP and public page.
+Release tag v0.7.4 points to 4c373c172db3d8d790df48525c2f5003f41a7ce0.
+GitHub Actions published it successfully; all 16 offline suites passed locally
+and in Linux CI. CF_API_TOKEN is configured. Future immutable version tags test,
+compile and upload the production ZIP; untagged pushes only run CI.
+CurseForge's native automatic packager is disabled to avoid duplicate/raw builds.
+See RELEASE_AUTOMATION.txt and CURSEFORGE_SUBMISSION_0.7.4.txt.
+
+Player-facing branding is TotalWarcraft; /tw is primary, /totalwarcraft and /wb
+are aliases. The WarbandPvP folder, SavedVariables, binding IDs and wire prefixes
+are intentionally retained for compatible upgrades. Production excludes test
+commands, remote tester controls and dummy data. No live grouping/layer guarantee.
+All prior 0.7.2/0.7.3 refinements below are included; live acceptance remains due.
+
+Installed 0.7.4-dev at E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP,
+34 hash-verified files, settings and other addons unchanged. Restart WoW to load.
+Backup: releases/installed-backups/WarbandPvP-before-0.7.4-dev-20261121-174009.zip
+Published Linux ZIP SHA256:
+6419618639f61a34edb3bfe12f3e7355d96205dab0bdda8e585d9328cfaf10e9
+Local Windows ZIP SHA256:
+5c4fc1fa4ff406619010eb3eafa53eed8e7649dec0392b0403063f2cbb56d119
+All 29 public ZIP entries match local file contents byte for byte. Archive hash
+differs only because ZIP create_system records Linux (3) versus Windows (0).
+Dev ZIP SHA256: 9786afa57896d7492da476f999fc60bf50c23e0c0aca366ef0213d096af81e14
+
+PREVIOUS 0.7.3 HANDOFF (historical)
 CURRENT BUILD: 0.7.3-alpha (developer flavor installed; production ZIP prepared)
 November 21, 2026, 17:22 UTC. User identified LayerSwap as the unexpected invite
 source; no proven WBP unsolicited-invite incident. Safeguards retained regardless.
