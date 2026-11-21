@@ -2,6 +2,9 @@ local _,A=...
 local P=A.WB
 local R={}
 A.autoReports=R
+local function stopTimer()
+    if R.timer then R.timer:Cancel(); R.timer=nil end
+end
 
 local function skip(reason)
     if R.skip~=reason and A.Trace then A.Trace("REPORT_AUTO_SKIP",reason) end
@@ -25,7 +28,7 @@ end
 
 function A.SetAutoReportsEnabled(enabled)
     A.db.autoReports=enabled==true
-    if R.timer then R.timer:Cancel(); R.timer=nil end
+    stopTimer()
     if A.db.autoReports then A.UpdateAutoReports() end
     if A.RefreshHome then A.RefreshHome() end
     if A.Trace then A.Trace("AUTO_REPORTS",A.db.autoReports and "on" or "off") end
@@ -40,13 +43,13 @@ function A.AutoReportTick()
     local now=GetTime()
     if R.checkedAt and now-R.checkedAt<1 then return end
     R.checkedAt=now
-    if R.attempted then return end
+    if R.attempted then stopTimer(); return end
     if R.awaitPeace then return skip("waiting for a confirmed combat end") end
     if A.ReportBlockedByDuel() then return skip("duel hold") end
     if P.Read(IsInInstance)~=false then return skip("instance or instance state unavailable") end
     if P.Read(IsInGuild)~=true then return skip("guild required") end
     -- An accepted manual report during this combat already serves the same purpose.
-    if (A.db.lastSubmit or 0)>=(R.startedAt or GetServerTime()) then R.attempted=true; return end
+    if (A.db.lastSubmit or 0)>=(R.startedAt or GetServerTime()) then R.attempted=true; stopTimer(); return end
     if GetServerTime()-(A.db.lastSubmit or 0)<120 or (A.lastAttempt and now-A.lastAttempt<5) then return skip("cooldown") end
     -- Combat plus a nearby flag alone is insufficient. Require the current target
     -- to be a visible, attackable opposing player who is also in combat.
@@ -60,7 +63,8 @@ function A.AutoReportTick()
         if P.Read(UnitIsPVPFreeForAll,unit)~=false or P.Read(UnitIsPVPSanctuary,unit)~=false then return skip("sanctuary/FFA rules active or unavailable") end
     end
     R.attempted=true -- Failed sends do not cause an automatic retry loop.
-    local ok,message=A.Report()
+    stopTimer()
+    local ok,message=A.Report("automatic")
     if A.Trace then A.Trace("REPORT_AUTO","accepted="..tostring(ok==true).." "..A.CleanText(message,160)) end
     if ok then A.Print("PvP report sent to your guild.") end
 end
@@ -69,7 +73,7 @@ function A.UpdateAutoReports()
     if not A.db then return end
     local combat=P.Read(UnitAffectingCombat,"player")
     if combat~=true then
-        if R.timer then R.timer:Cancel(); R.timer=nil end
+        stopTimer()
         if combat==false then
             R.startedAt=nil; R.attempted=nil; R.checkedAt=nil; R.skip=nil
             R.awaitPeace=nil
@@ -78,6 +82,7 @@ function A.UpdateAutoReports()
         return
     end
     if not R.startedAt then R.startedAt=GetServerTime() end
+    if R.attempted then stopTimer(); return end
     if A.db.autoReports==false then return end
     if not R.timer then R.timer=C_Timer.NewTicker(1,A.AutoReportTick) end
     A.AutoReportTick()

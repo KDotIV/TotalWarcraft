@@ -1,8 +1,9 @@
 local name, A = ...
-A.release = A.release or "0.7.4-dev"
+A.release = A.release or "0.7.5-dev"
 function A.Print(message) print("|cffedbf69TotalWarcraft:|r " .. message) end
 
 function A.Changed()
+    if A.timer and not next(A.records) then A.timer:Cancel(); A.timer=nil end
     if A.RefreshReportSurfaces then A.RefreshReportSurfaces() end
     A.RefreshUI(); A.RefreshMap()
     if not A.timer and next(A.records) then

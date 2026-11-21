@@ -31,14 +31,16 @@ C_PartyInfo={InviteUnit=function(n) invited[#invited+1]=n end}
 
 
 class Network:
-    def __init__(self):
+    def __init__(self, scheduled=False, factory=None):
+        self.scheduled = scheduled
+        self.factory = factory or client
         self.clients = {}
         self.sent = {}
         self.clock = 100
         self.base = 1794240000
 
     def add(self, name, guild='A'):
-        lua = client(name)
+        lua = self.factory(name)
         lua.execute(WORLD)
         lua.globals().CLOCK = self.clock
         lua.globals().NOW = self.base + int(self.clock - 100)
@@ -58,11 +60,14 @@ class Network:
         for _ in range(int(seconds * 4)):
             self.clock += .25
             for lua in self.clients.values():
-                lua.globals().CLOCK = self.clock
-                lua.globals().NOW = self.base + int(self.clock - 100)
-                lua.globals().A.WarbandTick()
-                if lua.globals().A.ScoutTick:
-                    lua.globals().A.ScoutTick()
+                if self.scheduled:
+                    lua.globals().advanceTimers(.25)
+                else:
+                    lua.globals().CLOCK = self.clock
+                    lua.globals().NOW = self.base + int(self.clock - 100)
+                    lua.globals().A.WarbandTick()
+                    if lua.globals().A.ScoutTick:
+                        lua.globals().A.ScoutTick()
             self.deliver()
 
     def deliver(self):

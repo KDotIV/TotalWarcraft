@@ -82,9 +82,10 @@ local function zoneChoice(mapID)
 end
 local function party()
     if not live() then return end
+    local h,m=W.host,W.member
+    if not h and not m then return end
     local info=A.WarbandNativeInfo()
     if not info or info.mode=="member" or info.count>=5 then return end
-    local h,m=W.host,W.member
     if h and h.recruiting then
         local loc=h.mode=="follow" and A.CurrentLocation() or h.rally
         return {id=h.id,session=W.session,owner=h.owner,slot=1,mapID=loc and loc.mapID}

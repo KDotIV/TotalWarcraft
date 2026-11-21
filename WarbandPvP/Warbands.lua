@@ -6,7 +6,16 @@ local HOME=Enum and Enum.PartyCategory and Enum.PartyCategory.Home or 1
 local lastFlush=-10; local budget,refill=40,0
 local function size(t) local n=0; for _ in pairs(t) do n=n+1 end; return n end
 local function trace(kind,message) if A.Trace then A.Trace("WARBAND_"..kind,message) end end
+function A.UpdateWarbandTimer()
+    local finder=A.finder
+    local interval=next(W.queue) and .25 or (W.enabled or (finder and (finder.owned or finder.operation))) and 1 or nil
+    if W.timerInterval==interval then return end
+    if W.timer then W.timer:Cancel(); W.timer=nil end
+    W.timerInterval=interval
+    if interval then W.timer=C_Timer.NewTicker(interval,A.WarbandTick) end
+end
 local function changed()
+    A.UpdateWarbandTimer()
     if A.RefreshWarbandUI then A.RefreshWarbandUI() end
     if A.RefreshMap then A.RefreshMap() end
 end
@@ -18,6 +27,7 @@ local function enqueue(packet,route,target,key)
     local previous=W.queue[key]; local kind=packet:sub(3,3)
     W.queue[key]={packet=packet,route=route,target=target,at=GetTime(),prefix=P.ActivePrefix(),
         order=previous and previous.order or GetTime(),priority=(kind=="A" or kind=="G") and 1 or 0,key=key}
+    A.UpdateWarbandTimer()
     return true
 end
 local function whisper(packet,target,key) return enqueue(packet,"WHISPER",target,key) end
@@ -30,12 +40,13 @@ local function flush()
         elseif not nextItem or item.priority<nextItem.priority
             or (item.priority==nextItem.priority and (item.order<nextItem.order or (item.order==nextItem.order and key<nextItem.key))) then nextItem=item end
     end
-    if not nextItem then return end
+    if not nextItem then A.UpdateWarbandTimer(); return end
     W.queue[nextItem.key]=nil; lastFlush=GetTime()
     local result=P.Read(C_ChatInfo and C_ChatInfo.SendAddonMessage,nextItem.prefix,nextItem.packet,nextItem.route,nextItem.target)
     local ok=result==true or result==(Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.Success or 0)
     W.sendStatus=ok and "accepted; delivery unconfirmed" or "rejected/unavailable"
     trace("SEND",nextItem.prefix.." "..nextItem.route.." "..nextItem.packet:sub(1,3).." "..W.sendStatus)
+    A.UpdateWarbandTimer()
 end
 function A.WarbandNativeInfo()
     if P.Read(IsInRaid,HOME)~=false then return nil,"Normal parties only; raids are not supported." end
@@ -585,7 +596,7 @@ local function memberTick()
 end
 function A.WarbandTick()
     if A.FinderTick then A.FinderTick() end
-    if not W.enabled and not next(W.queue) then return end
+    if not W.enabled and not next(W.queue) then A.UpdateWarbandTimer(); return end
     if W.lastMaintenance and GetTime()-W.lastMaintenance<1 then flush(); return end
     W.lastMaintenance=GetTime()
     local dirty=A.WarbandPrune()
@@ -688,7 +699,7 @@ function A.InitWarbands()
             A.WarbandTick(); changed()
         end
     end)
-    W.timer=C_Timer.NewTicker(.25,A.WarbandTick)
+    A.UpdateWarbandTimer()
 end
 
 function A.WarbandModeStatus() return "LIVE" end

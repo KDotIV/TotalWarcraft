@@ -6,6 +6,16 @@ A.scouting=S
 A.ScoutDisclosure="Start / Join makes your warband affiliation and reported size scoutable."
 local function secret(v) return issecretvalue and issecretvalue(v) end
 local function count(t) local n=0; for _ in pairs(t) do n=n+1 end; return n end
+local function updateTimer()
+    local active=next(S.pending) or next(S.orphans) or next(S.probed) or next(S.rates)
+    if not active then
+        for _,r in pairs(A.records) do
+            if r.scout and r.scout.state=="known" then active=true; break end
+        end
+    end
+    if active and not S.timer then S.timer=C_Timer.NewTicker(1,A.ScoutTick)
+    elseif not active and S.timer then S.timer:Cancel(); S.timer=nil end
+end
 local function live()
 --@dev
     if A.testMode or P.IsSimulation() then return false end
@@ -53,6 +63,7 @@ local function send(packet,route,target)
     return ok
 end
 local function changed()
+    updateTimer()
     -- A held-open map tooltip must not retain expired affiliation text.
     if A.tooltipRecord then GameTooltip:Hide(); A.tooltipRecord=nil end
     if A.RefreshReportSurfaces then A.RefreshReportSurfaces() end
@@ -133,6 +144,7 @@ function A.OnScoutMessage(prefix,packet,route,sender)
     local now=GetTime(); local key=P.Key(sender)
     local rate=S.rates[key]
     if not rate then if count(S.rates)>=64 then return end; rate={at=now,tokens=4}; S.rates[key]=rate end
+    updateTimer()
     rate.tokens=math.min(4,rate.tokens+math.max(0,now-rate.at)/5); rate.at=now
     S.tokens=math.min(16,S.tokens+math.max(0,now-S.refill)*2); S.refill=now
     if rate.tokens<1 or S.tokens<1 then return end
@@ -188,6 +200,7 @@ function A.ScoutTick()
         r.scout={state="expired",enemy=r.scout.enemy}; dirty=true
     end end
     if dirty then changed() elseif A.RefreshScoutUI then A.RefreshScoutUI() end
+    updateTimer()
 end
 function A.ClearScouting()
     S.pending={}; S.orphans={}; S.probed={}; S.rates={}
@@ -208,5 +221,4 @@ function A.InitScouting()
     local frame=CreateFrame("Frame"); S.events=frame
     frame:RegisterEvent("CHAT_MSG_ADDON")
     frame:SetScript("OnEvent",function(_,_,...) A.OnScoutMessage(...) end)
-    S.timer=C_Timer.NewTicker(1,A.ScoutTick)
 end

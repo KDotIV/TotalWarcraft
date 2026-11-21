@@ -149,8 +149,33 @@ WorldMapFrame.AcquirePin=function(self,t,r,x,y)
  return pin
 end
 function hooksecurefunc() end
-C_Timer={NewTicker=function(_,fn) return {Cancel=function() end,fn=fn} end,
- NewTimer=function(_,fn) return {Cancel=function() end,fn=fn} end}
+timers={}
+local function newTimer(delay,fn,repeating)
+ local timer={fn=fn,delay=delay,due=CLOCK+delay,repeating=repeating}
+ function timer:Cancel() self.cancelled=true end
+ timers[#timers+1]=timer; return timer
+end
+C_Timer={NewTicker=function(delay,fn) return newTimer(delay,fn,true) end,
+ NewTimer=function(delay,fn) return newTimer(delay,fn,false) end}
+function activeTimers()
+ local n=0; for _,t in ipairs(timers) do if not t.cancelled then n=n+1 end end; return n
+end
+function advanceTimers(seconds)
+ local finish,epoch=CLOCK+seconds,NOW-math.floor(CLOCK+.000001)
+ local calls=0
+ while true do
+  local nextTimer
+  for _,t in ipairs(timers) do
+   if not t.cancelled and t.due<=finish and (not nextTimer or t.due<nextTimer.due) then nextTimer=t end
+  end
+  if not nextTimer then break end
+  CLOCK=nextTimer.due; NOW=epoch+math.floor(CLOCK+.000001)
+  if nextTimer.repeating then nextTimer.due=CLOCK+nextTimer.delay else nextTimer.cancelled=true end
+  nextTimer.fn(); calls=calls+1; assert(calls<10000,'Timer runaway')
+ end
+ CLOCK=finish; NOW=epoch+math.floor(CLOCK+.000001)
+ return calls
+end
 C_Map={GetBestMapForUnit=function() return 1 end,
  GetPlayerMapPosition=function() return {GetXY=function() return .25,.75 end} end,
  GetMapInfo=function(id) return {name='Zone '..id} end}

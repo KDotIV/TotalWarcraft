@@ -1,3 +1,24 @@
+TotalWarcraft 0.7.5
+November 21, 2026 - Release - WoW Forever 1.60.1
+
+- Warband maintenance sleeps when discovery is off and no queue or owned Finder
+  listing needs cleanup. Active maintenance runs once per second; the 250ms send
+  timer runs only while messages are queued, with the same transmission limit.
+- Scouting cleanup starts only when there are requests, snapshots or rate-limit
+  entries to expire, then stops. No remote-detection experiment is included.
+- Automatic reports stop polling after their one attempt for the current combat.
+  Manual and automatic submissions now retain the correct local origin flag.
+- Group Locations and command-board counts refresh when shared locations arrive,
+  expire or leave the native roster. Clearing reports stops their expiry timer.
+- Removed a redundant release-only empty-note helper. Development fixtures remain
+  separate from production. Report, invitation and layer-evidence rules are unchanged.
+- Public packages exclude dummy parties, developer diagnostics and remote tester
+  controls. All 17 offline suites pass, including the compiled production build.
+
+Known limit: automatic reports are observations, not verified player-to-player
+damage. Native permissions, cross-faction delivery and layer arrival still need
+live validation. This release does not add a damage-verification feature.
+
 TotalWarcraft 0.7.4
 November 21, 2026 - Release - WoW Forever 1.60.1
 

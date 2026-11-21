@@ -1,4 +1,26 @@
 TOTALWARCRAFT - BACKEND AND ADDON HANDOFF
+RELEASE CANDIDATE: 0.7.5 (validated; publication requested November 21, 2026)
+November 21, 2026: remote-zone detection research cancelled at the user's request.
+Its standalone source, test, research notes, ZIP and installed addon were removed.
+No matching probe SavedVariables files were present. Do not resume that experiment.
+Existing development tools for supported addon features are retained separately.
+
+Audit fixes: demand-driven warband/scouting timers, 1s normal maintenance / 250ms
+queued sends, no Finder roster work without membership, stop automatic-report
+polling after its combat attempt, local manual/automatic origin correction,
+immediate report-timer stop on clear, and live presence UI refreshes. Removed the
+empty production report-note helper. No wire protocol or report eligibility change.
+Seventeen offline suites pass, including timer-driven multi-client joins/leases/
+END and idle/expiry/UI regression checks against source AND compiled release.
+Idle mock benchmark: 1,500 callbacks in 300 seconds before; zero afterward.
+This measures scheduled work, not live client CPU/FPS or proof of PvP damage.
+See AUDIT_0.7.5.txt for the pre-publication audit and initial archive hashes.
+The release changelog includes the audit fixes and explicit damage-evidence limits.
+Installed 0.7.5-dev at E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP,
+34 hash-verified files. Backup: releases/installed-backups/
+WarbandPvP-before-0.7.5-dev-20261121-185725.zip. Restart WoW before live checks.
+
+PUBLICATION RECEIPT (historical; installation below describes the 0.7.4 rollout)
 CURRENT BUILD: 0.7.4 (public Release; 0.7.4-dev installed locally)
 November 21, 2026, 17:45 UTC: CurseForge Approved / Release, Forever 1.60.1.
 Public download: https://www.curseforge.com/wow/addons/total-warcraft/files/9736735

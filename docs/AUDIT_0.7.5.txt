@@ -1,0 +1,91 @@
+TOTALWARCRAFT 0.7.5 - RUNTIME AND RELIABILITY AUDIT
+November 21, 2026. Audit snapshot before the 0.7.5 publication request.
+The archive hashes and installation below describe the initial audit build;
+the final release adds publication notes to CHANGELOG.txt and has a new hash.
+
+SCOPE
+Removed the cancelled remote-zone defense detection experiment: standalone
+source folder, its offline test, two research notes, research ZIP and installed
+WoW addon. No matching probe SavedVariables files were found. Existing dev-only
+warband simulation, remote tester controls and layer diagnostics remain separate
+from production. No /who scan, remote guild-combat poll or replacement probe added.
+
+FIXES
+- Warband ticker no longer starts at login. It runs at 250ms only while sending
+  a queue, or at 1s for enabled discovery/maintenance or owned Finder cleanup.
+  Terminal messages drain after disabling discovery. Pending native cleanup
+  still reaches its timeout while discovery is off. Send throttling unchanged.
+- Finder skips native roster reads when the player has no warband membership.
+  Explicit Search still lists candidates without joining or inviting them.
+- Scouting expiry work starts with requests/snapshots/rate-limit entries and
+  stops after they expire. Its existing visibility, scope and sender checks stay.
+- Automatic reports stop their timer after one attempt per combat, including a
+  failed send or an accepted manual report. Combat-end events reset the latch.
+  Local outbound requests correctly distinguish automatic from manual origin;
+  no new field is transmitted and no change to damage-evidence claims is implied.
+- Shared-location changes refresh visible Group Locations and command-board
+  counts as well as pins, including expiry and native-roster removal.
+- Clearing the report board stops its expiry ticker immediately.
+- Removed the release-only report-note function that always returned empty text,
+  along with its calls and an overwritten note initializer.
+
+REVIEWED BOUNDS
+Reports: 64 records; report sample up to 64 players/nameplate frames. Warbands:
+4 groups / 20 members, 8 named subscriptions, 96 queued messages, bounded rate
+and replay histories. Scouting: 8 pending / 32 orphan responses / 64 sender rate
+entries. Session journal: 1,500-row ring buffer with burst limiting. Presence is
+opt-in, native-roster authenticated and expires; it never contributes to heat.
+Map pin objects are pooled; glow updates belong only to active glowing pins.
+No dependencies, transport routes or production test hooks were added.
+
+VERIFICATION
+All 17 tests/test_*.py suites pass under Lua 5.1 mocks. The runtime suite uses
+registered timer callbacks/cancellation instead of directly calling each tick.
+It covers idle/discovery/queue transitions, failed sends, host publications,
+three-client guild/named subscriptions, joins, lease renewals, terminal shutdown,
+Finder timeout after disable, scouting request/rate expiry, report provenance,
+one-attempt latches, and presence UI receive/expiry/roster removal.
+These scenarios also run against the physically stripped production package.
+Existing suites exercise malformed/replayed traffic, consent-based invitations,
+release/dev isolation, hidden realm identities, report clusters and window history.
+
+Before/after idle comparison using the same mock and HEAD 795ff05 as baseline:
+  Before: 2 persistent timers; 1,500 callbacks over 300 simulated seconds.
+  After:  0 persistent timers; 0 callbacks over 300 simulated seconds.
+Conditions: no combat, no pending reports/scouting, discovery/sharing/diagnostics
+off. Event handlers remain registered to respond when features are used.
+This is a callback-count result, not a measured live CPU, memory or FPS gain.
+
+The existing 0.7.4 release ZIP is unchanged:
+SHA256 5c4fc1fa4ff406619010eb3eafa53eed8e7649dec0392b0403063f2cbb56d119
+At audit completion, 0.7.5 archives were local; no tag/push/upload had occurred.
+Release ZIP SHA256:
+99538de17c8d1dd35bcda7a1bd1815a9edc76dc1fc910be62a75e3a5e6653d2b
+Dev ZIP SHA256:
+62ae33753a375641ce33d255022ad87d2629394aa37195197b8d91300f07c02a
+Installed 0.7.5-dev, 34 hash-verified files at:
+E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP
+Backup: releases/installed-backups/WarbandPvP-before-0.7.5-dev-20261121-185725.zip
+SavedVariables and other addons unchanged. Restart WoW before live checks.
+
+REMAINING LIMITS / LIVE ACCEPTANCE
+Automatic reports are observations: both players being flagged/in combat does
+not prove they damaged each other. Two players fighting separate NPCs can still
+satisfy the current target heuristic. This audit preserves the agreed trigger;
+it does not claim the false-positive class is solved. Counts remain partial
+flagged-player samples under the user's compact display requirements.
+
+An attributed player A -> player B damage event establishes one-way damage;
+matching reverse damage in the encounter establishes an exchange. Opposing
+factions and duel exclusions remain necessary for the intended world-PvP feed.
+Forever marks combat-log events restricted, and damage-meter declarations expose
+session/source/spell aggregates, not an attacker-victim damage event stream.
+No verified live attribution route was established or added during this audit.
+Sources checked November 21:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/CombatLogDocumentation.lua
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/DamageMeterDocumentation.lua
+
+Offline success does not establish live native Finder permissions, cross-faction
+scouting delivery, exact layer arrival or client rendering/performance. After
+restarting WoW, check existing features with /tw, /tw show, /tw presence on,
+normal report/keybind flow and /tw export. No remote-radar test remains pending.

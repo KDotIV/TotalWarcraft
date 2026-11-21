@@ -67,7 +67,7 @@ function A.Snapshot(simulate)
     return result
 end
 
-function A.Report()
+function A.Report(source)
     if not A.db then return false, "Addon is not ready." end
     if A.ReportBlockedByDuel and A.ReportBlockedByDuel() then return false,"Reports are paused during or just after a duel." end
     if A.RefreshScope and not A.RefreshScope() then return false, "Ruleset/region unavailable; report not sent. Run /tw status." end
@@ -84,7 +84,7 @@ function A.Report()
     if not loc then return false, "Current location unavailable; report not sent." end
     local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(loc.mapID)
     local request = {
-        version = 1, id = "local:" .. now, kind = "report", manual = true,
+        version = 1, id = "local:" .. now, kind = "report", manual = source~="automatic",
         faction = UnitFactionGroup("player"), ruleset = A.db.ruleset,
         mapID = loc.mapID, x = loc.x, y = loc.y, zone = info and info.name or "",
         title = "PvP activity reported", reporter = UnitName("player"),
@@ -93,7 +93,7 @@ function A.Report()
         count = 0, countUnknown = true, test = test, snapshot = A.Snapshot(test),
 --@enddev
 --@release         count = 0, countUnknown = true, snapshot = A.Snapshot(),
-        note = "Observer report. Flagged players are not confirmed combatants.",
+        note = "",
     }
     request.observedCount = #request.snapshot.players
     request.unknownRange = request.snapshot.unknownRange
@@ -110,7 +110,6 @@ function A.Report()
 --@dev
     request.note = A.ReportNote(test, request.observedCount, request.unknownRange, request.syntheticCount)
 --@enddev
---@release     request.note = A.ReportNote(request.observedCount, request.unknownRange)
 --@dev
     if not A.adapter then
         request.demo = true
@@ -125,7 +124,10 @@ function A.Report()
     if test then A.lastTestSubmit = now else A.db.lastSubmit = now end
 --@enddev
 --@release     A.db.lastSubmit = now
-    if A.autoReports and read(UnitAffectingCombat,"player")==true then A.autoReports.attempted=true end
+    if A.autoReports and read(UnitAffectingCombat,"player")==true then
+        A.autoReports.attempted=true
+        if A.UpdateAutoReports then A.UpdateAutoReports() end
+    end
     return true, message or "Report submitted; remote delivery not confirmed."
 end
 

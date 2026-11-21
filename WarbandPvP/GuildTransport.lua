@@ -32,10 +32,9 @@ function A.ReportNote(test, observed, unknown, synthetic)
         return "Simulated PvP: " .. observed .. " observed players incl. reporter; " .. synthetic
             .. " synthetic. 100yd sample incomplete; " .. unknown .. " unknown range. Not real combat evidence."
     end
---@enddev
---@release function A.ReportNote(observed, unknown)
     return ""
 end
+--@enddev
 
 function A.EncodeGuildReport(r)
 --@dev
@@ -101,7 +100,7 @@ function A.DecodeGuildReport(packet, sender)
 --@enddev
 --@release         reporter=sender, title="PvP activity reported", count=0, countUnknown=true,
 --@release         observedCount=observed, unknownRange=unknown,
---@release         note=A.ReportNote(observed, unknown),
+--@release         note="",
     }
 end
 

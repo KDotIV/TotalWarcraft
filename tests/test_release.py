@@ -36,6 +36,8 @@ from auto_report_scenarios import check_auto_reports
 from activity_scenarios import check_activity
 check_auto_reports(release_client)
 check_activity(release_client)
+from runtime_scenarios import check_runtime
+check_runtime(release_client)
 from forever_compat import check_hidden_realms
 check_hidden_realms(release_client)
 assert alice.globals().SLASH_WARBANDPVP1 == '/tw'

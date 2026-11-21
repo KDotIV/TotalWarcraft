@@ -1,4 +1,4 @@
-TOTALWARCRAFT 0.7.4
+TOTALWARCRAFT 0.7.5
 World of Warcraft: Forever only (Interface 16001)
 
 Quickly form parties to seek out world PvP or rally your faction to retaliate
@@ -39,7 +39,7 @@ are not cross-client layer keys. A UUID, map position, listing, native group joi
 or transfer event does not establish arrival at the original fight. Parties-only
 is a product choice, not proof that outdoor raids cannot share a layer.
 
-Sixteen offline suites cover isolated Lua clients and the physically
+Seventeen offline suites cover isolated Lua clients and the physically
 stripped release ZIP. The two-client 0.6.1 live simulation established messaging,
 member updates and teardown; it did not validate native grouping or layer arrival.
 Finder calls and the revised 0.7 UI/invitations still require live acceptance.
@@ -77,6 +77,7 @@ WarbandPvP/README.txt - current player controls and restrictions
 WarbandPvP/WARBAND_TESTING.txt - three real clients, optional dummy party slots
  docs/RECRUITMENT_TEST_0.7.0.txt - native recruitment/party acceptance and sources
  docs/BACKEND_HANDOFF.txt - current state and historical implementation evidence
+ docs/AUDIT_0.7.5.txt - idle runtime fixes, cleanup and verification limits
  docs/WARBAND_RESULTS_2026-11-20.txt - two-client observed results and limits
  docs/GUID_SECURITY_REVIEW_2026-11-20.txt - GUID/hidden-realm compatibility audit
  docs/LAYER_COORDINATION_RESEARCH_2026-11-18.txt - source audit and arrival design

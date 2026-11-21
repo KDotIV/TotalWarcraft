@@ -37,7 +37,11 @@ local function route()
     if read(IsInRaid, home) == true then return "RAID" end
     if read(IsInGroup, home) == true then return "PARTY" end
 end
-local function changed() if A.RefreshMap then A.RefreshMap() end end
+local function changed()
+    if A.RefreshMap then A.RefreshMap() end
+    if A.RefreshHome then A.RefreshHome() end
+    if A.RefreshPresenceUI then A.RefreshPresenceUI() end
+end
 function A.ClearPresence()
     peers = {}
 end

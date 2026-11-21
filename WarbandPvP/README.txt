@@ -1,4 +1,4 @@
-TOTALWARCRAFT — 0.7.4
+TOTALWARCRAFT — 0.7.5
 World of Warcraft: Forever 1.60.1 (Interface 16001)
 
 Formerly Warband-PvP. /tw is primary; /totalwarcraft and /wb also work.
