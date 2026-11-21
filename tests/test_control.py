@@ -13,7 +13,7 @@ def request(verb, target='Tester Two'):
     return owner.globals().packets[owner.globals().sends]
 
 
-def deliver(packet, sender='Owner One', receiver=None, prefix='CTA_CTL1', route='WHISPER'):
+def deliver(packet, sender='Owner One', receiver=None, prefix='WBP_CTL1', route='WHISPER'):
     receiver = peer if receiver is None else receiver
     receiver.globals().A.OnControlMessage(prefix, packet, route, sender)
 
@@ -23,11 +23,11 @@ packet = request('test-on')
 assert owner.globals().sentTargets[1] == 'Tester Two'
 deliver(packet)  # install alone does not authorize a remote controller
 peer.execute('assert(not A.testMode and sends==0)')
-peer.execute("SlashCmdList.CALLTOARMS('control allow Owner One')")
+peer.execute("SlashCmdList.WARBANDPVP('control allow Owner One')")
 deliver(packet, sender='Intruder')
 peer.execute('assert(not A.testMode and sends==0)')
 deliver(packet)
-peer.execute('assert(A.testMode and sends==1 and sentPrefixes[1]=="CTA_CTL1")')
+peer.execute('assert(A.testMode and sends==1 and sentPrefixes[1]=="WBP_CTL1")')
 ack = peer.globals().packets[1]
 before = len(owner.globals().messages)
 deliver(ack, sender='Tester Wrong', receiver=owner)
@@ -63,7 +63,7 @@ tick(owner); tick(peer)
 packet = request('report')
 deliver(packet)
 peer.execute('''
-assert(sends==4 and sentPrefixes[3]=='CTA_REPORT1' and sentRoutes[3]=='GUILD')
+assert(sends==4 and sentPrefixes[3]=='WBP_REPORT1' and sentRoutes[3]=='GUILD')
 assert(packets[3]:sub(1,3)=='1\tT')
 assert(A.List()[1].test and A.List()[1].kind=='report')
 ''')
@@ -80,7 +80,7 @@ assert '\t0\t' in peer.globals().packets[peer.globals().sends]
 for verb in ('capture-start', 'snapshot', 'capture-stop'):
     tick(owner); tick(peer); deliver(request(verb))
 peer.execute("assert(not A.DiagnosticActive() and A.DiagnosticText():find('CONTROL_REQUEST',1,true))")
-peer.execute("SlashCmdList.CALLTOARMS('control off'); assert(not A.testMode and not A.presenceEnabled)")
+peer.execute("SlashCmdList.WARBANDPVP('control off'); assert(not A.testMode and not A.presenceEnabled)")
 tick(owner); tick(peer); count = peer.globals().sends
 deliver(request('test-on'))
 peer.execute(f'assert(not A.testMode and sends=={count})')
@@ -106,7 +106,7 @@ A.RemoteCommand('Tester Two arbitrary-lua'); assert(sends==1)
 timeout = client('Owner One')
 timeout.execute('''
 C_Timer.NewTimer=function(delay,fn) timeoutDelay=delay; timeoutCallback=fn end
-SlashCmdList.CALLTOARMS('remote Tester Two status')
+SlashCmdList.WARBANDPVP('remote Tester Two status')
 assert(timeoutDelay==30 and sentTargets[1]=='Tester Two')
 CLOCK=CLOCK+30; NOW=NOW+30; timeoutCallback()
 assert(sends==1 and messages[#messages]:find('No reply',1,true))
@@ -124,7 +124,7 @@ A.ControlCommand('allow Owner One')
 function TogglePVP() error('Remote CLI must not change game PvP flags') end
 ''')
 deliver(request('presence-on'))
-peer.execute('assert(A.presenceEnabled and sends==1 and sentPrefixes[1]=="CTA_CTL1")')
+peer.execute('assert(A.presenceEnabled and sends==1 and sentPrefixes[1]=="WBP_CTL1")')
 tick(owner); tick(peer); deliver(request('status'))
 assert 'presence=true' in peer.globals().packets[2]
 tick(owner); tick(peer); deliver(request('presence-off'))
@@ -135,7 +135,7 @@ tick(owner); tick(peer); deliver(request('report'))
 assert '\t0\tRemote reports require' in peer.globals().packets[peer.globals().sends]
 peer.execute('A.adapter=A.GuildSend; inGuild=false')
 tick(owner); tick(peer); deliver(request('report'))
-peer.execute('assert(#A.List()==0 and sentPrefixes[sends]=="CTA_CTL1")')
+peer.execute('assert(#A.List()==0 and sentPrefixes[sends]=="WBP_CTL1")')
 assert '\t0\t' in peer.globals().packets[peer.globals().sends]
 
 # Sender realm suffixes must be exact or the known local realm, never arbitrary.

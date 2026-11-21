@@ -1,0 +1,101 @@
+WARBAND-PVP 0.7.0-alpha - FOREVER RECRUITMENT ACCEPTANCE
+November 20, 2026
+
+IMPLEMENTED, NOT YET LIVE-VERIFIED
+Start/Join remain inside /wb show. /wb finder configures the optional public
+recruitment adapter. It does not open Blizzard's Finder UI. Native party
+invitations still require the recruit to accept. No dungeon/BG queue is used.
+No Finder API selects a world layer, and membership does not prove arrival.
+
+TWO-CLIENT LIVE CHECK
+1. Install matching WarbandPvP developer builds and restart WoW. Disable the
+   old CallToArms addon. Run /wb status and confirm 0.7.0-alpha-dev.
+2. Keep both clients outdoors, same faction/ruleset/region, with normal parties
+   or solo. Turn test mode OFF: /wb test off. Dummy warbands never publish public
+   Finder listings or send automatic native invitations.
+3. Both open /wb finder and select the SAME activity suitable for outdoor PvP.
+   Only runtime PvP/Custom choices are offered. Do not use an unrelated activity
+   merely to make the API succeed. A * marks a category needing manual protected
+   listing text: the adapter can search it but will not post it in the background.
+   If no suitable posting activity exists, export that result and use known
+   contacts. This is an actual capability limit, not a reason to queue a dungeon.
+4. Organizer: /wb start Recruitment test. Recruitment should show pending then
+   active. An existing native listing is deliberately not overwritten. If blocked,
+   try Retry listing change once out of combat and record the outcome.
+5. Recruit: /wb on, then /wb show. Opening the board searches when eligible.
+   /wb find requests another search, with at least 30 seconds between searches.
+   For a discovery-specific test, use separate guilds and no named watch: otherwise
+   the warband may have arrived through ordinary guild/subscription messages.
+6. Open the received warband and click Join warband. Expect WBP membership first,
+   then a normal WoW invitation from the assigned party captain. Accept it yourself.
+   No Finder application window should appear. A host can retry the invitation
+   inside the warband board if the automatic attempt was blocked.
+7. Check both native party rosters, map markers and /wb export. Travel together,
+   use the game's offered world refresh, and confirm reciprocal visibility.
+   Do not record a shared layer merely from successful listing/join messages.
+8. Organizer: close recruitment, fill the party, or /wb leave. Confirm the owned
+   native listing closes. If removal is blocked, Recruitment offers retry.
+   Existing user-owned listings and native party membership must survive teardown.
+9. Export BOTH session journals before reload/logout. Include selected activity,
+   API status, invite/accept outcome and whether the players could see each other.
+
+ADDITIONAL CASES
+- A second existing normal party joins; its captain posts their own listing.
+  A solo recruit discovering that captain should resolve the SAME warband UUID
+  and coordinator, then receive an invite from their assigned party captain.
+- Start from a fresh field report using Rally to report. Initial rally coordinates
+  should match the report. The reporter is not silently enlisted or assumed present.
+- Change an addon-created listing in the native UI only as an optional ownership
+  test; end the warband and verify that the externally edited listing survives.
+- Discovery-only subscriptions expire after two minutes unless joined. Use Watch
+  organizers for a deliberate persistent subscription during the current session.
+
+RAIDS AND LAYERS: CORRECTION
+The parties-only requirement is an addon design choice, not evidence that raids
+cannot share an outdoor layer or that five-player parties layer more reliably.
+Being a raid group is distinct from entering an instanced raid. We have not
+verified Forever's raid-versus-party placement behavior. Separate native parties
+have no common grouping contract merely because they share an addon UUID.
+A native raid would be a useful separate comparison test before revisiting this
+design. Do not silently convert the user's groups while testing this hypothesis.
+Blizzard's Forever party troubleshooting describes an offered world refresh;
+it does not promise a leader-selected destination or extend that guarantee to raids:
+https://us.forums.blizzard.com/en/wow/t/phasing-issues-with-group-still-persist-from-beta/2402367/2
+
+IMPLEMENTATION / AUTHORITY
+Finder.lua exposes only runtime eligible PvP/Custom activities. Creates/updates
+use the native table payload; descriptions are cleared through the supported API,
+never set/pasted into a protected widget. Confirmed active-entry state, bounded
+content fingerprints and replacement events gate ownership and cleanup. We never
+adopt a preexisting listing at login. An indistinguishable concurrent native edit
+cannot be given stronger ownership guarantees than the native API exposes.
+
+Search -> at most 8 fresh D probes among 50 results -> matching F reply with
+nonce, UUID/session and coordinator -> existing S/A/G subscription protocol.
+Search cooldown 30s, probe cooldown 60s, reply lifetime 25s, automatic watch 120s.
+No UUIDs or arbitrary metadata go into public listing text. A reply is a bounded
+claim from that native message sender, not cryptographic proof of honest data.
+Native result IDs, identical result sets and activities are never layer IDs.
+
+Automatic invites: one attempt per accepted request, at least 3s apart and at
+most 6/minute. Delegated hosts require both coordinator assignment and a direct
+V consent packet from the actual recruit. Manual retry is exposed in WBP. An
+InviteUnit return without error is logged as an attempt, not delivery/acceptance.
+Only a readable native roster clears the pending invitation as joined.
+
+All 12 offline suites pass, including actual stripped release-package scenarios:
+cross-guild discovery, secondary-party resolution, explicit acceptance, malicious
+and expired replies, invitation consent, ownership, updates/full-party cleanup,
+blocked/secret API results, retry limits, developer isolation and one-window UI.
+Mock results do not establish that Forever permits an insecure addon to invoke
+restricted Search/CreateListing/UpdateListing for the selected live activity.
+
+PRIMARY SOURCE AUDIT
+Blizzard Forever UI source mirror, native activity enumeration helper:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_GroupFinder_VanillaStyle/Blizzard_LFGVanilla_ParentFrame.lua
+Native CreateOrUpdateListing and RemoveListing:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_GroupFinder_VanillaStyle/Blizzard_LFGVanilla_Listing.lua
+Protected description box disables SetText and paste:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_GroupFinder_VanillaStyle/Mainline/Blizzard_LFGVanilla_Listing.xml
+Search/listing declarations and restricted-call markers:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/LFGListInfoDocumentation.lua

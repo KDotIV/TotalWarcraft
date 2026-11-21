@@ -1,0 +1,65 @@
+ENEMY SCOUTING - 0.7.1-alpha
+Implementation and offline validation; cross-faction delivery is NOT live-verified.
+
+PRODUCT CONTRACT
+Start/Join makes affiliation and reported size scoutable, per the owner's decision.
+An accepted local guild report can probe one currently visible opposing player
+from target, mouseover, focus or targettarget. The visible peer must also observe
+the requester and be a current WBP warband member. Nameplate visibility can qualify
+a requester; unreadable/secret identity, faction or visibility fails closed.
+No GUID components, hidden enemies, combat totals or native layer IDs are used.
+
+TRANSPORT / AUTHORITY
+WBP_SCOUT1 uses native addon WHISPER for Q/R and GUILD for S. Every packet is <=255
+bytes and scope/faction checked. Replies match a pending UUID and native event
+sender. They carry a warband UUID, coordinator session, sequence, snapshot time,
+reported size, party count, orders and title. These fields are self-reports, not
+cryptographic proof. A modified cooperating peer can lie about its own warband.
+Guild relays attach only to the same native reporter's already accepted field
+report; out-of-order relays wait at most 10 seconds. They cannot create a pin.
+
+Snapshot TTL is <=90 seconds from the underlying coordinator update, capped by
+report expiry. The first usable snapshot is immutable; replay does not refresh
+age. Pending probes expire after 10 seconds, with 30 seconds between probes of
+one enemy and 8 outstanding probes total. Per-sender/global rate budgets, 64 sender
+entries and 32 orphan relays cap inbound work and retained data. Scope/test-mode
+changes clear scouting state. Simulation cannot query, reply to or relay scouts.
+The production builder strips test guards with the corresponding test features.
+
+Only accepted API calls are logged as accepted, never as confirmed peer delivery.
+Blocked/missing responses remain unknown. No ordinary-chat, external-app, hidden
+Finder field, Battle.net or secret-value workaround is attempted.
+
+LIVE ACCEPTANCE (two factions; third friendly guild observer is helpful)
+1. Install the same 0.7.1 build on both opposing clients; restart WoW. Use live mode.
+2. Enemy: /wb show, enable discovery, Start a warband. Read the Start/Join disclosure.
+3. Meet outdoors in the same visible place. Both players target each other.
+4. Friendly scout must be in a guild. Run /wb report, then open that report's
+   Enemy scouting view. A usable response should identify the enemy warband and
+   label its count as reported. A timeout must show unknown, without a fabricated
+   warband or fighter count. Export both sessions with /wb export.
+5. A same-faction guild observer should receive the report and matching snapshot.
+6. Keep the view open for 90 seconds: affiliation expires while the five-minute
+   field report remains. Held-open tooltips must not retain known affiliation.
+7. Repeat after the report cooldown with an ordinary enemy warband member, then
+   after they leave. No membership/visibility/usable delivery must remain unknown.
+8. Check Back, dragging, map navigation and non-overlap in the actual game UI.
+
+OFFLINE COVERAGE
+tests/scouting_scenarios.py runs against source and the physically stripped release
+through tests/test_release.py. Separate Lua clients cover coordinator and ordinary
+member replies, expired membership, no delivery, explicit send rejection, invisible
+and unreadable enemies, forged sender/nonce/scope/field data, relay reordering,
+replay/TTL, bounded hostile traffic, simulation isolation and window navigation.
+Mocks cannot establish that Blizzard delivers cross-faction addon whispers.
+
+PRIMARY API SOURCE
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ChatInfoDocumentation.lua
+AreOutgoingAddonChatMessagesRestricted and InChatMessagingLockdown document native
+restriction controls; their presence does not promise cross-faction delivery.
+
+PUBLICATION GUIDANCE
+https://support.curseforge.com/support/solutions/articles/9000197241-creating-and-submitting-a-project
+https://support.curseforge.com/support/solutions/articles/9000199552-project-submission-guide-and-tips
+The project uses an original generated crossed-weapon emblem with plain banners;
+no Blizzard faction crest or reference illustration is uploaded as the logo.

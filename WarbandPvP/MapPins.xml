@@ -1,0 +1,14 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="WarbandPvPMapPinTemplate" virtual="true" enableMouse="true" mixin="WarbandPvPMapPinMixin">
+        <Size x="28" y="28"/>
+    </Frame>
+    <Frame name="WarbandPvPPresencePinTemplate" virtual="true" enableMouse="true" mixin="WarbandPvPPresencePinMixin">
+        <Size x="20" y="20"/>
+    </Frame>
+    <Frame name="WarbandPvPWarbandPinTemplate" virtual="true" enableMouse="true" mixin="WarbandPvPWarbandPinMixin">
+        <Size x="28" y="28"/>
+    </Frame>
+    <Frame name="WarbandPvPWarbandGroupPinTemplate" virtual="true" enableMouse="true" mixin="WarbandPvPWarbandGroupPinMixin">
+        <Size x="16" y="16"/>
+    </Frame>
+</Ui>

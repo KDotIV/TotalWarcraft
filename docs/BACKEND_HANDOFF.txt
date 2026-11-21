@@ -1,7 +1,212 @@
-CALL TO ARMS - BACKEND AND ADDON HANDOFF
-Current main addon + built-in diagnostics: 0.5.2-alpha | Standalone probe: 0.3.0 | November 18, 2026
+WARBAND-PVP - BACKEND AND ADDON HANDOFF
+CURRENT BUILD: 0.7.1-alpha (developer flavor installed; CurseForge submitted)
+Source is now WarbandPvP/, command prefix /wb, warband board /wb show.
+Physical release/dev separation, one-dialog navigation, campaign frame,
+command board/keybindings/session export and Forever-only scope are implemented.
+All 13 offline suites pass. GUID/hidden-realm audit and resulting compatibility
+fixes: GUID_SECURITY_REVIEW_2026-11-20.txt. No NPC GUID layer detector exists.
+Optional Finder recruitment, scoped nonce discovery, secondary-party resolution,
+consenting automatic invite attempts and report-to-rally are implemented. Native
+protected calls/activity suitability still need live verification. See
+RECRUITMENT_TEST_0.7.0.txt. No native Finder window is opened or protected text
+injected. Party-only is a design requirement, not proof of a layering advantage
+over raids; a native raid may share the outdoor world and warrants comparison.
+Enemy scouting and the Start/Join disclosure are implemented and validated in
+source and physically stripped production builds. Snapshot TTL, native sender /
+nonce / scope checks, ordinary-member leases, bounded input and failure-to-unknown
+are covered. Cross-faction delivery still requires a live check; it may be blocked.
+See ENEMY_SCOUTING_0.7.1.txt for protocol limits and the acceptance script.
 
-0.5.2 REMOTE TEST CONTROLLER
+CurseForge project 1819796 (warband-pvp) was created under KDotIV and file 9723988
+submitted as Alpha for WoW Forever 1.60.1. Public release ZIP only; automatic
+publication after approval selected. At submission the project awaited moderator
+approval and the file was Processing. Alpha files require direct project links;
+the portal says they are not shown in the CurseForge Client. Current receipt:
+CURSEFORGE_SUBMISSION_0.7.1.txt. All Rights Reserved, third-party distribution off,
+comments enabled, primary PvP category with Guild and Map & Minimap categories.
+
+At 22:41 UTC November 20, the 0.7.1-alpha-dev build was installed at
+E:\World of Warcraft\_forever_\Interface\AddOns\WarbandPvP (30 hash-verified files).
+Prior install backup: releases/installed-backups/WarbandPvP-before-0.7.1-alpha-dev-20261120-224103.zip.
+No SavedVariables changed. WoW was running; restart it to load the new modules.
+The production ZIP is separate and contains no dummy/remote/test implementations.
+
+PREVIOUS NAME MIGRATION
+At 19:32 UTC November 20, the 0.7.0-alpha-dev build was installed at
+E:\World of Warcraft\_forever_\Interface\AddOns\WarbandPvP (28 hash-verified files).
+The legacy 0.6.2 files matched their original archive before CallToArms.toc was
+renamed to CallToArms.toc.disabled. All legacy code/settings remain intact.
+SavedVariables were copied with only the two top-level variable names changed;
+WoW was closed. Backup: releases/installed-backups/name-migration-20261120-193204/.
+Restart WoW and use /wb show -> Recruitment for the new live check.
+Original installed-version evidence follows; historical /cta commands below
+describe older builds and are not the current command reference.
+
+ARCHIVED 0.6.2 INSTALLED BUILD / LIVE EVIDENCE
+Current main addon + built-in diagnostics: 0.6.2-alpha | Standalone probe: 0.3.0 | November 20, 2026
+
+NOVEMBER 20 LIVE RESULTS (0.6.1 TEST SESSION)
+
+PASS: two-client end-to-end simulated warband coordination. The user's third
+player was unavailable; that check is DEFERRED, not failed. Complete exports
+from Vitals (483 rows) and Profcatface (644 rows), plus screenshots, establish
+one shared UUID, two real clients / ten slots / eight dummies, successful remote
+setup/join, real peer receipt and sustained member updates. See
+WARBAND_RESULTS_2026-11-20.txt for exact line references and limits.
+
+The peer accepts consecutive coordinator sequences 27-71 (22 A, 22 G, one END),
+all from Vitals. Forty A/G receipts match publications in the overlapping host
+log. Eighteen member updates span 4m26s, through a loading/zone transition with
+no rejoin. The peer receives END at 12:35:39 EST, stops member updates, accepts
+remote test-off at 12:35:50 and unsubscribes; no further warband traffic follows.
+The earlier truncated peer attachment is superseded by the complete report.
+
+The peer captures SHARD_TRANSFER at 12:36:53, AFTER test-off. This validates
+capture of the transfer signal, not CTA causality or same-layer arrival. Later
+combat is also after test-off and remains unattributed; no PvP fighter evidence
+is established. No native group/roster/invite events or reciprocal observation
+of these two testers were captured. Displayed state/accepted messages cannot
+establish layer co-location.
+
+Remaining coverage: third client when available, visible movement/marker cleanup,
+silent-loss expiry/rejoin, 0.6.2 window behavior and the separate native-layer
+experiment. Basic two-client networking/setup/sustained updates/END and remote
+fixture teardown are live-verified. No code or release change was needed.
+Evidence and calculations remain in git-ignored probe-logs/warband-2026-11-20/;
+peer-full-analysis.json is the current full-peer summary. Partial artifacts are
+retained for provenance, not current test conclusions.
+
+0.6.2 WINDOW OVERLAP FIX
+
+User's live screenshot showed the warband board and details centered on top of
+each other, with controls interleaving because their frame levels matched.
+Windows.lua now manages all CTA dialog windows: warband board/details, activity
+panel, report details, diagnostic export and pin check. Title bars support drag;
+positions are retained during the session. Opening a new dialog chooses free
+space, arranging an untouched pair side by side when needed. If the viewport
+cannot fit them, existing CTA dialogs hide, retaining inputs/data/membership.
+Native game windows and toast placement are not managed or hidden by this code.
+
+Opaque backgrounds and bounded distinct frame-level bands separate complete CTA
+window trees. Header drag handles do not cover buttons/edit boxes. Placement is
+triggered by opening a window, not ordinary record refreshes; existing OnShow
+behavior is retained. No SavedVariables or networking schema changed.
+
+All ten offline suites pass. A targeted regression reproduces board/details
+opening, verifies non-overlap on wide/medium viewports, view switching at the
+screenshot dimensions, retained dragged positions and inputs, frame ordering,
+and native map visibility. In-game visual acceptance of the fix remains pending.
+The user's screenshot is evidence of the prior bug, not of a verified fix.
+
+Installed November 20, 2026 at 17:33 UTC into
+E:\World of Warcraft\_forever_\Interface\AddOns\CallToArms.
+All 23 files hash-verified; prior addon backed up to
+releases/installed-backups/CallToArms-before-0.6.2-alpha-20261120-173318.zip.
+Release: releases/CallToArms-0.6.2-alpha.zip (23 files, 59,781 bytes).
+Archive entries match source byte-for-byte; TOC/XML verified.
+SHA256: b65a1103a1f9255afdf4d6509acaac5497bd1ee1a9bcd9ba49bf3f350490ee16.
+Restart WoW to load the new Windows.lua module. Session-only simulation,
+controller authorization and warband membership must be set up again afterwards.
+
+HISTORICAL 0.6.1 THREE-PLAYER WARBAND SIMULATION
+
+WarbandSimulation.lua supplies a test-only roster input without replacing WoW
+APIs: /cta test on, then /cta warband simulate 1-5. Each real client represents
+one independent party host with real coordinates and up to four dummy slots.
+Three clients join the same UUID to display 15 slots / 12 dummies, while retaining
+exactly three real CTA memberships. Native party invitations are disabled for
+fixtures. Actual WoW parties, diagnostics, presence and report counts are unchanged.
+
+CTA_WBT1 is isolated from production CTA_WB1, including requests, snapshots,
+member leases and withdrawals. Both test-mode and fixture opt-in are required;
+old clients ignore the new prefix. Queued traffic retains its source prefix and
+mode changes maintain separate replay ledgers. Test-off/control-off tears down
+fixtures; reload defaults to production with discovery OFF. Purple pins, [TEST]
+titles and explicit real/dummy totals prevent fixtures appearing as normal data.
+
+Remote CLI adds four fixed verbs under existing per-session controller approval:
+warband-five/watch/join/leave. All require test mode. Watch/join resolve only the
+controller's test listing; they cannot operate on live warbands, execute code or
+issue native invitations. Full local/remote instructions are bundled in
+CallToArms/WARBAND_TESTING.txt. The original report-control guide is updated too.
+
+All nine offline suites pass. New coverage uses three independently routed Lua
+clients, 15 displayed slots, real movement, three actual memberships, explicit
+opt-in, remote authority, no fake message targets/invites, production isolation,
+count changes, revocation/teardown and replay protection across mode switches.
+The production 20-member/eight-listener suite still passes. This does not prove
+live rendering/delivery, fifteen actual clients, native grouping or layer transfer.
+The user will perform the live test; no live game commands were sent in development.
+
+Installed November 20, 2026 at 17:16 UTC into
+E:\World of Warcraft\_forever_\Interface\AddOns\CallToArms.
+All 22 files hash-verified; previous addon backed up to
+releases/installed-backups/CallToArms-before-0.6.1-alpha-20261120-171640.zip.
+Release: releases/CallToArms-0.6.1-alpha.zip (22 files, 57,660 bytes), including
+WARBAND_TESTING.txt. Archive entries match source byte-for-byte; TOC/XML verified.
+SHA256: 4aac0c394a75a014ce13a2ce5a78c7ecddbc1494227c0d30681fcaaf39546b17.
+Restart WoW on all three clients and confirm /cta status says 0.6.1-alpha.
+Settings and other addons were not modified. Live acceptance remains pending.
+
+HISTORICAL 0.6.0 MULTI-PARTY WARBANDS
+
+The clarified requirement ships as one CTA UUID spanning up to four NORMAL
+parties / 20 CTA members. Accepting a listing creates CTA membership; the assigned
+party host manually invites and the recruit accepts the native WoW invitation.
+Existing party leaders register first, followed by their CTA members. There is
+no raid conversion, automatic invitation/acceptance or forced layer transfer.
+
+WarbandProtocol.lua / Warbands.lua / WarbandUI.lua implement opt-in discovery,
+coordinator-owned listings, independent group-host locations, fixed/follow rally,
+manual invite tasks, membership leases, native map pins and bounded networking.
+GUILD/PARTY and named WHISPER subscriptions only; public server discovery remains
+unimplemented. Group positions/membership are reported, never confirmed PvP heat.
+The 28x28 axe/sword/banner icon uses native lines; member group markers are 16x16.
+Existing report/presence/remote-control protocols are unchanged.
+
+CTA_WB1 uses single packets <=255 bytes, UUIDs, monotonic sequences, expiry,
+actual message-sender/role checks and request nonces. Membership incarnations
+prevent delayed leave/update traffic from affecting a new enrollment. A bounded
+96-entry queue coalesces snapshots without starving older destinations; control
+and lease messages have priority. Attempt cap is four per second, including
+failures. Input rates, stores and subscriptions are bounded. No obfuscation or
+client-embedded secret can make self-reported observations authoritative.
+
+See WARBANDS_DESIGN_2026-11-20.txt for the exact architecture, timings, authority
+limits and AceComm/ChatThrottleLib/LibSerialize research. No new library or
+external backend dependency was added. WARBAND_TEST_0.6.0.txt is the live guide.
+The earlier one-party-only recommendation is superseded by the user's explicit
+multi-party requirement; separate native parties still need independent layer
+checks. Automatic reciprocal arrival verification and reliable PvP attribution
+remain unimplemented, along with the existing live report/presence/UI gates.
+
+Eight offline suites pass. The new network harness exercises independent clients,
+four full parties/20 members/eight cross-guild listeners while hosts move,
+authority/session/replay rejection, join cancel/retry, native invitation separation,
+capacity, lease renewal, map dimensions, byte limits, failed-send throttling,
+END/expiry, subgroup-host departure and coordinator raid exit. No live WoW actions
+or server transfer were performed by those tests. Client rendering/invite behavior
+and actual cross-layer/co-location behavior still require the supplied live test.
+
+Redundancy review: the previous estimate composer remains removed. Warbands reuse
+CurrentLocation, map projection/provider, scope detection and diagnostic capture.
+The new protocol/store is separate because one logical UUID can span native
+parties; the opt-in per-player presence stream and remote test controller serve
+different audiences/permissions and remain supported. No raid-based warband path,
+backend bridge, unused dependency or executable message evaluator was added.
+Historical probe/art artifacts remain outside the current renderer's dependencies.
+
+Installed November 20, 2026 at 16:58 UTC into
+E:\World of Warcraft\_forever_\Interface\AddOns\CallToArms.
+Installer backed up the prior addon and hash-verified all 20 source files.
+Backup: releases/installed-backups/CallToArms-before-0.6.0-alpha-20261120-165837.zip.
+Release: releases/CallToArms-0.6.0-alpha.zip (20 files, 50,638 bytes).
+Every archive entry was compared byte-for-byte with source; TOC and XML verified.
+SHA256: eac43cd46ee9cef55f11e734986d2f4c381cb60f337bea867427cc6c64adddb3.
+Restart WoW, confirm /cta status says 0.6.0-alpha, then follow the warband guide.
+Settings and other addons were not modified. This is not a live acceptance result.
+
+HISTORICAL 0.5.2 REMOTE TEST CONTROLLER
 
 Control.lua provides /cta control allow/off and /cta remote First Surname <verb>.
 Session-only explicit authorization; nine fixed verbs over targeted CTA_CTL1
@@ -62,7 +267,7 @@ The full OpenMap renderer, art, friends protocol and fog are not copied.
 Protocol/acceptance: PRESENCE_TEST.txt. MVP/research: MVP_REVIEW_2026-11-18.txt.
 Presence is not proof of PvP activity or same-layer visibility. Existing report
 wire/cooldown behavior below is unchanged. New tests pass offline; no new live
-acceptance has been recorded. First presence package was 0.5.0; use 0.5.2 now.
+acceptance has been recorded. First presence package was 0.5.0; use the current release above.
 
 Layer follow-up: LAYER_COORDINATION_RESEARCH_2026-11-18.txt records installed
 LayerSwap 1.14.33. User requirement: accept CTA, reach report zone, then coordinate
@@ -263,7 +468,7 @@ generic display model. Adapter validation/authorization must precede Receive.
 cityAllowed is only a display gate; no implemented city/organizer authority
 backs it. Guild packets support report only, never heat/raid/defense creation.
 Detailed snapshots are not retained by Model.lua. Text limits are byte-based.
-No tombstones, cancellation protocol, layer schema or delivery receipts exist.
+The report model has no tombstones, cancellation protocol, layer schema or delivery receipts.
 
 8. AGREED PRODUCT REQUIREMENTS STILL TO BUILD
 

@@ -1,55 +1,66 @@
-CALL TO ARMS 0.5.2-alpha - IN-GAME REMOTE TEST CLI
-November 18, 2026
+CURRENT COMMAND PREFIX: /wb. Historical filenames are retained for links.
+CALL TO ARMS 0.7.0-alpha-dev - IN-GAME REMOTE TEST CLI
+Updated November 20, 2026 (original guide filename retained)
 
-Install the full CallToArms-0.5.2-alpha.zip on your client and each tester's
-client. Restart WoW and check /cta status. No companion app, Python, C# backend,
+Install the full WarbandPvP-0.7.0-alpha-dev.zip on your client and each tester's
+client. Restart WoW and check /wb status. No companion app, Python, C# backend,
 OpenMap, LayerSwap or separate probe is required. All commands below are typed
 in WoW chat. Your controller character and the tester must both be online.
 
 QUICK START
 
 The tester runs this once each session, using YOUR full character name:
-  /cta control allow YourFirst YourSurname
+  /wb control allow YourFirst YourSurname
 
 Then YOU run these, substituting the TESTER'S full character name:
-  /cta remote TesterFirst TesterSurname status
-  /cta remote TesterFirst TesterSurname test-on
-  /cta remote TesterFirst TesterSurname report
+  /wb remote TesterFirst TesterSurname status
+  /wb remote TesterFirst TesterSurname test-on
+  /wb remote TesterFirst TesterSurname report
 
 Wait at least FIVE seconds between remote commands. Wait TEN seconds between
 simulated reports on a given tester. Each command prints OK/FAILED with a short
 result, or times out after 30 seconds. No automatic retry is sent.
 
-For the report to appear on YOUR client, you must also run /cta test on locally
+For the report to appear on YOUR client, you must also run /wb test on locally
 and share the tester's guild, faction, ruleset and region. Other guild recipients
 must opt into test mode too. The report originates at the tester's current map
 position and is labeled [TEST]. An OK report reply confirms local acceptance
 and guild dispatch, not that another client received/rendered the report.
 
-For a test from your own character, /cta test on then /cta report is sufficient.
+For a test from your own character, /wb test on then /wb report is sufficient.
 Remote commands reduce repeated tester input; another online WoW client is
 still necessary to exercise real network delivery. They cannot create players.
 
 SUPPORTED VERBS
 
-status         Reply with version, test/presence/capture state, report/peer counts.
+status         Reply with version, test/presence/capture, reports/peers and warband role.
 test-on        Enable simulated reports and reception of others' test reports.
-test-off       Stop simulation and clear that client's simulated report records.
+test-off       Clear simulated reports/warbands and disable fixture discovery.
 presence-on    Enable session-only outdoor party/raid self-location sharing.
 presence-off   Stop sharing and clear local peer markers; remote peers expire.
 report         Submit a simulated guild report, using the normal report pipeline.
 capture-start  Start a local bounded layer/evidence capture labeled remote-test.
 capture-stop   Stop capture and retain its log.
 snapshot       Record one local phase/visibility snapshot, even without a ticker.
+warband-five   With test mode ON, configure one real host plus four dummy slots.
+warband-watch  Subscribe to the authorized controller's test warband listing.
+warband-join   Request CTA membership in that controller's fresh test listing.
+warband-leave  Leave the simulated warband; actual WoW parties stay unchanged.
+
+Warband verbs require test mode; watch/join/leave also require the simulated
+party fixture first. They cannot configure or join live warbands. Only the
+organizer starts the test listing locally. Three testers can represent three
+five-slot parties under one UUID; dummy slots never impersonate extra clients.
+See WarbandPvP/WARBAND_TESTING.txt (also inside the ZIP) for the full walkthrough.
 
 Example diagnostic session (wait five seconds between each remote command):
-  /cta remote TesterFirst TesterSurname capture-start
-  /cta remote TesterFirst TesterSurname presence-on
-  /cta remote TesterFirst TesterSurname snapshot
-  /cta remote TesterFirst TesterSurname status
-  /cta remote TesterFirst TesterSurname capture-stop
-  /cta remote TesterFirst TesterSurname presence-off
-  /cta remote TesterFirst TesterSurname test-off
+  /wb remote TesterFirst TesterSurname capture-start
+  /wb remote TesterFirst TesterSurname presence-on
+  /wb remote TesterFirst TesterSurname snapshot
+  /wb remote TesterFirst TesterSurname status
+  /wb remote TesterFirst TesterSurname capture-stop
+  /wb remote TesterFirst TesterSurname presence-off
+  /wb remote TesterFirst TesterSurname test-off
 
 Repeat for each tester. Presence needs an outdoor HOME party/raid and opt-in at
 both ends; enabling it solo sets the preference but does not send locations.
@@ -58,15 +69,15 @@ group. It still requires matching faction/ruleset/region and available messaging
 
 AUTHORIZATION / ENDING THE SESSION
 
-/cta control                       Show the currently authorized controller.
-/cta control allow First Surname   Replace it with exactly one controller.
-/cta control off                   Revoke access; stop test/presence/capture.
+/wb control                       Show the currently authorized controller.
+/wb control allow First Surname   Replace it with exactly one controller.
+/wb control off                   Revoke access; stop test/presence/capture.
 
 Authorization never persists across login/reload. Installing CTA does not grant
 control. The tester can revoke it at any time. Remote commands cannot grant
 another controller, run arbitrary Lua, change actual PvP flags, move a character,
 accept invitations, refresh the world, change protected settings or export logs
-over the network. Only the nine verbs above are accepted. Remote real reports
+over the network. Only the thirteen verbs above are accepted. Remote real reports
 are disabled, and reports require the built-in guild transport and test mode ON.
 
 Use the full in-game First Surname, with spaces, without quotation marks.
@@ -76,7 +87,7 @@ alone. A wrong surname or unknown realm suffix does not match. Cross-realm name
 formats and whisper restrictions still need live acceptance on this client.
 
 If no reply arrives, check online status, authorization after reload, exact name,
-/cta status on both clients, matching scope and the five-second command interval.
+/wb status on both clients, matching scope and the five-second command interval.
 A send accepted by the game is not proof that the recipient received it.
 If you lose a reply to a report, inspect the existing test record before retrying;
 a newly issued command is a new request and may create another report later.
@@ -86,8 +97,8 @@ WHAT STILL NEEDS TESTER INPUT
 Players must join/accept groups, travel and use any Blizzard refresh UI normally.
 Three-player layer validation still requires each person to check actual mutual
 visibility at the encounter. Commands cannot prove that everyone sees each other.
-Export each tester's local capture with /cta layer export, or collect the main
-CallToArms.lua SavedVariables after normal logout/reload. See
+Export each tester's local capture with /wb layer export, or collect the main
+WarbandPvP.lua SavedVariables after normal logout/reload. See
 DIAGNOSTIC_TEST_0.5.1.txt (updated for 0.5.2) for the full capture procedure.
 Presence, combat flags and casting remain context, not confirmed PvP evidence.
 

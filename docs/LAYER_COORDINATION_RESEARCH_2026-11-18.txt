@@ -1,6 +1,129 @@
 CALL TO ARMS - LAYER-SWAP RESEARCH AND ARRIVAL REQUIREMENT
 November 18, 2026 | Research/design only; not implemented in 0.5.0
 
+NOVEMBER 20 UPDATE: GUID SECURITY AND DUNGEON/GROUP FINDER
+
+The historical NPC heuristics below describe the inspected LayerSwap version,
+not a supported future integration. GUID_SECURITY_REVIEW_2026-11-20.txt records
+the announced GUID/realm obfuscation and the current compatibility fixes.
+Do not use NPC GUID/realm components as cross-client layer keys.
+
+Current conclusion: no supported exact-world-layer selection control was found
+in the inspected Forever C_PartyInfo, C_LFGInfo or C_LFGList declarations and
+Vanilla-style Group Finder implementation. This is a source/API audit, not a
+live test or a claim to know the server's internal placement algorithm.
+
+Primary evidence (Blizzard source mirrored in the forever branch):
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_GroupFinder_VanillaStyle/Blizzard_LFGVanilla_Browse.lua#L1346
+LFGBrowseUtil_GetInviteActionForResult uses
+C_PartyInfo.InviteUnit(searchResultInfo.leaderName). Finder invitation uses the
+normal party invitation path already used by Warband-PvP, not a shard selector.
+The search call at line 320 passes category, filters, language, cross-faction
+listing preference and activities. It supplies no destination world layer.
+
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/LFGListInfoDocumentation.lua#L539
+Search arguments, LfgListingCreateData (line 918) and LfgSearchResultData (line
+937) expose no documented world-layer targeting contract. Search-result IDs and
+activity IDs must not be interpreted as unique world-instance identifiers.
+
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/PartyInfoDocumentation.lua#L333
+InviteUnit takes a target name; no destination layer argument is documented.
+
+https://us.forums.blizzard.com/en/wow/t/phasing-issues-with-group-still-persist-from-beta/2402367/2
+Blizzard's Kaivax describes joining a friend's party and using the offered world
+refresh / Refresh Now flow. This is a supported regrouping path, not a guarantee
+that the leader stays at the original encounter or that every member transfers.
+
+Product implications:
+- Finder can assist recruitment where available. Seeing the same listing is
+  not documented proof of shared world-layer placement; not seeing it is also
+  not sufficient evidence of a different layer. Do not derive layer labels by
+  comparing search-result sets or probe hidden fields as an alternative.
+- A dungeon group/instance is not proof of the outdoor report's world instance.
+  Returning outdoors still requires fresh encounter verification.
+- Keep an encounter anchor, normal five-player invitations and user-controlled
+  refresh. Combine readable phase/shard signals with fresh reciprocal local
+  observations. Keep "with party host" distinct from "at the original fight".
+- Different normal parties have no shared native grouping contract just because
+  their addon membership uses the same UUID. Verify arrival separately for each
+  party and prefer parties already observed at the encounter. Moving a captain
+  through a temporary group, then splitting/reforming, has no verified retention
+  guarantee and must not be presented as a working layer-sync solution.
+- Revalidate on transfer, zone/roster/leader change and short evidence expiry.
+  Unavailable readings stay unknown. No outside backend adds a server placement
+  capability absent from the game API.
+
+These are design constraints for remaining arrival UX, not newly shipped code.
+The earlier two-client simulated warband run did not validate native layering.
+
+FOLLOW-UP: FINDER LISTINGS AS A RECRUITMENT ADAPTER
+
+Implementation update: Finder.lua now implements the supported-call adapter and
+the in-addon recruitment controls; RECRUITMENT_TEST_0.7.0.txt documents the fresh
+nonce exchange, ownership safeguards, consenting invites and live gates. The
+original proposal below records its rationale. Offline acceptance is complete;
+actual activity eligibility and restricted-call behavior remain unverified.
+
+The user's clarified idea is a listing lifecycle and matching service: starting
+a warband (optionally from a report) advertises native parties in Group Finder,
+then Warband-PvP associates recruits and those parties with the warband UUID.
+This is conceptually feasible recruitment work, subject to live API checks.
+It does not depend on first proving that two ungrouped players share a layer.
+That initial check can be unknown; posting/joining cannot resolve it by itself.
+
+GET/POST/UPDATE are useful analogies, but these are in-game Lua calls, not HTTP:
+  Read: C_LFGList.Search -> LFG_LIST_SEARCH_RESULTS_RECEIVED ->
+        GetSearchResults / GetSearchResultInfo; GetActiveEntryInfo for our listing.
+  Create: C_LFGList.CreateListing.
+  Update: C_LFGList.UpdateListing.
+  Remove: C_LFGList.RemoveListing (used by Blizzard's listing UI).
+
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_GroupFinder_VanillaStyle/Blizzard_LFGVanilla_Listing.lua#L245
+Blizzard's own CreateOrUpdateListing implementation shows all three mutations.
+Search/create/update have restrictions in the API declarations. No guarantee
+of timer-driven invisible publishing or arbitrary programmatic comment text
+follows from their presence. A user-driven Start/Post flow must honor any native
+UI requirements and handle rejected/unsupported calls without retry spam.
+
+LfgListingCreateData has no addon UUID/custom-data field. Keep UUID, party slot,
+organizer session and report association in WBP's protocol. A fresh handshake
+with a listing's readable leader maps that native party to the UUID. A user-
+entered public tag may assist discovery if text entry is allowed, but is not
+required for correctness, authority, or layer identification. Search-result IDs
+are not persistent warband IDs. Anyone can copy a tag; validate sender/leader,
+session, nonce, scope and expiration independently.
+
+Proposed flow:
+  Start from report OR start roaming -> WBP UUID + native party host ->
+  optional supported Finder listing -> fresh WBP membership/slot handshake ->
+  normal invite/accept -> travel/refresh -> fresh encounter verification.
+
+Each normal party remains capped at five. A four-party warband would require
+each party's own participating leader/listing, coordinated under the parent
+UUID. An already-grouped party must not be silently dissolved to fill another.
+Never overwrite another active listing as an implementation shortcut. Posted
+entries are Finder listings, not an invisible private transport for the addon.
+
+Before committing this adapter to the release:
+1. On the actual Forever client, enumerate allowed categories/activities and
+   verify that a suitable PvP/Custom activity is available for these players.
+   Shared source contains PvP/Custom UI categories, not proof of availability
+   for every character/ruleset. Do not queue unrelated dungeon/BG content.
+2. Test permitted user-action create/update/remove, fields, account/leader
+   eligibility, restrictions, search throttle and active-entry events.
+3. Test actual visibility of the listing to the other intended client. Results
+   must not be assumed to form a complete cross-layer/faction-wide directory.
+4. Test fresh handshake, party capacity, invite/accept and listing cleanup.
+5. Separately test native co-location at the original report with the anchor.
+   A successful listing/join test does not establish this outcome.
+
+This adapter is implemented but not live-verified. Existing known-contact WBP
+discovery and normal-party coordination remain the fallback. The parties-only
+design is not a demonstrated layering advantage over a native raid. We have not
+established any Forever rule forbidding a raid from sharing an outdoor layer.
+
+HISTORICAL NOVEMBER 18 RESEARCH
+
 USER REQUIREMENT
 
 After accepting a CTA AND reaching the zone where it was reported, help the
@@ -233,4 +356,5 @@ Test the invite direction both ways, with the same zone and a stationary third
 encounter anchor where available. Record which clients transfer and whether all
 can actually see one another. This can validate CTA's observed outcome checks;
 it cannot establish a universal server population-selection rule from a few
-joins. Keep the numeric NPC label as supplementary diagnostics only.
+joins. The November 20 update supersedes the earlier NPC-label recommendation;
+opaque NPC GUID observations must not be used as cross-client layer evidence.

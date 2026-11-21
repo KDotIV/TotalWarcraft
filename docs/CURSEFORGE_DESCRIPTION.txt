@@ -1,0 +1,45 @@
+Warband-PvP helps you quickly form parties to seek out world PvP or rally your faction to retaliate against enemy attacks in WoW Forever.
+
+Report the attack. Rally a response. Move together.
+
+Open /wb for your command board. Send a field report, rally at a reported location, or start a roaming warband. One warband coordinates up to four normal five-player parties under a shared identity, with rally pins and group-host positions on the world map. Warbands use parties, not raids.
+
+WHAT YOU CAN DO
+
+- Report PvP at your current location to Warband-PvP users in your guild. Reports stay on the map for five minutes.
+- Start or join a warband, set rally orders, follow the organizer's rally point, and see reported party locations.
+- Rally a new warband at a field report to organize a response.
+- Use optional recruitment controls inside Warband-PvP, where WoW's native Finder API permits them. Recruits still accept the game's party invitation.
+- Share your location with your outdoor native group for the current session.
+- Open a short-lived enemy scouting snapshot from a field report when a visible opposing Warband-PvP member returns usable information.
+- Export a bounded local session journal with /wb export when reporting a problem.
+
+THE COMMAND BOARD
+
+The campaign frame, crimson report pins and gold rally banners bring your reports and orders together. Only one Warband-PvP dialog opens at a time. Use Back to retrace your steps or drag the header to move it. Every ordinary player feature has a UI control.
+
+/wb - Command board
+/wb report - Report PvP here
+/wb show - Warbands
+/wb finder - Recruitment controls
+/wb export - Session journal
+
+Optional keybindings are available through /wb and the game's Key Bindings menu. No keys are assigned automatically.
+
+ENEMY SCOUTING: EXPERIMENTAL
+
+Target a visible enemy before reporting. A cooperating enemy member may return their warband's name, identifier, reported membership size, party count and orders. Your same-faction guild report recipients can view that snapshot. It expires within 90 seconds of the underlying update and does not track enemy movement.
+
+Starting or joining a warband makes your affiliation and reported size scoutable by visible enemy Warband-PvP scouts. This is disclosed beside Start / Join. The addon does not reveal non-users or hidden players. No usable reply means unknown; it does not mean the enemy has no warband.
+
+FIRST PUBLIC ALPHA - WOW FOREVER ONLY
+
+Built for WoW Forever 1.60.1 (Interface 16001). Other WoW clients are not supported by this build. OpenMap is optional and is not bundled.
+
+Party invitations, native Finder behavior and cross-faction scouting delivery still need live acceptance testing. WoW may block the scouting exchange. The addon respects native restrictions and cannot select or prove a shared layer. Reported membership and location are not confirmed counts of nearby enemies or PvP participants.
+
+The public ZIP excludes developer test commands, dummy parties and remote tester controls. It contains no external backend, advertisements or paid features. Location sharing and discovery are session-only choices. The journal stays local unless you copy and share it; it may contain character names and in-game locations.
+
+Install the WarbandPvP folder in Interface/AddOns, restart WoW, and open /wb. If replacing a private CallToArms prototype, disable that older addon first; its commands and saved settings use different names.
+
+All Rights Reserved. See LICENSE.txt in the download.

@@ -1,0 +1,51 @@
+WARBAND-PVP - CURSEFORGE SUBMISSION RECEIPT
+November 20, 2026
+
+Account: KDotIV (signed in by the user)
+Project ID: 1819796
+Slug: warband-pvp
+Author portal: https://authors.curseforge.com/#/projects/1819796/files
+Project preview: https://www.curseforge.com/wow/addons/warband-pvp/preview
+File ID: 9723988
+File editor: https://authors.curseforge.com/#/projects/1819796/files/9723988
+Uploaded at: 05:42 PM America/New_York (22:42 UTC)
+Display name: Warband-PvP 0.7.1-alpha
+Archive: WarbandPvP-0.7.1-alpha-release.zip
+SHA256: 96b0344b8a568a8a2918fb178d1fabe0803083870c0c11621c758af119430951
+Release type: Alpha
+Version: WoW Forever / 1.60.1 only
+Release option: Publish automatically once approved
+Initial file status observed: Processing
+Initial project status observed: Awaiting moderator approval; not visible to others
+Do not describe this initial state as an approved/live public release.
+
+Summary:
+Quickly form parties to seek out world PvP or rally your faction to retaliate against enemy attacks in WoW Forever.
+
+License: All Rights Reserved
+Third-party distribution: Not allowed
+Comments: Enabled
+Unlisted: No
+Categories: PvP (primary), Guild, Map & Minimap
+Logo source: docs/assets/warband-pvp-curseforge-icon-v3.png
+Description: docs/CURSEFORGE_DESCRIPTION.txt (formatted as Markdown in portal)
+Changelog: docs/CHANGELOG_0.7.1.txt (formatted as Markdown in portal)
+
+The portal warns that Alpha files are not visible in the CurseForge Client and
+can only be downloaded via a direct project link. No relabeling to stable was
+done to bypass that distinction. Cross-faction scouting, native recruitment,
+party invitations, actual layer arrival and revised UI still need live acceptance.
+
+LOCAL INSTALL
+0.7.1-alpha-dev, 30 files hash verified at 22:41 UTC.
+E:\World of Warcraft\_forever_\Interface\AddOns\WarbandPvP
+Dev ZIP SHA256: 788f4258f076dcaab0d9be411ece81cae7edef4b48e6264288eccda2af9ca250
+Backup: releases/installed-backups/WarbandPvP-before-0.7.1-alpha-dev-20261120-224103.zip
+WoW was running; restart required. No SavedVariables touched.
+
+VALIDATION
+All 13 offline suites passed. Production packaging was rerun after adding the
+actual CurseForge project ID to the TOC; packaged code and deterministic ZIP checks
+passed. Source and production execute the same scouting scenarios. Offline layout
+preview visually checked for readable scouting details and separated controls.
+This is not live cross-faction, layer or UI verification.

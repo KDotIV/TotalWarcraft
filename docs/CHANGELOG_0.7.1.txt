@@ -1,0 +1,11 @@
+Warband-PvP 0.7.1-alpha - first public alpha, WoW Forever 1.60.1 only
+
+- Added cooperative enemy scouting to field reports: visible enemy identity, short-lived affiliation/size snapshot, same-faction guild relay, and an Enemy scouting details view.
+- Added the Start / Join scoutability disclosure. Ordinary current members can answer scouting requests; expired membership cannot.
+- Bounded scouting requests, replies and caches; validated native sender, nonce, faction, scope, fields and timestamps. No response remains unknown, and repeated packets cannot extend a snapshot's original lifetime.
+- Closed stale scouting tooltips at expiry and added live age/expiry updates to the details view.
+- Included /wb command board, /wb show warbands, normal-party coordination, recruitment controls, report-to-rally, group locations, keybindings and /wb export.
+- Included the campaign frame with one-dialog navigation and Back controls.
+- Physically separated public addon files from developer simulation, remote control, demo and diagnostic code.
+
+Validation: 13 offline Lua scenario suites, including the packaged production build. Earlier two-client live testing covered simulated warband messaging, updates and teardown. Native recruitment/invitations, revised UI acceptance, actual layer arrival and cross-faction scouting still require live verification. Scouting may be unavailable if the game blocks the exchange. No exact-layer or confirmed fight-size claims.

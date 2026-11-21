@@ -2,7 +2,7 @@ from pathlib import Path
 # Install the development-only runtime with: python -m pip install lupa
 from lupa.lua51 import LuaRuntime
 
-root = Path(__file__).resolve().parents[1] / 'CallToArms'
+root = Path(__file__).resolve().parents[1] / 'WarbandPvP'
 lua = LuaRuntime(unpack_returned_tuples=True)
 lua.execute('''
 NOW = 10000
@@ -16,7 +16,7 @@ A = {db={ruleset='pvp'}}
 ''')
 for path in root.glob('*.lua'):
     lua.execute('assert(loadstring(...))', path.read_text())
-lua.execute('assert(loadstring(...))("CallToArms", A)', (root/'Model.lua').read_text())
+lua.execute('assert(loadstring(...))("WarbandPvP", A)', (root/'Model.lua').read_text())
 lua.execute('''
 function record(id)
  return {version=1,id=id or 'a',kind='heat',faction='Horde',ruleset='pvp',

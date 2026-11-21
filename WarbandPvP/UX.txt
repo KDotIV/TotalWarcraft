@@ -1,0 +1,3 @@
+See README.txt for current player controls.
+The active UI is a single campaign-board view with Back navigation.
+Development workflows are described in WARBAND_TESTING.txt (dev package only).

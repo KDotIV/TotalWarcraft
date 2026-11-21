@@ -1,0 +1,211 @@
+CALL TO ARMS - WARBANDS IMPLEMENTATION AND BOUNDARIES
+November 20, 2026 | 0.6.1-alpha | Offline validated; live acceptance pending
+
+0.6.1 TEST FIXTURES
+
+WarbandSimulation.lua adds /cta warband simulate 1-5|off, requiring test mode.
+Each real client represents an independent group host plus 0-4 dummy roster
+slots. Positions stay real; dummy slots are not logical members, GUIDs, senders
+or invitations. Three clients can therefore display 15 slots / 12 dummies while
+retaining exactly three real CTA memberships under one UUID. Production native
+roster APIs are unchanged. Simulated native invitations are explicitly blocked.
+CTA_WBT1 isolates every fixture message from production CTA_WB1; both report
+test mode and explicit warband simulation are required. Queue entries preserve
+their original prefix through teardown; replay ledgers are separate by mode.
+Test off/control off clears fixtures; no fake party state persists after reload.
+UI uses purple pins, [TEST] names and explicit real/dummy counts. Remote CLI
+adds four authorized test-only verbs: warband-five/watch/join/leave. Watch/join
+are restricted to the controller's test listing. See the bundled
+CallToArms/WARBAND_TESTING.txt for the complete three-player acceptance procedure.
+Nine offline suites now pass. This is not 15-client load or native-layer evidence.
+
+CONFIRMED REQUIREMENT
+
+One CTA warband UUID coordinates several independent NORMAL WoW parties, never
+a raid. An organizer advertises a warband; accepting the CTA listing establishes
+logical membership. Native party invitations and their acceptance are a separate
+step. This supersedes the earlier suggestion to ship one party per warband.
+The first testing build bounds a warband to four parties / 20 CTA members.
+
+Current flow: solo/party leader starts a listing; other opted-in reachable CTA
+players join it. Existing party leaders register their party first, then their
+members join the same UUID. A solo recruit is assigned an available party, or
+becomes the next party host when existing parties have no room. The assigned
+host manually uses Invite to party; the recruit accepts through WoW. CTA never
+leaves a native party, converts to raid, automatically invites or auto-accepts.
+Non-CTA native party members occupy capacity but are not CTA members.
+
+Discovery uses GUILD, the organizer's normal PARTY and explicit named WHISPER
+subscriptions. Default OFF every session. At most eight named watches/subscribers;
+joined CTA members receive direct coordinator updates independently of that cap.
+Registering a prefix does not discover everyone running CTA. A faction-wide or
+all-server directory is not implemented. Public zone discovery remains future work.
+
+WHAT IS IMPLEMENTED
+
+WarbandProtocol.lua: bounded wire parsing, names, sender-key normalization,
+UUID generation, scope and freshness checks. Warbands.lua: local state store,
+queues, discovery, membership leases, group assignments, role checks and lifecycle.
+WarbandUI.lua: listings/details, manual party-invite controls and native pin art.
+Map.lua reuses CTA's native map provider and optional OpenMap transforms.
+No generic event framework or external service is needed for this slice.
+
+An organizer owns the listing, recruitment state and follow/rally position.
+Members send their own native-party summary and position to that organizer.
+Only the registered party host supplies that group's advertised location.
+The coordinator sends a compact snapshot of up to four group-host positions.
+Ordinary members' individual positions are not forwarded by this protocol.
+Joining consents to send your position/party summary to the organizer. Group-host
+positions and reported counts are shared with the listing's audience. Member-only
+numbered map markers are a UI choice, not a confidentiality boundary.
+
+One 28x28 crossed axe/sword/banner marker advertises potential activity, matching
+the report-pin footprint. Numbered 16x16 group markers are shown to members.
+The runtime draws native lines, avoiding unsupported file texture assumptions.
+assets/warband-pin.svg and PNG previews remain editable design references.
+assets/warband-pin-runtime-preview.png illustrates the actual native-line geometry
+at 28px and 4x, rendered offline; it is not a WoW screenshot.
+A rally is a fixed point selected with /cta warband rally; follow publishes the
+organizer's moving location. Neither is a measured center of all members.
+Counts are explicitly organizer/host-reported, not confirmed combat participants.
+No warband data generates reports, heat or city-raid authorization.
+
+PROTOCOL CTA_WB1
+
+Tab-separated version 1 packets, at most 255 bytes and 20 fields. UUIDs are
+canonical lowercase v4-shaped identifiers, generated from WoW random bytes mixed
+with readable identity/time and a persisted counter without reseeding shared RNG.
+They identify objects; they are not cryptographic credentials or numeric layers.
+A fresh coordinator session UUID is created at login/reload; each warband has its
+own UUID. Each new member enrollment has another UUID so old leave/update packets
+cannot affect a later enrollment. Invitation retries preserve that enrollment
+and its update sequence. Listings and memberships are not resumed after reload.
+
+A / G / E: organizer advertisement, group snapshot, terminal end. Envelope:
+version, kind, warband UUID, coordinator session UUID, sequence, updatedAt,
+expiresAt, faction, ruleset, region. A then includes revision, map, x/y scaled to
+10000, forming/roaming/rallying, recruiting, follow/rally, CTA count and title.
+G appends up to four base36 rows: slot,map,x,y,nativeCount,sampleAgeSeconds.
+G preserves source sample age, so coordinator rebroadcast does not freshen stale
+positions. E contains only the envelope. A/G sequences are checked separately
+so route reordering does not discard a complete sibling snapshot; E also checks
+the highest sequence observed across both. An accepted END cannot be revived.
+
+S / X: subscribe/unsubscribe a known organizer. J / R: join request/result bound
+to the current coordinator, UUID/session and request nonce. I: coordinator asks
+a registered host to display a manual invitation task. U: member-only update,
+including enrollment UUID and increasing sequence. L: leave that enrollment.
+K: member lease renewal from the coordinator, tied to the enrollment and an
+already-sent update sequence. It is not an acknowledgement of every snapshot.
+Remote test control CTA_CTL1 is independent and grants no warband authority.
+
+Timing/bounds:
+- Organizer state: minimum 15 seconds when dirty/moving, 30 seconds when idle.
+- Members: update every 15 seconds while enrolled and readable outdoors.
+- Lease replies: at most once per member per 30 seconds; membership TTL 90s.
+- Listing and group-source TTL: 90s; future timestamp tolerance: five seconds.
+- Join/reply/request freshness: 30s; no automatic join/invite retry.
+- Named subscriptions renew every 60s; organizer subscription TTL 120s.
+- Send attempts: at most four per second, including rejected sends.
+- Queue: 96 entries, coalesced by type/listing/destination, discard after 25s.
+  Coalescing preserves queue order; control/lease/end messages have priority.
+  Under saturation some intermediate snapshots are replaced by newer ones.
+- Receive budgets: eight-message burst/two per second per sender and a global
+  forty-message burst/eight per second. Control requests additionally limited
+  to one per five seconds per sender. No retransmission storm or recursive relay.
+- At most 64 listings, 256 replay histories and 128 sender/owner entries.
+  Replay/owner history expires after 190s, beyond maximum accepted packet age.
+
+AUTHORITY, LIBRARIES AND LIMITS
+
+Everything running in the live addon uses WoW's Lua environment and public game
+APIs. Lua libraries can be embedded: AceComm provides communication/fragmentation,
+ChatThrottleLib outgoing throttling, LibSerialize table serialization. They do not
+provide application-specific authority or prove that a client tells the truth.
+This release adds no dependency: fixed bounded packets fit one native message,
+a small explicit parser suffices, and CTA owns its bounded queue/state checks.
+Consider a shared ChatThrottleLib scheduler if traffic grows; fragmentation or
+serialization should be added only when there is a concrete data-shape need.
+
+Obfuscation is not authentication. Every client is editable, so a shared secret
+embedded in Lua is recoverable. Changing the prefix or encoding bytes cannot
+prevent forged contents. Never execute received Lua or deserialize executable
+objects. This protocol has no loadstring, arbitrary remote execution, compression
+bomb surface or external Python/C# runtime bridge.
+
+Authority comes from the sender supplied by CHAT_MSG_ADDON, route, known listing
+owner/session, enrollment, nonce/sequence and bounded freshness. Unknown whisper
+advertisements are ignored unless explicitly subscribed/joining/enrolled. PARTY
+advertisements additionally require a currently resolvable native party leader.
+Existing UUIDs cannot be overwritten by another sender or session. A publisher
+can maintain one listing; replacement must be newer and rate-limited, and prior
+known listings are closed. Malformed, oversized, stale, cross-scope, wrong-role
+and duplicate traffic cannot update accepted state or indefinitely renew expiry.
+
+This is cooperation with bounded trust, not server-authoritative anti-cheat.
+An authorized organizer can lie about its own count/location; an enrolled member
+can lie about its own party observations. Scope fields from remote clients are
+claims where native roster evidence is unavailable. A malicious client can mint
+its own new listing. Sender validation cannot prove a fight, faction, leadership
+outside a readable roster or same-layer presence. Rate limits bound local work;
+they cannot guarantee service under a coordinated flood. No encryption or private
+location transport is claimed. Trusted-key enrollment/server attestation would
+need a separate trust design and still could not attest an untrusted observation.
+
+LAYER AND LIFECYCLE
+
+CTA shows waiting for native party, in assigned party/co-location unverified,
+world refresh pending, or host position unavailable. It does not infer a numeric
+layer from NPC GUIDs and never promises the leader's layer wins. Use Blizzard's
+normal grouping/refresh flow and the existing three-player diagnostic. Matching
+coordinates, addon messages and membership are not proof of mutual visibility.
+Each separate party needs its own check against a stationary encounter anchor.
+The automated reciprocal-observation/arrival-verdict protocol is not implemented.
+
+Coordinator leadership loss, raid conversion or instance entry ends the warband.
+A member entering a raid/instance leaves CTA membership on its next update.
+A departed subgroup host retires that slot until its members leave; there is no
+silent reassignment or automatic leader election. Those players leave/rejoin
+through a current party leader to establish a new group. Ending/leaving CTA never
+changes the actual WoW party. Lost END/leave packets fall back to bounded expiry.
+Scope changes disable sharing and clear local warband state. Logout/reload has
+best-effort withdrawal; recipient expiry remains necessary.
+
+VALIDATION AND NEXT GATES
+
+Eight offline Lua/mock suites pass for 0.6.0. The warband network test uses
+independent clients, four full parties, 20 memberships and eight cross-guild
+listeners while hosts move. It covers opt-in/identity/authority, nonce/session
+replays, cancel/rejoin/invite retries, source positions, map-pin dimensions,
+packet limits, throttle failures, full capacity, leases, END/expiry and raid exit.
+These are offline results, not live WoW acceptance or a rendering screenshot.
+
+Run WARBAND_TEST_0.6.0.txt, then the three-player layer diagnostic. Remaining MVP
+work includes public discovery, calibrated cross-party arrival observations,
+reliable PvP participation evidence and the preexisting live report/UI gates.
+Remote warband verbs affect test fixtures only. No remote live-party assembly
+or automatic native grouping is included.
+
+SOURCES CHECKED NOVEMBER 20
+
+OpenMap author API (coordinate transforms; no copied renderer/art):
+https://github.com/openmap-world/openmap/blob/main/docs/api.md
+LayerSwap author project (WHO/request discovery and party-only hosting policy):
+https://www.curseforge.com/wow/addons/layer
+Installed-source details: LAYER_COORDINATION_RESEARCH_2026-11-18.txt.
+Those addon policies are examples, not a guarantee of server transfer direction.
+
+Blizzard-generated Forever API declarations mirrored by Gethe:
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/ChatInfoDocumentation.lua
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/PartyInfoDocumentation.lua
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua
+Declarations establish candidate API shapes, not successful live use in CTA.
+Blizzard refresh guidance after grouping:
+https://us.forums.blizzard.com/en/wow/t/phasing-issues-with-group-still-persist-from-beta/2402367/2
+
+AceComm author documentation:
+https://www.wowace.com/projects/ace3/pages/api/ace-comm-3-0
+ChatThrottleLib author project:
+https://www.wowace.com/projects/chatthrottlelib
+LibSerialize author source:
+https://github.com/rossnichols/LibSerialize

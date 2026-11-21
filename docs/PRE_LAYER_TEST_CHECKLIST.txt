@@ -1,3 +1,4 @@
+CURRENT COMMAND PREFIX: /wb. Historical filenames are retained for links.
 CALL TO ARMS - REPORT ACCEPTANCE BEFORE LAYER COORDINATION
 0.5.2-alpha test target | Updated November 18, 2026
 
@@ -7,31 +8,31 @@ unless a new result is recorded. See GUILD_REPORT_RESULTS_2026-11-09.txt.
 Two guildmates suffice for the core pass. Do not recruit six players for simulation.
 
 SETUP
-[ ] Both install the full CallToArms-0.5.2-alpha.zip MAIN addon. Disable the
+[ ] Both install the full WarbandPvP-0.5.2-alpha.zip MAIN addon. Disable the
     separate diagnostic unless capturing transport troubleshooting. /reload
     existing installations outside combat; restart for a first install.
-[ ] Capture /cta status on both: version, guild=true, messaging=true, matching
+[ ] Capture /wb status on both: version, guild=true, messaging=true, matching
     real ruleset/region, test=false. Note character, zone and client build.
-[ ] Configure Call to Arms -> Report PvP at my location in Key Bindings. Also
-    prepare an action-bar macro containing /cta report to test that entry point.
-[ ] Turn alerts on in /cta; /cta clear removes old demo/test clutter. It does
+[ ] Configure Warband-PvP -> Report PvP at my location in Key Bindings. Also
+    prepare an action-bar macro containing /wb report to test that entry point.
+[ ] Turn alerts on in /wb; /wb clear removes old demo/test clutter. It does
     not reset cooldowns. Begin outside combat and remain in different zones.
 
 A. REMOTE REPORT ROUND TRIP - REQUIRED CORE CHECK
-[ ] BOTH /cta test on. A presses the bound action once. B captures the remote
+[ ] BOTH /wb test on. A presses the bound action once. B captures the remote
     receipt line and a small top-right [TEST] toast. No form/confirmation opens.
 [ ] B clicks that toast: details identify A, A's zone/coordinates, simulated
     counts, incomplete sample and Layer: unknown. Record those coordinates.
 [ ] B clicks Show on map outside combat: A's zone opens with a visible purple
     crossed-swords pin at that location. Hover and click show the same report.
-    This must be A's remote report, not B's own report or a /cta demo record.
+    This must be A's remote report, not B's own report or a /wb demo record.
 [ ] Wait >=10 seconds between sends by the same player and >=5 seconds between
     test toasts. B sends via the macro; A repeats toast/details/pin verification.
 [ ] Each sender's own guild echo creates no second copy of that submission.
 
 B. NORMAL REPORT, THROTTLES AND NOTIFICATIONS - REQUIRED CORE CHECK
-[ ] BOTH /cta test off. Clear old displays as needed. A sends one ordinary
-    /cta report; B receives an unlabelled manual observer report with fight size
+[ ] BOTH /wb test off. Clear old displays as needed. A sends one ordinary
+    /wb report; B receives an unlabelled manual observer report with fight size
     unknown. A flagged-player sample is never described as confirmed fighters.
 [ ] Repeat the normal command inside 120 seconds: no extra accepted submission.
     After the interval, another submission works. Test cooldown is ten seconds;
@@ -44,7 +45,7 @@ B. NORMAL REPORT, THROTTLES AND NOTIFICATIONS - REQUIRED CORE CHECK
 [ ] Wait five minutes from a submission without replacing it. The record no
     longer appears as active in list/map; allow the 15-second cleanup sweep.
     Inspect any open tooltip/details too and record stale UI as a defect.
-[ ] /cta clear removes retained displays without bypassing send cooldowns.
+[ ] /wb clear removes retained displays without bypassing send cooldowns.
 
 C. MAIN ADDON DURING COMBAT - REQUIRED CORE CHECK
 [ ] Use a safe PvE encounter and simulated reports. With A actually in combat,
@@ -61,15 +62,15 @@ D. TEST ISOLATION AND MAP LIFECYCLE - REQUIRED CORE CHECK
 [ ] Receiver test mode OFF, sender ON: a fresh test report does not create a
     toast, list item or pin on the receiver. Then opt in and send a fresh report
     after cooldown; it arrives. No automatic replay of the discarded test.
-[ ] /cta test off removes test records/toast/details while normal reports remain.
-    /reload resets test=false and removes transient reports; verify /cta status.
+[ ] /wb test off removes test records/toast/details while normal reports remain.
+    /reload resets test=false and removes transient reports; verify /wb status.
 [ ] With an unexpired report, close/reopen, pan/zoom and resize the world map.
     Its zone pin stays correctly located/visible; changing to another zone or
     continent must not leave an incorrectly positioned pin. Zone-only pins are
     expected without OpenMap projection. Also run PRESENCE_TEST.txt for optional
     OpenMap projection and group locations; neither aggregates encounters.
 [ ] Normal/test pins retain readable tooltips and clicks after those transitions.
-    If artwork regresses, capture /cta mapdebug and /cta pincheck separately.
+    If artwork regresses, capture /wb mapdebug and /wb pincheck separately.
     Expected map layer: PIN_FRAME_LEVEL_AREA_POI.
 
 E. ADDITIONAL COVERAGE - RECORD PASS, FAIL OR DEFERRED WITH A REASON

@@ -1,0 +1,167 @@
+CALL TO ARMS 0.6.0-alpha - LIVE WARBAND TEST
+November 20, 2026 | Offline tests passed; record live outcomes separately
+
+The normal-party workflow below also applies to 0.6.1-alpha; install the current
+release ZIP. For three testers representing 15 roster slots, use the separate
+CallToArms/WARBAND_TESTING.txt guide bundled with 0.6.1. Keep simulation OFF for
+the real native-party invitation/layer checks below.
+
+INSTALL / PREPARE
+
+Share releases/CallToArms-0.6.0-alpha.zip. Extract its CallToArms folder directly
+into the matching WoW client's Interface/AddOns folder. Avoid an extra nested
+CallToArms directory. Restart WoW to discover new files, enable Call to Arms,
+then /cta status: everyone must show 0.6.0-alpha and readable ruleset/region.
+Use same-faction characters outdoors, in matching region/ruleset. Start with
+known guild contacts; cross-guild named subscriptions are tested below.
+
+Everyone runs:
+  /cta warband on
+  /cta layer start warband-test
+
+Warband discovery resets OFF after reload/login. Starting a listing, joining a
+received listing or subscribing explicitly opts in. /cta test on is NOT needed:
+warbands are real coordination data and never generate combat heat. Existing
+remote report-test commands are unchanged; they cannot remotely join a warband,
+invite a party member or accept an invitation. These steps need each player's UI.
+
+1. START AND VERIFY A MAP LISTING
+
+Character A (solo or normal party leader):
+  /cta warband start CTA Test Patrol
+  /cta warband status
+
+Character B (same guild): open /cta warband. Allow 30 seconds, or up to 45 under
+heavier load, for discovery. Select CTA Test Patrol, then Show rally on map.
+Expect ONE normal-size crossed axe/sword/banner marker on A's current zone map.
+Hover/click it: organizer, status, location mode and reported CTA count should
+match the listing. It must say potential activity/layer unverified. A warband
+must not appear as a combat report, increase heat or claim confirmed fighters.
+
+Native zone maps are the baseline. Optional compatible OpenMap mouse mode also
+uses CTA's existing coordinate projection. Check visibility above fog, click and
+tooltip behavior at the regular 28x28 pin footprint. This still needs live QA.
+
+2. CTA MEMBERSHIP, THEN A NORMAL PARTY INVITATION
+
+B selects Join warband in the details. Expect Joined CTA warband, group N led
+by <host>. Compare /cta warband status on A and B: the UUID must be the SAME.
+This acceptance changes CTA membership only; B is not automatically grouped.
+
+Assigned host opens /cta warband and clicks Invite to party for B. Alternatively:
+  /cta warband invite BFirst BSurname
+
+B accepts the standard WoW party invitation. Expect a normal party, never a
+raid. CTA does not click Accept, leave an old party or convert groups. If the
+30-second invitation task expires, B selects Request party invite on the same
+listing. Invite retries retain membership and its update stream.
+
+Full name examples use Forever First Surname. Use actual names, not placeholders.
+If an invite is blocked by combat/client restrictions, use the ordinary game UI
+out of combat. A successful addon send or invite API call does not prove delivery
+or acceptance. The actual WoW roster is the acceptance check.
+
+3. ADD AN INDEPENDENT SECOND PARTY TO THE SAME UUID
+
+C already leads a normal party with D. C selects the SAME CTA listing and joins.
+C receives a separate group number. D then selects that listing and joins; D
+must be assigned to C's group. Both existing native parties stay separate.
+If D joins first, expect party-leader-first; C must register before D retries.
+
+All CTA users accept individually. Native party members without CTA still take
+up physical party slots, but do not become logical CTA members automatically.
+Up to four groups / 20 CTA members are supported. A solo recruit joins a group
+with room or becomes a new host when existing groups are full. Full capacity
+rejects further joins; there is no raid fallback.
+
+Move C within the zone, then into another zone. Expect fresh numbered group-host
+positions in the world map for warband members. Open C's zone map if using the
+native map. Coordinates/counts in details should follow that party host. Ordinary
+observers see the one listing pin; group positions are still reported to the
+listing audience, so the member-only map display is not a privacy guarantee.
+Matching coordinates do not prove the two parties share a layer.
+
+4. FIX A RALLY, CROSS-GUILD DISCOVERY AND RECRUITMENT
+
+A at the intended rendezvous:
+  /cta warband rally
+Move A away: the main listing marker stays at the selected rally while group
+positions continue updating. To return to a moving organizer marker:
+  /cta warband follow
+  /cta warband state roaming
+To close/reopen new recruitment:
+  /cta warband recruit off
+  /cta warband recruit on
+
+An opted-in character outside A's guild and party subscribes explicitly:
+  /cta warband watch AFirst ASurname
+The listing should appear; joining and group updates then use direct addon
+whispers. At most eight named subscriptions per client and eight listeners per
+organizer, plus up to 19 other joined members. No whole-server directory exists.
+An arbitrary unrelated CTA user will not automatically discover this warband.
+
+5. LAYER / VISIBILITY CHECK (THREE PLAYERS)
+
+Keep an independent anchor stationary at the rendezvous. Before the invitation,
+after native-party acceptance, on zone arrival and after any Blizzard refresh,
+ALL testers run and label:
+  /cta layer snap before-invite
+  /cta layer snap after-party-accept
+  /cta layer snap zone-arrival
+  /cta layer snap after-refresh
+Only use each label at that actual step. Add what YOU visibly observe:
+  /cta layer mark I can see <name> beside <landmark>
+  /cta layer mark I cannot see <name> at the rally
+
+Use Blizzard's normal refresh notification if offered. Record who moved and
+whether each pair can see one another, including the stationary anchor. Test
+both parties independently. CTA shows unverified/refresh pending and does not
+declare same-layer success from a matching map pin, membership or message ACK.
+See DIAGNOSTIC_TEST_0.5.1.txt for the complete observation matrix.
+
+6. LEAVE, LOSS AND EXPIRY
+
+B: /cta warband leave. CTA membership ends; the WoW party must remain intact.
+A: /cta warband stop. All listings/member state should clear after END delivery;
+if delivery is lost, the listing expires within 90 seconds of its latest sample.
+/cta warband off also unsubscribes/disables discovery for this session.
+
+Coordinator logout/raid conversion/instance entry/leadership loss ends the listing
+or lets remote copies expire. A subgroup host leaving retires its group; members
+see host unavailable once updated and can leave/rejoin through a current party
+leader. There is no automatic coordinator or subgroup-host election. A member
+entering a raid/instance leaves CTA coordination on the next member update.
+Scope changes clear/disable local sharing. No silent restoration after reload.
+
+On a willing test participant, stop sharing or log out. Check no stale group dot
+or listing survives its source TTL, and no repeated invitations happen. Maximum
+advertisement/member TTL is 90s. Updates are queued/throttled, not instantaneous.
+
+CAPTURE / REPORT RESULTS
+
+Before reloading or ending the session:
+  /cta layer snap final
+  /cta layer stop
+  /cta layer export
+Save each tester's log separately, plus the actual pin/roster/visibility outcome.
+Capture is local, capped at 15 minutes and 1200 rows. WARBAND_* traces record
+send/receive/join/end activity alongside existing phase/transfer observations.
+SavedVariables persist on normal logout/reload; logs never broadcast themselves.
+
+Acceptance record should include client/version, names/roles, region/ruleset,
+same/different guild, UUID/group assignment, native invitation outcome, zone/map,
+OpenMap enabled/disabled, pin visibility, timestamp and independent visual checks.
+Do not report an offline mock test as a successful live transfer or PvP census.
+
+SECURITY / EXPECTATIONS
+
+Messages are bounded and validated for native event sender, known owner/session,
+membership, request nonce, monotonic sequences, scope, values, expiry and rate.
+New memberships have distinct tokens; delayed traffic from an earlier membership
+cannot change a later one. There is no executable message payload or shared
+secret embedded in Lua. Client obfuscation would not establish authority.
+An authorized client can still lie about its own counts/location. These are
+cooperative reports, not server-certified combat or same-layer evidence.
+
+No external backend or bundled Lua framework is required. The design document
+lists AceComm/ChatThrottleLib/LibSerialize options and primary source links.

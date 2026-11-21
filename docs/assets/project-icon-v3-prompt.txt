@@ -1,0 +1,16 @@
+Built-in image_gen edit, November 20, 2026.
+Edit target: warband-pvp-curseforge-icon-v2.png.
+Final asset: warband-pvp-curseforge-icon-v3.png.
+
+Use case: precise-object-edit. Asset type: square CurseForge project icon for
+Warband-PvP. Change ONLY the two banner emblems: remove the recognizable gold
+lion on the blue banner and recognizable faction crest on the red banner,
+leaving plain worn cloth with gold borders and folds. Keep the crossed crude
+hand-painted axe and sword, wood handles, rough gold square frame, dark brown
+background, amateur pixel-brush appearance, layout, proportions and colors.
+No letters, words, logos, faction insignia or watermark. Deliberately homemade
+fantasy addon icon, not polished corporate art. Square PNG, opaque background.
+
+The CurseForge project form requires an original icon without trademarked
+assets. The existing in-game frame is unchanged. No game texture files or
+reference-art typography are redistributed in this icon.

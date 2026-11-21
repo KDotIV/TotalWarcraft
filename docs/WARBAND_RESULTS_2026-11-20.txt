@@ -1,0 +1,172 @@
+CALL TO ARMS - LIVE WARBAND TEST RESULTS
+November 20, 2026 | Tested addon: 0.6.1-alpha | Current installed build: 0.6.2-alpha
+
+VERDICT
+
+PASS: two-client end-to-end simulated warband coordination. Both complete logs
+and the screenshots establish one shared UUID, successful remote setup/join,
+actual receipt of coordinator state, sustained member updates across a zone
+transition, terminal END receipt and remote test-off. The coordinator correctly
+shows two real clients, ten simulated slots and eight dummies.
+
+The third player was unavailable, as confirmed by the user. The third-client /
+15-slot test is DEFERRED, not failed. It does not invalidate the completed
+two-client scenario. Visual movement/cleanup, silent-loss expiry/rejoin, native
+party co-location and the 0.6.2 window fix remain separate acceptance checks.
+
+EVIDENCE / REPRODUCIBILITY
+
+User screenshots:
+  codex-clipboard-fadf493a-4797-486c-addf-069863ce0889.png - controller chat
+  codex-clipboard-126ae5de-36c0-4a86-8629-39601075ac09.png - map and details
+  codex-clipboard-8808f930-4d86-494b-9385-7925924f37a8.png - warband board
+
+Coordinator attachment: 5f47da2f-ad1a-4219-936b-af52c2d7ce0b / Pasted text.txt.
+SHA256: 31c90a090905e4d5df7a54334af757d2659ae3ed483c2b7634e5e72dd8a70864
+Full peer attachment: 409f31fa-d654-446a-b2a2-abbc6719a25a / Pasted text.txt.
+SHA256: b3e48eb00086d04225306f40e49dbfd5ba1b2a59585e750b6a16e5182de93546
+
+Exact evidence copies and calculated summaries are retained locally under
+probe-logs/warband-2026-11-20/ (git-ignored; not included in addon releases):
+  warband-three-1795195391-vitals.txt / analysis.json
+  remote-test-1795195608-profcatface.txt / peer-full-analysis.json
+Source line numbers below refer to these exact copies. Raw evidence is unchanged.
+
+The earlier peer attachment 612856f9-b5bd-413f-93d9-88216feb5de7 was truncated
+before enrollment, with the literal suffix "... (111 KB left)". It is retained
+as *profcatface-partial.txt / peer-analysis.json for provenance only. Its missing-
+tail limitation is now resolved by the full peer export; no rerun was required.
+
+CAPTURES
+
+Both clients: addon 0.6.1-alpha, WoW 1.60.1 build 70959, ruleset rppvp / region 1.
+Coordinator: Vitals Shienx, run warband-three-1795195391, 483 records, dropped=0.
+  12:23:11-12:35:00 EST; monotonic duration 708.189s; ends with STOP user.
+Peer: Profcatface Meowmers, run remote-test-1795195608, 644 records, dropped=0.
+  12:26:48-12:39:28 EST; monotonic duration 760.458s; ends with STOP logout.
+
+Zero dropped diagnostic rows is not a network packet-loss statistic. GetTime is
+local to each client; correlate across clients using server timestamps, UUID,
+sequence, sender and control verb, not by subtracting their GetTime values.
+The peer capture continues after the coordinator stops logging, so it adds
+END/test-off/transfer observations absent from the earlier coordinator export.
+
+REMOTE CONTROL / MEMBERSHIP
+
+The coordinator's five issued commands each receive a successful reply:
+  test-on       lines 126-127 | 0.511s round trip
+  capture-start lines 141-142 | 0.326s
+  warband-five  lines 218-221 | 0.512s
+  warband-watch lines 231-232 | 0.408s
+  warband-join  lines 296-300 | 0.448s
+The peer independently logs the accepted capture-start/five/watch/join requests.
+Its capture starts after test-on, so that initial request is outside its log.
+The later accepted test-off is in the peer export after coordinator logging ends.
+
+Coordinator line 299: WARBAND_JOIN profcatface-meowmers joined slot=2 at 12:31:04.
+Line 302 publishes members=2; sixteen snapshots retain members=2 through line
+476, 230.894s after joining. Peer line 190 begins member updates at 12:31:05.
+Only one J join request is sent; no rejoin is needed during this recorded session.
+Both clients identify the same warband:
+  c76f0cf7-ece0-414f-9f3b-f96ceece367e
+
+The peer accepts 45 coordinator state messages: 22 advertisements A, 22 group
+snapshots G and one terminal E. Sequences 27 through 71 are contiguous and
+increasing, all from vitals-shienx and the same UUID. Forty A/G receipts match
+publication pairs in the overlapping coordinator log (27-66); 67-71 occur after
+coordinator logging ends. Multiple delivery routes/deduplication mean this is
+not proof that every individual transmission on every route was delivered.
+
+The peer sends 18 U member updates from 12:31:05 through 12:35:31, spanning
+266.223s. Intervals range from 15.038s to 15.970s. Seven K lease replies appear
+in the coordinator capture. Sustained updates far beyond the initial 90-second
+membership lease support successful lease renewal in both directions; K receipt
+and U payloads are not individually traced, so avoid packet-by-packet claims.
+
+MAP / ROSTER / MOVEMENT
+
+Screenshots show [TEST] Three Player Test, organizer Vitals Shienx, rallying and
+recruiting, with two real clients / ten slots / eight dummies:
+  Rally:   Desolace       73.8, 69.2
+  Group 1: Desolace       74.0, 69.3 | one real + four dummy
+  Group 2: Thunder Bluff  42.8, 54.1 | one real + four dummy
+
+The coordinator represents separate group locations across zones and distinguishes
+the fixed rally from the organizer's position. A purple test marker and readable
+details are visible. The peer log confirms state acceptance but is not itself a
+screenshot proving peer-side rendering or precise placement of every group pin.
+
+The full peer log adds movement during active membership: 62 sampled snapshots
+between join and END, with 30 distinct location readings (including a temporary
+unavailable reading). At 12:34:41 location is briefly unavailable; PLAYER_ENTERING_
+WORLD follows at 12:34:42. Map reads recover through 1414 to 1452 by 12:34:44.
+Member updates resume at 12:34:45 and continue without a rejoin; incoming A/G
+state also continues. This verifies continuity through a loading/zone transition.
+It does not independently verify that another player's map visibly tracked each
+position change; that remains a visual acceptance check.
+
+END / TEST-OFF
+
+Peer line 446 records the coordinator's accepted END at 12:35:39, sequence 71.
+No later U updates or A/G receipts occur in the capture. A subscription renewal S
+at 12:35:45 is expected: watching an organizer can continue after a listing ends.
+
+At 12:35:50 the peer logs WARBAND_SIMULATION LIVE and an accepted remote test-off.
+Here LIVE means fixture mode is OFF, not that a production warband was started.
+An X unsubscribe is sent on CTA_WBT1; subsequent snapshots have test=false.
+No further warband sends/receipts follow that unsubscribe through logout.
+This verifies END propagation, cessation of member traffic and remote fixture
+teardown. Actual disappearance of map markers is not separately screenshotted.
+Silent loss and the 90-second expiry fallback were not exercised by a clean END.
+
+NETWORK TIMING
+
+Coordinator: 33 publication traces, sequences 2,4,...,66; publication intervals
+minimum 15.119s, median 15.858s, maximum 30.933s. Even increments are expected:
+A and G each advance the publisher. Timing matches 15/30s scheduling with timer
+granularity. 112 locally accepted CTA_WBT1 sends:
+  GUILD:   33 A + 33 G
+  WHISPER: 19 A + 19 G + 1 R + 7 K
+Minimum observed separation between coordinator warband sends: 0.250s.
+Peer: 27 locally accepted CTA_WBT1 WHISPER sends: 7 S + 1 J + 18 U + 1 X.
+No WARBAND_DROP/send-rejection trace is present. Actual accepted remote state
+and the join/member flow establish delivery beyond local send acceptance alone.
+Guild plus whispers were in use; cross-guild coverage is not isolated by this run.
+
+LAYER / COMBAT BOUNDARIES
+
+The full peer log DOES capture an actual SHARD_TRANSFER at 12:36:53, line 480,
+63.110s after test-off. This updates the earlier coordinator-only finding of no
+observed transfer. The listener successfully captured the signal. It does not
+establish transfer direction, cause, CTA-induced movement or arrival on Vitals'
+layer. No native group/invitation/roster event is recorded in either capture.
+
+Coordinator UNIT rows resolve only to Vitals, including self target/focus.
+The peer samples itself, NPC targets and one unrelated player target (Noodle
+Pog), not Vitals or a native warband party unit. These are not reciprocal host/
+member visibility observations. distanceSq=0 with checked=false remains unknown
+distance. No NPC GUID fragment is interpreted as a numeric layer.
+
+The peer later enters combat at 12:38:27 and exits at 12:39:08, after test mode
+is OFF. Its EVIDENCE rows record unattributed wound/cast events; NPC target combat
+is present. They cannot establish reliable PvP participation. All report/peer
+counts remain zero. Presence is OFF on Vitals and ON on Profcatface; the presence
+peer store is separate from warband membership. No warband-in-combat acceptance
+is claimed because active-fixture samples all have combatLock=false.
+
+WINDOW ACCEPTANCE / NEXT COVERAGE
+
+Both exports explicitly report 0.6.1-alpha; they do not certify the 0.6.2 window
+fix. Individual screenshots are readable, but title-bar dragging/non-overlap and
+actual marker cleanup need direct visual checks on the current build.
+
+The basic two-client coordination scenario is complete and PASSED. Additional
+coverage can proceed with these same two players when convenient:
+- Visually follow the other host's marker while they move and change zones.
+- Check disappearance after END, then separately test silent-loss expiry/rejoin.
+- Confirm the 0.6.2 draggable window/placement behavior.
+
+Defer the third-client / 15-slot case until another player is available. Native
+party/refresh/reciprocal-visibility testing remains a separate layer-validation
+pass. None of those future checks turns this successful two-client run into a
+failure. No runtime or release change was required to review these results.

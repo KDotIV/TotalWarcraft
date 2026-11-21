@@ -1,16 +1,22 @@
 param(
-    [string]$AddonDirectory = 'E:\World of Warcraft\_forever_\Interface\AddOns\CallToArms'
+    [string]$AddonDirectory = 'E:\World of Warcraft\_forever_\Interface\AddOns\WarbandPvP',
+    [ValidateSet('release','dev')][string]$Flavor = 'release'
 )
 $ErrorActionPreference = 'Stop'
 $repoDirectory = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$sourceDirectory = Join-Path $repoDirectory 'CallToArms'
+$buildScript = Join-Path $PSScriptRoot 'build_addon.py'
+$python = Join-Path $repoDirectory '.venv\Scripts\python.exe'
+$buildResult = & $python $buildScript --flavor $Flavor
+if ($LASTEXITCODE -ne 0) { throw 'Addon build failed.' }
+$buildManifest = $buildResult | ConvertFrom-Json
+$sourceDirectory = Join-Path ([IO.Path]::ChangeExtension($buildManifest.zip, $null)) 'WarbandPvP'
 $destination = [IO.Path]::GetFullPath($AddonDirectory)
-if ((Split-Path $destination -Leaf) -ne 'CallToArms' -or
+if ((Split-Path $destination -Leaf) -ne 'WarbandPvP' -or
     (Split-Path (Split-Path $destination -Parent) -Leaf) -ne 'AddOns') {
-    throw 'Destination must be the CallToArms folder directly under AddOns.'
+    throw 'Destination must be the WarbandPvP folder directly under AddOns.'
 }
-if (-not (Test-Path -LiteralPath (Join-Path $sourceDirectory 'CallToArms.toc'))) { throw 'Source TOC missing.' }
-$versionLine = Select-String -LiteralPath (Join-Path $sourceDirectory 'CallToArms.toc') -Pattern '^## Version: ([\w.-]+)$'
+if (-not (Test-Path -LiteralPath (Join-Path $sourceDirectory 'WarbandPvP.toc'))) { throw 'Source TOC missing.' }
+$versionLine = Select-String -LiteralPath (Join-Path $sourceDirectory 'WarbandPvP.toc') -Pattern '^## Version: ([\w.-]+)$'
 if (-not $versionLine) { throw 'Source version missing.' }
 $releaseVersion = $versionLine.Matches[0].Groups[1].Value
 # Never follow junctions/symlinks while backing up or installing an addon.
@@ -33,7 +39,7 @@ foreach ($root in @($sourceDirectory, $destination)) {
 if (Test-Path -LiteralPath $destination) {
     $backupDirectory = Join-Path $repoDirectory 'releases\installed-backups'
     New-Item -ItemType Directory -Path $backupDirectory -Force | Out-Null
-    $backup = Join-Path $backupDirectory ('CallToArms-before-' + $releaseVersion + '-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '.zip')
+    $backup = Join-Path $backupDirectory ('WarbandPvP-before-' + $releaseVersion + '-' + [DateTime]::UtcNow.ToString('yyyyMMdd-HHmmss') + '.zip')
     Compress-Archive -LiteralPath $destination -DestinationPath $backup -CompressionLevel Optimal
     Write-Output "Backup: $backup"
 }
@@ -48,5 +54,15 @@ foreach ($file in $sourceFiles) {
         throw "Hash mismatch: $relative"
     }
 }
+# Remove files from the previous flavor only after the new tree was verified.
+# The backup above preserves every old file. Never recurse through another addon.
+$expected = @{}
+foreach ($file in $sourceFiles) { $expected[$file.FullName.Substring($sourceDirectory.Length).TrimStart('\','/')] = $true }
+foreach ($file in @(Get-ChildItem -LiteralPath $destination -Recurse -File -Force)) {
+    $resolved = [IO.Path]::GetFullPath($file.FullName)
+    if (-not $resolved.StartsWith($destination + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Cleanup target escaped addon directory.' }
+    $relative = $resolved.Substring($destination.Length).TrimStart('\','/')
+    if (-not $expected.ContainsKey($relative)) { Remove-Item -LiteralPath $resolved -Force }
+}
 Write-Output "Installed and hash-verified $($sourceFiles.Count) files at $destination"
-Write-Output 'Existing settings and other addons were not modified. Start/restart WoW to load the testing build.'
+Write-Output "Installed flavor: $Flavor. Settings and other addons were not modified. Restart WoW to load the build and new art."

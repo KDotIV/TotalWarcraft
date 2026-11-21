@@ -1,0 +1,102 @@
+WARBAND-PVP - GUID / REALM SECURITY REVIEW
+Reviewed November 20, 2026. Target: WoW Forever, interface 16001.
+
+SOURCE AND CONFIDENCE
+
+The exact PTR 6 announcement was located in a reproduced developer statement
+at Warcraft Tavern, attributed to Blizzard engineer Daniel Yates (Meorawr).
+The article links these original WoWUIDev Discord messages:
+
+1. PTR 6 API/security announcement:
+https://discord.com/channels/327414731654692866/1572759655438876702/1572759655438876702
+Reproduced statement:
+https://www.warcrafttavern.com/forever/news/layer-hopping-functionality-will-be-reduced-for-addons-in-wow-forever/#reference1
+
+2. Forever realm-metadata announcement:
+https://discord.com/channels/327414731654692866/1573118698808549398/1573118698808549398
+Reproduced statement:
+https://www.warcrafttavern.com/forever/news/layer-hopping-functionality-will-be-reduced-for-addons-in-wow-forever/#reference2
+
+The reproduced statements were read in the browser. The original Discord links
+did not expose the message contents in this session. This is verified reporting
+of the developer announcement, NOT direct observation of a deployed hotfix.
+No exact Forever rollout date is established by these statements. A player's
+forum claim about November 24 is not a confirmed Blizzard release date.
+
+WHAT THE ANNOUNCEMENT SAYS
+
+PTR 6 extends obfuscation to the realm component of creature, vehicle, pet and
+game-object GUIDs, alongside their server and spawn components. The announcement
+also says this change is planned for a Forever 1.60.1 hotfix. Player GUIDs are
+not listed in this specific restriction. Do not infer that all GUIDs or all
+addon messaging will be unavailable.
+
+The second statement says Forever APIs returning realm names/IDs will return
+empty text or zero instead, including GetRealmName/GetRealmID and relevant
+Battle.net game-account information. These changes remove assumptions about
+realm metadata, in addition to invalidating cross-client NPC layer heuristics.
+
+CODE AUDIT / IMPACT
+
+- No release module parses creature/vehicle/pet/game-object GUID components,
+  derives a numeric layer, or compares NPC GUIDs received from another client.
+- WarbandProtocol.UUID generates an application UUID from local entropy,
+  a persisted counter, time, name and an optional readable player GUID. It does
+  not interpret a game GUID or depend on a world object's server/spawn fields.
+- Report.Snapshot accepts player units only. Readable player GUIDs deduplicate
+  a local sample; raw identities are not sent in the guild report payload.
+- Presence uses readable native-party player GUIDs locally to associate event
+  sender names with the actual roster. Its wire payload carries self-reported
+  map coordinates/status and scope, not game GUIDs.
+- Scope uses game rules, region and faction, not a realm number. Realm and
+  region are different concepts; this announcement does not remove region.
+- Development diagnostics capture opaque unit GUIDs as observations. These
+  cannot be treated as cross-client NPC/layer keys. The export now says so.
+- No dependency on C_Intl or C_EncodingUtil exists in the current addon, so
+  the other restrictions in the same announcement do not directly affect it.
+
+FIXES FROM THIS AUDIT
+
+Presence previously required a normalized realm to accept unqualified roster
+names. It now tolerates absent realm metadata on Forever, while requiring an
+unambiguous match in the actual current group roster. Outsiders and ambiguous
+aliases remain rejected. No missing realm is guessed or recovered elsewhere.
+
+Guild report identity no longer appends a blank realm suffix or reads a secret
+realm value without a guard. First/surname separator normalization is shared
+with warbands when hashing report IDs and rate-limit identities. This also
+prevents a differently formatted self echo from becoming a duplicate report.
+
+Validation: all 11 offline suites pass, including the compiled release package.
+New regressions cover blank/secret realm metadata, roster-backed matching,
+ambiguous/foreign senders, first/surname self echoes, and real-protocol warband
+join/lease/END with hidden realm metadata. These mocks do not certify the live
+hotfix or Blizzard cross-faction delivery.
+
+PRODUCT BOUNDARIES
+
+Keep maps, cooperative position snapshots, UUID membership, throttling, sequence
+validation and expirations. This announcement is not a reason to remove those.
+
+Do not implement an NPC GUID/realm fingerprint fallback. Joining a warband is
+application membership, not a transfer. Normal party invitations remain the
+coordination path; the server controls transfers. A transfer event alone is not
+proof that everyone arrived together. Phase readings, readable party visibility
+and reciprocal player observations are evidence with explicit uncertainty.
+No automatic shared-layer guarantee is advertised.
+
+Enemy scouting remains a separate release task. It must use visible/readable
+player identities and cooperative membership snapshots, never NPC identifiers
+or restricted identity recovery. Joining-as-scoutable disclosure is approved by
+the user and still needs implementation beside Start/Join. Cross-faction addon
+delivery is unverified and may be unavailable; a missing response must remain
+unknown, never a fabricated enemy warband or a claim of no enemy membership.
+
+CURRENT RELEASE STATUS
+
+These fixes are in the working 0.7.0-alpha source and generated release/dev
+packages. They have not been installed or live-tested as part of this review.
+The broader 0.7 release preparation remains in progress; no CurseForge upload
+or publication has occurred. Complete scouting/disclosures, current release
+documentation, final visual review, install/migration and live gates before
+calling the candidate ready to publish.

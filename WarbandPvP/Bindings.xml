@@ -1,0 +1,14 @@
+<Bindings>
+    <Binding name="WARBANDPVP_REPORT" header="WARBANDPVP">
+        if WarbandPvP and WarbandPvP.Report then WarbandPvP.Report() end
+    </Binding>
+    <Binding name="WARBANDPVP_OPEN" header="WARBANDPVP">
+        if WarbandPvP and WarbandPvP.Open then WarbandPvP.Open() end
+    </Binding>
+    <Binding name="WARBANDPVP_WARBANDS" header="WARBANDPVP">
+        if WarbandPvP and WarbandPvP.Warbands then WarbandPvP.Warbands() end
+    </Binding>
+    <Binding name="WARBANDPVP_EXPORT" header="WARBANDPVP">
+        if WarbandPvP and WarbandPvP.Export then WarbandPvP.Export() end
+    </Binding>
+</Bindings>

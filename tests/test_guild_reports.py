@@ -2,32 +2,32 @@
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-ROOT = Path(__file__).resolve().parents[1] / 'CallToArms'
+ROOT = Path(__file__).resolve().parents[1] / 'WarbandPvP'
 template = ET.parse(ROOT/'MapPins.xml').getroot()[0]
-assert template.attrib == {'name':'CallToArmsMapPinTemplate','virtual':'true','enableMouse':'true','mixin':'CallToArmsMapPinMixin'}
-assert '## Dependencies: Blizzard_MapCanvas' in (ROOT/'CallToArms.toc').read_text()
+assert template.attrib == {'name':'WarbandPvPMapPinTemplate','virtual':'true','enableMouse':'true','mixin':'WarbandPvPMapPinMixin'}
+assert '## Dependencies: Blizzard_MapCanvas' in (ROOT/'WarbandPvP.toc').read_text()
 from wow_mock import client
 
 alice, bob = client('Alice'), client('Bob')
 alice.execute('''
-SlashCmdList.CALLTOARMS('test on')
+SlashCmdList.WARBANDPVP('test on')
 assert(A.testMode)
-CallToArms.Report() -- same entry point as binding
+WarbandPvP.Report() -- same entry point as binding
 assert(sends==1 and #A.List()==1)
 local r=A.List()[1]
 assert(r.test and r.count==4 and r.observedCount==2 and r.syntheticCount==2)
 assert(not r.countUnknown and A.lastSnapshot.players[1].pvpFlagged==false)
 assert(A.lastSnapshot.players[1].simulatedCombat)
 assert(A.toast.title.text:find('[TEST]',1,true) and A.toast.shown)
-CallToArms.Report(); assert(sends==1) -- cooldown
+WarbandPvP.Report(); assert(sends==1) -- cooldown
 ''')
 packet = alice.globals().packets[1]
 
-def deliver(lua, data=packet, sender='Alice-TestRealm', prefix='CTA_REPORT1', route='GUILD'):
+def deliver(lua, data=packet, sender='Alice-TestRealm', prefix='WBP_REPORT1', route='GUILD'):
     lua.globals().A.OnGuildMessage(prefix, data, route, sender)
 
 deliver(bob)  # explicit recipient opt-in required
-bob.execute("assert(#A.List()==0); SlashCmdList.CALLTOARMS('test on')")
+bob.execute("assert(#A.List()==0); SlashCmdList.WARBANDPVP('test on')")
 deliver(bob)
 bob.execute('''
 assert(#A.List()==1 and sends==0) -- receive never rebroadcasts
@@ -54,8 +54,8 @@ for _,f in ipairs(frames) do
  end
 end
 assert(pins==1)
-SlashCmdList.CALLTOARMS('pincheck'); assert(A.pinCheck.shown)
-SlashCmdList.CALLTOARMS('pincheck'); assert(not A.pinCheck.shown)
+SlashCmdList.WARBANDPVP('pincheck'); assert(A.pinCheck.shown)
+SlashCmdList.WARBANDPVP('pincheck'); assert(not A.pinCheck.shown)
 local poolSize=#WorldMapFrame.pool
 WorldMapFrame:SetMapID(2)
 for _,p in ipairs(WorldMapFrame.pool) do assert(not p.active and not p.record) end
@@ -68,17 +68,17 @@ alice.execute('assert(#A.List()==1)')
 bob.execute('assert(#A.List()==1 and sends==0)')
 
 # Reverse direction while the recipient is in mocked combat.
-bob.execute('CallToArms.Report(); assert(sends==1)')
+bob.execute('WarbandPvP.Report(); assert(sends==1)')
 alice.execute('function InCombatLockdown() return true end; CLOCK=CLOCK+6')
 deliver(alice, bob.globals().packets[1], 'Bob-TestRealm')
 alice.execute('assert(#A.List()==2 and A.toast.record.reporter=="Bob-TestRealm")')
 
 # Opt-out clears simulated data and ignores incoming tests, retaining real data.
 bob.execute('''
-SlashCmdList.CALLTOARMS('test off')
+SlashCmdList.WARBANDPVP('test off')
 assert(#A.List()==0 and not A.details.shown and not A.toast.shown)
 CLOCK=CLOCK+10; NOW=NOW+10
-CallToArms.Report(); assert(sends==2)
+WarbandPvP.Report(); assert(sends==2)
 assert(not A.List()[1].test and A.List()[1].countUnknown)
 ''')
 real = bob.globals().packets[2]
@@ -94,7 +94,7 @@ def altered(index, value):
 
 # Fresh receiver for adversarial input. Wrong scope never enters store or toasts.
 guard = client('Guard')
-guard.execute("SlashCmdList.CALLTOARMS('test on')")
+guard.execute("SlashCmdList.WARBANDPVP('test on')")
 for bad in [altered(8, 'rppvp'), altered(12, '2'), altered(7, 'A'),
             altered(5, '10001'), altered(3, '1'), altered(4, 'nan'),
             altered(11, '0'), packet+'\textra', 'x'*256, 'SECRET']:
@@ -104,7 +104,7 @@ deliver(guard, prefix='OTHER'); deliver(guard, route='PARTY')
 guard.execute('assert(#A.List()==0 and sends==0)')
 guard.execute('''
 Enum.GameRule.PvPRuleset=nil
-CallToArms.Report(); assert(sends==0 and A.scopeRuleset==nil)
+WarbandPvP.Report(); assert(sends==0 and A.scopeRuleset==nil)
 ''')
 deliver(guard)
 guard.execute('assert(#A.List()==0)')
@@ -113,16 +113,16 @@ guard.execute('assert(#A.List()==0)')
 failed = client('Failed')
 failed.execute('''
 sendFailure=true
-CallToArms.Report(); assert(sends==0 and #A.List()==0 and A.db.lastSubmit==0)
+WarbandPvP.Report(); assert(sends==0 and #A.List()==0 and A.db.lastSubmit==0)
 sendFailure=false; CLOCK=CLOCK+5; NOW=NOW+5
-CallToArms.Report(); assert(sends==1 and A.db.lastSubmit==NOW)
+WarbandPvP.Report(); assert(sends==1 and A.db.lastSubmit==NOW)
 ''')
 
 # Automatic rulesets cannot be changed by a slash override; RP-PvP differs from PvP.
 failed.execute('''
 C_GameRules.IsGameRuleActive=function(rule) return rule==2 or rule==3 end
 A.RefreshScope(); assert(A.scopeRuleset=='rppvp' and #A.List()==0)
-SlashCmdList.CALLTOARMS('ruleset pvp'); assert(A.db.ruleset=='rppvp')
+SlashCmdList.WARBANDPVP('ruleset pvp'); assert(A.db.ruleset=='rppvp')
 C_GameRules.IsGameRuleActive=function(rule) return rule==1 end
 A.RefreshScope(); assert(A.scopeRuleset=='hardcore')
 C_GameRules.IsGameRuleActive=function(rule) return rule==2 end

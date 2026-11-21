@@ -1,7 +1,7 @@
 from pathlib import Path
 from lupa.lua51 import LuaRuntime
 lua = LuaRuntime(unpack_returned_tuples=True)
-root = Path(__file__).resolve().parents[1] / 'CallToArms'
+root = Path(__file__).resolve().parents[1] / 'WarbandPvP'
 lua.execute('''
 NOW=10000
 function GetServerTime() return NOW end
@@ -19,7 +19,7 @@ end
 A={db={ruleset='pvp'}}
 ''')
 for name in ['Model.lua','GuildTransport.lua','Report.lua']:
-    lua.execute('assert(loadstring(...))("CallToArms",A)', (root/name).read_text())
+    lua.execute('assert(loadstring(...))("WarbandPvP",A)', (root/name).read_text())
 lua.execute('''
 local s=A.Snapshot()
 assert(#s.players==1 and s.players[1].guid=='target')

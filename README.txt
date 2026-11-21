@@ -1,85 +1,76 @@
-CALL TO ARMS 0.5.2-alpha
-Documentation reconciled November 18, 2026
+WARBAND-PVP 0.7.1-alpha
+World of Warcraft: Forever only (Interface 16001)
 
-CallToArms/ is the installable MAIN addon. /cta report sends one bounded guild
-addon message. Matching recipients display the report; accepted submissions also
-display locally. Only remote receipt proves delivery. No external service or
-third-party library is required. Target interface: 16001.
+Quickly form parties to seek out world PvP or rally your faction to retaliate
+against enemy attacks in WoW Forever.
 
-Start here:
-  docs/REMOTE_TEST_CLI_0.5.2.txt - control online testers through in-game commands
-  docs/DIAGNOSTIC_TEST_0.5.1.txt - three-player layer test, evidence capture and export
-  docs/MVP_REVIEW_2026-11-18.txt - current MVP gaps and installed OpenMap research
-  docs/PRESENCE_TEST.txt - opt-in group locations, protocol and live acceptance
-  docs/LAYER_COORDINATION_RESEARCH_2026-11-18.txt - LayerSwap and accept/arrival design
-  docs/GUILD_REPORT_TEST.txt - install, bind and run the two-player report test
-  docs/GUILD_REPORT_RESULTS_2026-11-09.txt - observed results and evidence limits
-  docs/PRE_LAYER_TEST_CHECKLIST.txt - remaining checks before layer coordination
-  docs/BACKEND_HANDOFF.txt - current architecture, wire contract and future scope
-  docs/BACKEND_STACK.txt - C# recommendation and external-transport boundary
+WarbandPvP/ is the addon source. Open /wb for the command board and /wb show
+for warbands. One managed dialog is visible at a time, with Back navigation and
+a draggable military frame. No external backend or third-party library is needed.
 
-Verified so far: two-way cross-zone guild diagnostic delivery, including sends
-during PvE combat; main report receipt/details; visible map pins after the 0.4.4
-fix. The managed AREA_POI map layer places the native line swords above fog and
-exploration overlays. See docs/MAP_PIN_FIX_0.4.4.txt for the cause and correction.
-Final remote-origin pin/toast tests on BOTH updated clients, keybinding use and
-main UI combat/lifecycle checks remain open. Probe combat success alone does not
-prove the full report UI in combat. Actual PvP detection is not implemented.
+FEATURES
+- /wb report: bounded observer report to same-scope guild users; five-minute pin.
+- Enemy scouting: a visible opposing WBP member may reply with a bounded snapshot
+  of affiliation and reported warband size. Same-faction guild report recipients
+  can open it from report details. Joining a warband discloses this behavior.
+- /wb show: one UUID coordinates up to four normal five-player parties, never raids.
+- /wb finder: optional public recruitment, available activities, search and retry
+  inside Warband-PvP. Protected/native restrictions are respected; existing user
+  listings are left alone. Native Finder UI is not opened by the addon.
+- /wb find: throttled recruitment search, followed by scoped, expiring addon
+  handshakes. Public listings are not a private transport or a complete directory.
+- Accepted Join requests trigger a bounded native invite attempt by the assigned
+  captain. Recruits still accept WoW's invitation. No auto-accept or group removal.
+- Rally to report starts a warband at the last reported location, without assuming
+  that the reporter is still present or automatically including them.
+- /wb presence on/off: opt-in location sharing within the outdoor native group.
+- /wb export: bounded local session journal, including group/zone/transfer events.
+- UI controls and optional keybindings cover all ordinary player features.
 
-/cta report       One-action report, also in Key Bindings or an action-bar macro
-/cta control allow First Surname  Authorize one remote tester controller this session
-/cta remote First Surname status  Request status; see the CLI guide for other verbs
-/cta control off  Revoke control and stop test/presence/capture
-/cta presence on  Share your location/status with outdoor party/raid this session
-/cta presence off Stop group location sharing and clear local peer markers
-/cta presence     Fresh peers, checked nearby peers, unknown range and send status
-/cta layer start <label>  Capture local phase/visibility/transfer and validation data
-/cta layer snap <label>   Record/print group readings; mark <text> adds a manual note
-/cta layer stop   Stop capture; /cta layer export opens the copyable log
-/cta evidence     Current reliable PvP-attribution capability (still unresolved)
-/cta test on      Session-only simulated report; recipients must also opt in
-/cta test off     End simulation and clear test reports
-/cta status       Version, detected scope, guild transport and test state
-/cta              Activity panel and notification toggle
-/cta demo         Local-only interface preview
-/cta clear        Clear local records; cooldowns remain
-/cta mapdebug     Current map/pin diagnostics
-/cta pincheck     Toggle independent crossed-swords rendering check
+EVIDENCE LIMITS
+Fight size, PvP participation and exact layers remain unconfirmed. GUID components
+are not cross-client layer keys. A UUID, map position, listing, native group join
+or transfer event does not establish arrival at the original fight. Parties-only
+is a product choice, not proof that outdoor raids cannot share a layer.
 
-Normal reports retain unknown fight size. Simulation includes the reporter and
-fills the participant count to four when needed, with explicit synthetic counts.
-Only accessible players with verified distance are sampled; this is not a full
-100-yard census. No actual combat/PvP flags are changed. Test mode resets off
-on reload/login. Normal send cooldown: 120s; test send cooldown: 10s.
+Thirteen offline suites cover isolated Lua clients and the physically
+stripped release ZIP. The two-client 0.6.1 live simulation established messaging,
+member updates and teardown; it did not validate native grouping or layer arrival.
+Finder calls and the revised 0.7 UI/invitations still require live acceptance.
+Enemy scouting is implemented and mock-tested, including ordinary members, reply
+loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-faction
+addon delivery still needs live verification; no reply means unknown, never an
+inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
+Public packages use the production build flavor but remain Alpha releases.
+CurseForge project 1819796 / file 9723988 was submitted November 20, 2026;
+the last observed state was Processing with project moderator approval pending.
+See docs/CURSEFORGE_SUBMISSION_0.7.1.txt. Alpha downloads use direct project links.
 
-Audience uses detected game-rule flags, region and faction. Unknown scope disables
-networking; manual ruleset overrides are not used. Guild broadcast is not a
-faction-wide or cross-guild network, and client filtering is not confidentiality.
-Group presence uses separate PARTY/RAID addon messages, including other guilds
-within the group, and defaults OFF each session. Green plus markers expire after
-30 seconds; sends are throttled to ten seconds. Presence, flags and generic combat
-never count as confirmed PvP. OpenMap's optional public Lua coordinate API lets
-CTA own its native pins on the stitched map in mouse mode; otherwise zone-only
-fallback applies. No backend or OpenMap installation is required.
+BUILD / INSTALL
+  .venv\Scripts\python.exe tools/build_addon.py --flavor both
+  powershell -File tools/Install-Addon.ps1 -Flavor dev
+Release ZIP physically excludes developer simulation, remote control, diagnostics
+and demo implementations. The dev ZIP retains authorized in-game testing tools.
+Only one flavor is installed at once. The installer backs up and verifies files.
+For an old CallToArms installation, tools/Migrate-LegacyInstall.ps1 verifies it
+against its original archive, backs it up, copies settings under the new variable
+names and disables only the old TOC. Run it with WoW closed and the explicit
+SavedVariables directory. Old code and settings remain available for rollback.
 
-Layer IDs remain unknown in CTA. No automatic invites, layer transfer or world refresh
-are implemented. Different-zone message receipt does not prove different layers.
+START HERE
+WarbandPvP/README.txt - current player controls and restrictions
+WarbandPvP/WARBAND_TESTING.txt - three real clients, optional dummy party slots
+ docs/RECRUITMENT_TEST_0.7.0.txt - native recruitment/party acceptance and sources
+ docs/BACKEND_HANDOFF.txt - current state and historical implementation evidence
+ docs/WARBAND_RESULTS_2026-11-20.txt - two-client observed results and limits
+ docs/GUID_SECURITY_REVIEW_2026-11-20.txt - GUID/hidden-realm compatibility audit
+ docs/LAYER_COORDINATION_RESEARCH_2026-11-18.txt - source audit and arrival design
+ docs/assets/ui-layout-preview.html - offline layout reference, not a game capture
+Historical /cta commands in older research documents refer to older builds.
+Current player commands use /wb; the board is /wb show, not /wb warband.
 
-Development checks (passed for 0.5.2; mocks do not replace live acceptance):
-  python -m pip install lupa
-  python tests/test_addon.py
-  python tests/test_reporting.py
-  python tests/test_identity.py
-  python tests/test_guild_reports.py
-  python tests/test_presence.py
-  python tests/test_diagnostics.py
-  python tests/test_control.py
-
-probes/ contains separate in-game messaging diagnostics (current version 0.3.0)
-and the closed snapshot experiment. probes/RESULTS.txt records live transport
-evidence. Discord/relay tooling is not active. No backend connection is proven.
-Current main release: releases/CallToArms-0.5.2-alpha.zip; install its inner
-CallToArms folder. Historical releases are not the current installation package.
-New presence, diagnostics and remote control have no live acceptance result yet. The diagnostic
-captures observations without an automatic synced/confirmed-fighters verdict.
-Use tools/Install-Addon.ps1 to back up, copy and hash-verify the testing build.
+VALIDATION
+Run .venv\Scripts\python.exe tests/test_*.py individually. Tests use Lua 5.1 mocks,
+never a live WoW client. tests/test_release.py checks both packaged flavors,
+production protocol isolation, native lifecycle paths and deterministic ZIPs.
+All Rights Reserved; see WarbandPvP/LICENSE.txt.

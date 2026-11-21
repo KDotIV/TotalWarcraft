@@ -1,0 +1,14 @@
+Warband-PvP
+Copyright (c) 2026 Warband-PvP contributors. All Rights Reserved.
+
+Permission is granted to download, install, and use this addon free of charge
+for personal gameplay. No permission is granted to redistribute, sublicense,
+sell, or reuse this project's code or artwork in another project without
+written permission from the relevant rights holder, except as permitted by law.
+
+The addon is provided as is, without warranties, to the extent permitted by law.
+World of Warcraft and Blizzard assets remain the property of their respective
+owners. Game-provided fonts and UI textures are referenced, not redistributed.
+Reference artwork is not included. Newly generated campaign artwork is provided
+with the addon; this notice claims no rights in third-party works or in material
+that is not eligible for copyright protection.

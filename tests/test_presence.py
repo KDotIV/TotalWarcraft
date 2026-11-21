@@ -1,5 +1,8 @@
 """Cooperative location transport and map integration, using separate Lua clients."""
 from wow_mock import client
+from forever_compat import check_hidden_realms
+
+check_hidden_realms(client)
 
 GROUP = '''
 grouped=true; raid=false; instance=false; members={'Alice','Bob','Carol','Dave','Eve'}
@@ -31,16 +34,16 @@ def grouped(name):
     return lua
 
 
-def deliver(lua, packet, sender='Alice-TestRealm', route='PARTY', prefix='CTA_PRES1'):
+def deliver(lua, packet, sender='Alice-TestRealm', route='PARTY', prefix='WBP_PRES1'):
     lua.globals().A.OnPresenceMessage(prefix, packet, route, sender)
 
 
 alice, bob = grouped('Alice'), grouped('Bob')
 alice.execute('''
 assert(not A.presenceEnabled and A.presenceReady and sends==0 and not A.presenceTimer)
-SlashCmdList.CALLTOARMS('presence on')
+SlashCmdList.WARBANDPVP('presence on')
 assert(A.presenceEnabled and A.presenceTimer and sends==1)
-assert(sentRoutes[1]=='PARTY' and sentPrefixes[1]=='CTA_PRES1')
+assert(sentRoutes[1]=='PARTY' and sentPrefixes[1]=='WBP_PRES1')
 assert(#A.List()==0 and not A.toast) -- presence never creates a report/toast
 A.PresenceTick(); assert(sends==1)
 ''')
@@ -48,7 +51,7 @@ packet = alice.globals().packets[1]
 assert len(packet.split('\t')) == 10 and len(packet) <= 255
 assert 'Alice' not in packet and 'Player-' not in packet
 deliver(bob, packet)
-bob.execute("assert(#A.PresenceList()==0); SlashCmdList.CALLTOARMS('presence on')")
+bob.execute("assert(#A.PresenceList()==0); SlashCmdList.WARBANDPVP('presence on')")
 deliver(bob, packet)
 bob.execute('''
 assert(#A.PresenceList()==1 and sends==1 and #A.List()==0 and not A.toast)
@@ -95,7 +98,7 @@ for channel in ['GUILD', 'WHISPER', 'INSTANCE_CHAT', 'RAID']:
     deliver(guard, packet, route=channel)
 deliver(guard, packet, sender='Outsider-TestRealm')
 deliver(guard, packet, sender='SECRET')
-deliver(guard, packet, prefix='CTA_REPORT1')
+deliver(guard, packet, prefix='WBP_REPORT1')
 guard.execute('assert(#A.PresenceList()==0 and #A.List()==0)')
 deliver(guard, packet, sender='Alice')  # same-realm event names normalize
 guard.execute('assert(#A.PresenceList()==1)')
