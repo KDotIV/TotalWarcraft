@@ -1,0 +1,42 @@
+TOTALWARCRAFT 0.7.7 - RELEASE UPLOAD RECEIPT
+November 22, 2026. Workflow artifact completed 11:35:57 AM America/New_York.
+
+CurseForge project 1819796, file 9754372, releaseType=release, Forever 1.60.1.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9754372
+Upload accepted; automatic publication after moderation requested. Public
+approval/indexing remains unverified: the web tool could not access the file or
+project file listing. This does not establish a rejection. Do not rerun upload.
+
+Immutable tag v0.7.7 -> ee33d7771863727f0f5d5e0d73bf981dbbe50452.
+https://github.com/KDotIV/TotalWarcraft/tree/v0.7.7
+Publish run 45044707974: success. Main CI 45044707905: success.
+https://github.com/KDotIV/TotalWarcraft/actions/runs/45044707974
+All 19 offline suites passed locally and in Linux CI before publication,
+including source and compiled Release report/channel/scouting regressions.
+The changelog describes implemented reporting, cleanup, deduplication, scouting
+and bounded connectivity. Only the newest section was uploaded to CurseForge.
+
+Artifact 14762709283, release-receipt, downloaded and SHA256 verified:
+acc88804203ef4e2b938d99e2ba46734c087493cb09b710d9e161511a90eef3d.
+Uploaded archive SHA256:
+40fe95f2eb2b076fdb76487eb28df658a51fb4e5226fef47db232c065a029ec4.
+Local archive SHA256:
+f2108e654868bd8533199c73e96e37ad62e9349e1501308d90c2d47ddfc18714.
+All 30 archive entries match byte for byte; ZIP platform metadata differs.
+Local ZIP: releases/TotalWarcraft-0.7.7-release.zip.
+Receipt: releases/curseforge-receipt-0.7.7.json.
+
+Installed 30 hash-verified Release files into:
+E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP.
+Backup: releases/installed-backups/WarbandPvP-before-0.7.7-20261122-163551.zip.
+Restart WoW completely. /tw status shows connection state; /tw export captures
+the session journal. Old channel-test commands/tools are removed. The separate
+developer ZIP retains independent dev tools; none are in the Release package.
+
+New real PvP reports use TotalWarcraftReportComms once, without a guild mirror.
+Old-version guild input remains readable and deduplicates against channel input.
+Login/reload cleans the character's TotalWarcraft-prefixed channel memberships,
+then joins the release channel using its actual local index. No forced index 20.
+Live 0.7.6 probes established automatic cross-continent delivery to/from an
+unguilded client. Exact 0.7.7 preflight/report integration passed offline
+regressions; native acceptance remains a live follow-up, not a claim from mocks.

@@ -1,5 +1,10 @@
 TOTALWARCRAFT - BACKEND AND ADDON HANDOFF
-PREPARED RELEASE, November 22: 0.7.7 implements automatic report delivery over
+CURRENT RELEASE, November 22: 0.7.7 uploaded as Release, CurseForge file 9754372.
+Main CI 45044707905 and publication 45044707974 succeeded. Tag v0.7.7 points to
+ee33d7771863727f0f5d5e0d73bf981dbbe50452. All 30 uploaded files match the tested
+local package and installed Release. Public approval/indexing remains unverified.
+See CURSEFORGE_SUBMISSION_0.7.7.txt; do not rerun the successful upload.
+0.7.7 implements automatic report delivery over
 TotalWarcraftReportComms. New real reports send once via CHANNEL; GUILD remains
 receive-only compatibility for older versions. Stable wire IDs deduplicate both
 routes and self echoes. Scouting attachments follow the public report channel.
@@ -18,8 +23,9 @@ All 19 regression suites passed, including source and compiled Release report
 delivery with unguilded clients, distinct/reindexed IDs, cross-route pin/heat
 deduplication, asynchronous joins, cleanup/reload, rejection/timeouts, scouting
 to unguilded peers, and existing combat/Finder/warband/UI behavior. See
-REPORT_CHANNEL_0.7.7.txt and releases/validation-0.7.7.log. Publication and local
-installation receipts will follow after the tagged pipeline succeeds.
+REPORT_CHANNEL_0.7.7.txt and releases/validation-0.7.7.log. Restart WoW to load
+the installed build; /tw status displays report-channel connectivity. Legacy
+channel start/status/export testing commands no longer exist in this release.
 
 HISTORICAL 0.7.6 RELEASE AND LIVE TRANSPORT EVIDENCE
 CURRENT RELEASE, November 22: 0.7.6 uploaded as Release, file 9753276. Both CI
