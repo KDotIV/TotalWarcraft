@@ -133,7 +133,7 @@ tick(owner); tick(peer); deliver(request('test-on'))
 peer.execute('A.adapter=function() error("Custom transport must not be called") end')
 tick(owner); tick(peer); deliver(request('report'))
 assert '\t0\tRemote reports require' in peer.globals().packets[peer.globals().sends]
-peer.execute('A.adapter=A.GuildSend; inGuild=false')
+peer.execute('A.adapter=A.ReportSend; inGuild=false')
 tick(owner); tick(peer); deliver(request('report'))
 peer.execute('assert(#A.List()==0 and sentPrefixes[sends]=="WBP_CTL1")')
 assert '\t0\t' in peer.globals().packets[peer.globals().sends]

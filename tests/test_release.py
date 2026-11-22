@@ -16,9 +16,9 @@ for flavor, directory in [('release', root), ('dev', dev)]:
 with zipfile.ZipFile(manifest['zip']) as z:
     assert all(n.startswith('WarbandPvP/') for n in z.namelist())
     names = {Path(n).name for n in z.namelist()}
-    assert not names.intersection({'Control.lua','Diagnostics.lua','DamageDiagnostics.lua','DAMAGE_TESTING.txt','WarbandSimulation.lua','Development.lua','WARBAND_TESTING.txt','CrossedSwords.tga'})
+    assert not names.intersection({'ChannelDiagnostics.lua','CHANNEL_TESTING.txt','GuildTransport.lua','Control.lua','Diagnostics.lua','DamageDiagnostics.lua','DAMAGE_TESTING.txt','WarbandSimulation.lua','Development.lua','WARBAND_TESTING.txt','CrossedSwords.tga'})
     code = '\n'.join(z.read(n).decode() for n in z.namelist() if n.endswith(('.lua','.txt','.toc')))
-    for forbidden in ['WBP_CTL1','WBP_WBT1','testMode','SetTestMode','simulate','synthetic','/tw demo','/tw remote','/tw layer','/tw test','/tw damage','DamageDiagnostic','SetTransport','SetWarbandSimulation']:
+    for forbidden in ['TW_CHTEST1','TotalWarcraftTest','ShowChannelCheck','/tw channel','WBP_CTL1','WBP_WBT1','testMode','SetTestMode','simulate','synthetic','/tw demo','/tw remote','/tw layer','/tw test','/tw damage','DamageDiagnostic','SetTransport','SetWarbandSimulation']:
         assert forbidden not in code, forbidden
 
 def release_client(name):
@@ -28,7 +28,7 @@ def release_client(name):
     for line in (root/'WarbandPvP.toc').read_text().splitlines():
         if line.endswith('.lua'):
             lua.execute('assert(loadstring(...))("WarbandPvP",A)', (root/line).read_text())
-    lua.execute("for _,f in ipairs(frames) do if f.events.ADDON_LOADED then core=f end end; core.scripts.OnEvent(nil,'ADDON_LOADED','WarbandPvP')")
+    lua.execute("for _,f in ipairs(frames) do if f.events.ADDON_LOADED then core=f end end; core.scripts.OnEvent(nil,'ADDON_LOADED','WarbandPvP'); emitEvent('PLAYER_LOGIN')")
     return lua
 
 alice, bob = release_client('Alice One'), release_client('Bob Two')
@@ -46,7 +46,7 @@ alice.execute("SlashCmdList.WARBANDPVP('show'); assert(A.warbands.panel:IsShown(
 alice.execute('''
 assert(A.buildFlavor=='release' and not A.SetTestMode and not A.ControlCommand and not A.SetWarbandSimulation)
 assert(not WarbandPvP.Receive and not WarbandPvP.SetTransport)
-for _,cmd in ipairs({'test on','remote Bob Two report','control allow Bob Two','simulate 5','demo','pincheck','layer start','damage start test'}) do SlashCmdList.WARBANDPVP(cmd) end
+for _,cmd in ipairs({'channel start dummy-unguilded','test on','remote Bob Two report','control allow Bob Two','simulate 5','demo','pincheck','layer start','damage start test'}) do SlashCmdList.WARBANDPVP(cmd) end
 assert(sends==0 and not A.testMode and not A.warbands.host)
 A.CloseWindows(); A.ShowHome(); assert(A.home:IsShown())
 A.BuildUI(); A.panel:Show(); assert(not A.home:IsShown())
@@ -55,10 +55,10 @@ assert(A.Report()); assert(sends==1 and #A.List()==1)
 assert(A.List()[1].countUnknown and A.List()[1].count==0)
 ''')
 packet=alice.globals().packets[1]
-bob.globals().A.OnGuildMessage('WBP_REPORT1',packet,'GUILD','Alice One')
+bob.globals().A.OnReportMessage('WBP_REPORT1',packet,'GUILD','Alice One')
 bob.execute("assert(#A.List()==1); A.ShowDetails(A.List()[1]); assert(A.details:IsShown()); A.ShowExport(); assert(not A.details:IsShown() and A.exportPanel:IsShown())")
 fields=packet.split('\t'); fields[1]='T'
-bob.globals().A.OnGuildMessage('WBP_REPORT1','\t'.join(fields),'GUILD','Developer One')
+bob.globals().A.OnReportMessage('WBP_REPORT1','\t'.join(fields),'GUILD','Developer One')
 bob.execute(r'''
 assert(#A.List()==1)
 assert(A.SessionLogText():find('REPORT_RECEIVE',1,true))

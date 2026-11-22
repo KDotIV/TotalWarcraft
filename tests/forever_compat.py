@@ -50,9 +50,9 @@ assert(A.WB.UUIDValid(A.WB.UUID()))
     report = alice.globals().packets[2]
     assert alice.globals().sentPrefixes[2] == 'WBP_REPORT1'
     for sender in ('Alice Smith', 'Alice-Smith'):
-        alice.globals().A.OnGuildMessage('WBP_REPORT1', report, 'GUILD', sender)
+        alice.globals().A.OnReportMessage('WBP_REPORT1', report, 'GUILD', sender)
         alice.execute('assert(#A.List()==1)')
-    bob.globals().A.OnGuildMessage('WBP_REPORT1', report, 'GUILD', 'Alice-Smith')
+    bob.globals().A.OnReportMessage('WBP_REPORT1', report, 'GUILD', 'Alice-Smith')
     bob.execute('assert(#A.List()==1)')
     # Realm APIs may be unavailable/restricted, rather than returning empty text.
     alice.execute("function GetNormalizedRealmName() return 'SECRET' end; NOW=NOW+121; CLOCK=CLOCK+121; assert(A.Report())")

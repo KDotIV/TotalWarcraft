@@ -1,4 +1,4 @@
-TOTALWARCRAFT 0.7.6
+TOTALWARCRAFT 0.7.7
 World of Warcraft: Forever only (Interface 16001)
 
 Quickly form parties to seek out world PvP or rally your faction to retaliate
@@ -16,7 +16,7 @@ FEATURES
   pulsing red halo and native red weapons/raid skull for heavy reported activity.
 - Create Warband and nine-page Help on /tw, with commands and bug-report link.
 - Enemy scouting: a visible opposing TotalWarcraft member may reply with a bounded snapshot
-  of affiliation and reported warband size. Same-faction guild report recipients
+  of affiliation and reported warband size. Same-faction report recipients
   can open it from report details. Joining a warband discloses this behavior.
 - /tw show: one UUID coordinates up to four normal five-player parties, never raids.
 - /tw finder: optional public recruitment, available activities, search and retry
@@ -51,26 +51,24 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
-GitHub Actions uploaded TotalWarcraft 0.7.6 as a Release for Forever 1.60.1 on
-November 22, 2026. CurseForge returned file 9753276; public approval/availability
-has not yet been verified. See docs/CURSEFORGE_SUBMISSION_0.7.6.txt:
-https://www.curseforge.com/wow/addons/total-warcraft/files/9753276
-The last independently verified public release is 0.7.4:
-https://www.curseforge.com/wow/addons/total-warcraft/files/9736735
+Version 0.7.7 is prepared for publication after regression checks. The previous
+0.7.6 Release upload receipt is docs/CURSEFORGE_SUBMISSION_0.7.6.txt.
 See docs/REFINEMENTS_0.7.3.txt for current live acceptance steps and
-docs/DAMAGE_VERIFICATION_DESIGN.txt for the proposed post-combat damage check.
+docs/DAMAGE_VERIFICATION_DESIGN.txt for the incoming-damage checks and their evidence limits.
 
 The separate dev build now includes /tw damage start <label>, status, stop and
 export for local post-combat meter acceptance tests. Normal reports pause while
 it captures one fight; it never broadcasts candidate evidence. See
 WarbandPvP/DAMAGE_TESTING.txt. These tools are physically excluded from Release.
 
-The Release includes /tw channel start <label>, status, stop, export and
-clear for opt-in custom-channel delivery checks with unguilded clients. Timed
-probes and ACKs use only CHANNEL; local acceptance/self-echo do not prove receipt.
-No PvP pins or ordinary chat traffic are generated. See WarbandPvP/CHANNEL_TESTING.txt
-for same-zone and cross-continent checks. Normal report routing remains guild-only.
-Channel index 20 is preferred when empty; native assignment is always verified.
+The Release automatically joins TotalWarcraftReportComms on login/reload after
+leaving existing TotalWarcraft-prefixed channel memberships. Each client uses
+its actual local channel index. New reports use CHANNEL once; legacy guild
+reports remain readable and duplicate IDs are ignored across both routes.
+The live 0.7.6 transport captures confirmed automatic two-way delivery involving
+unguilded clients across Kalimdor and Eastern Kingdoms on Forever build 71037.
+See docs/CHANNEL_LIVE_RESULTS_2026-11-22.txt. No external backend is required.
+Temporary channel probes and commands have been retired.
 
 BUILD / INSTALL
   python -m pip install -r requirements-dev.txt

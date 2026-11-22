@@ -55,6 +55,7 @@ local function observed(name)
 end
 local function send(packet,route,target)
     if not packet then return false end
+    if route=="CHANNEL" then return A.SendReportChannel(PREFIX,packet) end
     local restricted=C_ChatInfo and C_ChatInfo.AreOutgoingAddonChatMessagesRestricted
     if type(restricted)=="function" and P.Read(restricted)~=false then return false end
     local result=P.Read(C_ChatInfo and C_ChatInfo.SendAddonMessage,PREFIX,packet,route,target)
@@ -135,10 +136,12 @@ function A.ResolveEnemyScout(report)
     S.orphans[report.id]=nil
     if orphan.untilAt>GetTime() then attach(report.id,orphan.intel) end
 end
-function A.OnScoutMessage(prefix,packet,route,sender)
+function A.OnScoutMessage(prefix,packet,route,sender,_,zoneID,localID,channelName)
     if secret(prefix) or secret(packet) or secret(route) or secret(sender) then return end
     if prefix~=PREFIX or not live() or not P.Name(sender) then return end
-    if route~="WHISPER" and route~="GUILD" then return end
+    if route=="CHANNEL" then
+        if not A.IsReportChannel(localID,channelName) then return end
+    elseif route~="WHISPER" and (route~="GUILD" or P.Read(IsInGuild)~=true) then return end
     local f=P.Fields(packet)
     if not f or not scope(f) then return end
     local now=GetTime(); local key=P.Key(sender)
@@ -168,15 +171,13 @@ function A.OnScoutMessage(prefix,packet,route,sender)
         S.pending[f[3]]=nil; intel.enemy=pending.enemy
         if not attach(pending.id,intel) then return end
         if A.Trace then A.Trace("SCOUT_RECEIVE","report="..pending.id.." enemy="..intel.enemy.." affiliation=self-reported") end
-        if P.Read(IsInGuild)==true then
-            send(P.Pack({"1","S",pending.token,f[4],f[5],f[6],f[7],intel.enemy,intel.warbandID,
-                tostring(intel.members),tostring(intel.parties),intel.activity,intel.title}),"GUILD")
-        end
-    elseif f[2]=="S" and route=="GUILD" and #f==13 and P.Read(IsInGuild)==true then
+        send(P.Pack({"1","S",pending.token,f[4],f[5],f[6],f[7],intel.enemy,intel.warbandID,
+            tostring(intel.members),tostring(intel.parties),intel.activity,intel.title}),"CHANNEL")
+    elseif f[2]=="S" and (route=="CHANNEL" or route=="GUILD") and #f==13 then
         if type(f[3])~="string" or #f[3]>40 or not f[3]:match("^%d+%-%d+%-%d+$") or not P.Name(f[8]) then return end
         local intel=snapshot(f,true); if not intel then return end
         intel.enemy=f[8]
-        local id=A.GuildReportID(sender,f[3])
+        local id=A.ReportID(sender,f[3])
         if A.records[id] then
             if attach(id,intel) and A.Trace then A.Trace("SCOUT_RELAY","report="..id.." reporter="..sender) end
         elseif not S.orphans[id] and count(S.orphans)<32 then

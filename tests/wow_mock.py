@@ -18,6 +18,25 @@ function UnitIsPVP() return false end
 function UnitDistanceSquared(u) return u=='target' and 10000 or 10001,true end
 function InCombatLockdown() return false end
 function IsInGuild() return inGuild end
+channels={}; nextChannel=7; channelJoins=0; channelLeaves={}
+function GetChannelList()
+ local list={}
+ for i=1,100 do if channels[i] then list[#list+1]=i; list[#list+1]=channels[i]; list[#list+1]=false end end
+ return unpack(list)
+end
+function GetChannelName(name)
+ for i=1,100 do if channels[i] and (name==i or (type(name)=='string' and channels[i]:lower()==name:lower())) then return i,channels[i] end end
+ return 0
+end
+function JoinTemporaryChannel(name)
+ channelJoins=channelJoins+1
+ if GetChannelName(name)>0 then return 0 end
+ local id=nextChannel; while channels[id] do id=id+1 end; channels[id]=name; return 0
+end
+function LeaveChannelByName(name)
+ channelLeaves[#channelLeaves+1]=name
+ for id,v in pairs(channels) do if v:lower()==name:lower() then channels[id]=nil end end
+end
 function IsInInstance() return false end
 function IsInGroup() return false end
 function IsInRaid() return false end
@@ -88,6 +107,10 @@ function frame(kind,name,parent)
  table.insert(frames,f); if name then _G[name]=f end; return f
 end
 function CreateFrame(kind,name,parent) return frame(kind,name,parent) end
+function emitEvent(event,...)
+ local count=#frames
+ for i=1,count do local f=frames[i]; if f.events[event] and f.scripts.OnEvent then f.scripts.OnEvent(f,event,...) end end
+end
 function CreateFromMixins(...)
  local obj={}
  for i=1,select('#',...) do for k,v in pairs(select(i,...)) do obj[k]=v end end
@@ -183,10 +206,11 @@ C_ChatInfo={RegisterAddonMessagePrefix=function(p) assert(p=='WBP_REPORT1' or p=
  SendAddonMessage=function(prefix,payload,route,target)
   attempts=attempts+1
   assert(#payload<=255)
-  assert((prefix=='WBP_REPORT1' and route=='GUILD') or (prefix=='WBP_PRES1' and (route=='PARTY' or route=='RAID'))
+  assert((prefix=='WBP_REPORT1' and (route=='GUILD' or route=='CHANNEL')) or (prefix=='WBP_PRES1' and (route=='PARTY' or route=='RAID'))
    or (prefix=='WBP_CTL1' and route=='WHISPER' and type(target)=='string')
-   or (prefix=='WBP_SCOUT1' and (route=='GUILD' or (route=='WHISPER' and type(target)=='string')))
+   or (prefix=='WBP_SCOUT1' and (route=='GUILD' or route=='CHANNEL' or (route=='WHISPER' and type(target)=='string')))
    or ((prefix=='WBP_WB1' or prefix=='WBP_WBT1') and (route=='GUILD' or route=='PARTY' or (route=='WHISPER' and type(target)=='string'))))
+  if route=='CHANNEL' then assert(target==tostring(GetChannelName('TotalWarcraftReportComms'))) end
   if sendFailure then return 3 end
   packets[#packets+1]=payload; sentRoutes[#packets]=route; sentPrefixes[#packets]=prefix; sentTargets[#packets]=target; sends=sends+1; return 0
  end}
@@ -203,8 +227,8 @@ def client(name):
     lua.execute('''
     for _,f in ipairs(frames) do if f.events.ADDON_LOADED then core=f end end
     core.scripts.OnEvent(nil,'ADDON_LOADED','WarbandPvP')
-    core.scripts.OnEvent(nil,'PLAYER_LOGIN')
-    assert(sends==0 and A.scopeRuleset=='pvp' and A.scopeRegion==1 and A.guildReady)
+    emitEvent('PLAYER_LOGIN')
+    assert(sends==0 and A.scopeRuleset=='pvp' and A.scopeRegion==1 and A.reportReady)
     ''')
     return lua
 

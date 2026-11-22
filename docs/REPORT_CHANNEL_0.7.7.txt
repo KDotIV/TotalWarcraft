@@ -1,0 +1,68 @@
+TOTALWARCRAFT 0.7.7 - AUTOMATIC REPORT CHANNEL
+November 22, 2026. Target: WoW Forever 1.60.1 / Interface 16001.
+
+BEHAVIOR
+On login/reload, snapshot current channel names, leave case-insensitive names
+beginning TotalWarcraft (including the previous release channel), wait until
+those memberships disappear, then join TotalWarcraftReportComms. This removes
+the character's memberships, not a globally shared channel for everyone else.
+Unrelated channel memberships are never removed. Existing saved probe logs are
+discarded. No dummy probes, ACKs, simulation, remote controls or test commands
+are packaged in Release. The independent dev build retains authorized developer
+tools; its simulated reports remain confined to explicitly opted-in guild peers.
+
+New real reports are sent ONCE to CHANNEL. GUILD is not a second send or fallback.
+Legacy GUILD input is still accepted for guild members. The existing WBP_REPORT1
+format and internal guild:-prefixed report IDs are retained to deduplicate
+legacy and new transport without duplicate map markers, heat or refreshed TTL.
+The internal ID prefix is historical and does not select the network route.
+Enemy scouting retains its cooperating-player whisper handshake and forwards a
+successful snapshot through the same report channel. Legacy GUILD snapshots
+remain readable. Matching report/sender/token and expiry checks are unchanged.
+
+Each send resolves GetChannelName("TotalWarcraftReportComms") on the local client.
+Client-local channel indexes may differ and may change. Receive validates the
+recipient's channel name/index, registered prefix, faction/ruleset/region,
+packet fields/size/age and bounded sender/global rates. No incoming report is
+rebroadcast. Local send acceptance never claims remote receipt or participation.
+Manual reports and remote reports are observations, not authenticated damage proof.
+
+LIFECYCLE AND COST
+Cleanup and join each have at most three native attempts, five seconds apart,
+inside one 30-second connection window. The one-second ticker exists only during
+that window and is cancelled on connection, timeout, rejection or logout.
+Normal world entry and own-channel disconnect events can request a bounded
+reconnection, at most once per 30 seconds. No permanent heartbeat or polling.
+Scope, duel/NPC/pet/combat checks, report cooldowns and expiration are unchanged.
+/tw status displays channel state; /tw export captures channel/report events.
+
+VALIDATION
+19 offline suites pass on source and compiled Release, using Lua 5.1 mocks.
+New coverage includes:
+- Prefix-only cleanup, preservation of other channels and a fresh reload cycle.
+- No send before membership is confirmed; asynchronous join and reindex handling.
+- Unguilded report-to-map flow between different map IDs and local indexes 7/8.
+- One CHANNEL send per report; no GUILD mirror or receive rebroadcast.
+- Guild-first and channel-first duplicate delivery: one pin, one heat contribution.
+- Sender/route/prefix/faction/ruleset/region/TTL rejection and native send failure.
+- Missing/restricted APIs, failed cleanup, join timeout, server rejection, reconnect.
+- Zero channel timer callbacks after connected idle, timeout and logout.
+- Scouting snapshots delivered to unguilded peers in source and compiled Release.
+- Production archive excludes retired channel tooling and all developer tools.
+Existing regression suites cover incoming PvP damage, reporting, map pooling,
+Finder invitations, warband membership/leases, scouting, presence, windows and
+publication safeguards. Logs: releases/validation-0.7.7.log.
+
+LIVE EVIDENCE AND LIMITS
+0.7.6 diagnostic captures on Forever build 71037 established automatic two-way
+CHANNEL delivery, including an unguilded receiver, across Durotar/Dustwallow and
+Stranglethorn Vale/Dustwallow. See CHANNEL_LIVE_RESULTS_2026-11-22.txt.
+Those tests used TotalWarcraftTest. Exact 0.7.7 preflight and report integration
+are regression-tested offline, not represented as a completed live test.
+The requested release channel name is within the native UI's 31-character
+input limit (Blizzard_Channels/Mainline/CreateChannelPopup.xml, forever branch):
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_Channels/Mainline/CreateChannelPopup.xml
+Hidden internal realm IDs remain unavailable in the live captures; reach across
+all internal realms, server restrictions and high-population capacity are not
+claimed. Channel delivery distributes observations and does not detect unobserved
+fights remotely. No external backend is required for the demonstrated route.

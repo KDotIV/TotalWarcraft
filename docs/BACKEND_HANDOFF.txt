@@ -1,4 +1,27 @@
 TOTALWARCRAFT - BACKEND AND ADDON HANDOFF
+PREPARED RELEASE, November 22: 0.7.7 implements automatic report delivery over
+TotalWarcraftReportComms. New real reports send once via CHANNEL; GUILD remains
+receive-only compatibility for older versions. Stable wire IDs deduplicate both
+routes and self echoes. Scouting attachments follow the public report channel.
+ReportChannel.lua performs one preflight per UI session: snapshot and leave all
+case-insensitive TotalWarcraft-prefixed memberships, await departure, then join
+the named release channel. Other memberships stay intact. Indexes are resolved
+locally for every send; no reserved index, swapping or padding. Native connection
+work has three attempts per phase and a 30-second deadline, then sleeps. World
+entry/disconnect events may initiate bounded recovery. Status and journal expose
+availability; connected idle clients have no channel ticker or heartbeat.
+Temporary ChannelDiagnostics.lua, CHANNEL_TESTING.txt, commands/UI, probe packets
+and saved probe logs are removed. Independent dev fixtures remain dev-only and
+their simulated reports stay off the public channel. GuildTransport.lua was
+replaced by ReportTransport.lua; internal wire prefix/record IDs remain stable.
+All 19 regression suites passed, including source and compiled Release report
+delivery with unguilded clients, distinct/reindexed IDs, cross-route pin/heat
+deduplication, asynchronous joins, cleanup/reload, rejection/timeouts, scouting
+to unguilded peers, and existing combat/Finder/warband/UI behavior. See
+REPORT_CHANNEL_0.7.7.txt and releases/validation-0.7.7.log. Publication and local
+installation receipts will follow after the tagged pipeline succeeds.
+
+HISTORICAL 0.7.6 RELEASE AND LIVE TRANSPORT EVIDENCE
 CURRENT RELEASE, November 22: 0.7.6 uploaded as Release, file 9753276. Both CI
 and publication succeeded. Public approval/indexing remains unverified. Installed
 31 hash-verified Release files locally. See CURSEFORGE_SUBMISSION_0.7.6.txt for
@@ -19,8 +42,24 @@ developer tools remain excluded. Saved log is A.db.channelDiagnostics; testing
 never auto-resumes. Native SwapChatChannelsByChannelIndex prefers empty index 20,
 then the actual channel assignment is read again before routing. Occupied/secret
 slots or unavailable/rejected native moves retain the assigned index. No other
-channel is displaced, and no padding memberships are created. Live delivery and
-the native move to an empty 20 remain unverified. Existing guild transport stays.
+channel is displaced, and no padding memberships are created.
+LIVE RESULT, November 22: automatic CHANNEL probes and matching ACKs succeeded
+in both directions between unguilded Vylek Hikari (Durotar 1411) and guilded
+Jojo Stardust (Dustwallow Marsh 1445), both ungrouped Horde/rppvp/region 1 on
+Forever build 71037. RTTs were 0.87s and 0.86s. A later cross-continent test also
+PASSED: unguilded Vitals Shienx in Stranglethorn Vale (1434, Eastern Kingdoms)
+and Jojo in Dustwallow Marsh (1445, Kalimdor) exchanged matched automatic probes
+and ACKs both ways, RTT 0.95s / 1.55s, both still ungrouped. The dummy-contintents
+label typo on Vitals was harmless; labels do not select the route. Native realm
+names were blank and IDs 0, so cross-internal-realm reach remains unknown.
+The request for index 20 left
+both clients on actual index 7; channel delivery worked there. The informational
+addon-restricted flag was true despite successful delivery. See
+CHANNEL_LIVE_RESULTS_2026-11-22.txt for the matched runs and evidence boundaries.
+Existing normal PvP report transport remains GUILD; this is a demonstrated
+candidate transport, not an implemented public report feed. Cross-continent
+reach is now demonstrated; full report/map integration and lifecycle/scale
+validation remain. No further continent test is needed to begin integration.
 Current CurseForge changelog is limited to completed reporting changes and omits
 channel/developer tooling. The publisher sends only the newest version section.
 Historical updates below describe earlier versions and proposals.

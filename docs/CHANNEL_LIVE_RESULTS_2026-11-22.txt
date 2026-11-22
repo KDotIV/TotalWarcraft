@@ -1,0 +1,136 @@
+TOTALWARCRAFT - AUTOMATIC CUSTOM-CHANNEL LIVE RESULTS
+November 22, 2026. Source: both client exports supplied by the owner in chat.
+
+RESULT
+PASS for automatic two-way custom-channel delivery between the tested clients,
+including an unguilded receiver and sender across continents. The later captures
+confirm Stranglethorn Vale / Eastern Kingdoms <-> Dustwallow Marsh / Kalimdor.
+The earlier Durotar <-> Dustwallow test is retained below. This supersedes
+the earlier lack of live CHANNEL evidence for this build and path. No external
+backend, manual send clicks, ordinary chat, guild, party or whisper fallback was
+used by the revision-2 diagnostic. These were dummy transport probes, not PvP
+reports. No map pin or heatmap integration was exercised.
+
+FIRST TEST: CROSS-ZONE CLIENTS AND SCOPE
+Both: TotalWarcraft 0.7.6 Release, channel diagnostic revision 2, omitted=0.
+Forever 1.60.1 build 71037 (November 18, 2026), Interface 16001.
+Both: faction=Horde, ruleset=rppvp, region=1, group=false, combat=false.
+Vylek Hikari: guild=false, map=1411 (Durotar).
+Jojo Stardust: guild=true, map=1445 (Dustwallow Marsh).
+Both zones are on Kalimdor. This is cross-zone, not cross-continent evidence.
+Map labels checked against installed OpenMap/Data/Forever/Fog.lua and Tones.lua.
+Both exports have blank realm/normalizedRealm and realmID=0. The logs do not
+establish whether the clients were on different internal realms or layers.
+
+MATCHED SUCCESSFUL RUNS (label=dummy-unguilded)
+Vylek: 1795363256-48030386-527776; started at logged epoch 1795363256.
+Jojo: 1795363247-3821553-275887; started at logged epoch 1795363247.
+
+Direction Vylek -> Jojo -> Vylek, probe sequence 1:
+Vylek +5.03: SEND P seq=1, CHANNEL index 7, accepted=true, automatic=true.
+Jojo +13.86: REMOTE_PROBE sender=Vylek Hikari,
+  run=1795363256-48030386-527776, seq=1, map=1411.
+Jojo +14.04: SEND A seq=1, CHANNEL index 7, automatic=true.
+Vylek +5.90: REMOTE_ACK sender=Jojo Stardust, seq=1, map=1445, rtt=0.87.
+
+Direction Jojo -> Vylek -> Jojo, probe sequence 2:
+Jojo +20.06: SEND P seq=2, CHANNEL index 7, automatic=true.
+Vylek +11.87: REMOTE_PROBE sender=Jojo Stardust,
+  run=1795363247-3821553-275887, seq=2, map=1445.
+Vylek +12.05: SEND A seq=2, CHANNEL index 7, automatic=true.
+Jojo +20.93: REMOTE_ACK sender=Vylek Hikari, seq=2, map=1411, rtt=0.86.
+
+Vylek's sequence 2 also reached Jojo, who sent its ACK. Vylek stopped at +20.74
+and has no matching receipt for that later ACK. Do not infer packet loss from
+the unmatched ACK: stopping removes listeners and leaves test-owned membership.
+Jojo's export was captured while still running, after Vylek had stopped; its
+later self echoes alone do not establish more remote delivery.
+
+SUCCESSFUL RUN COUNTERS
+Vylek stopped: 1 remote probe, 1 remote ACK, 3 self echoes, 3 accepted sends.
+Jojo still running at export: 2 remote probes, 1 remote ACK, 6 self echoes,
+6 accepted sends. These asymmetric counters are compatible with staggered
+start/stop times and should not be treated as a reliability or loss-rate sample.
+
+EARLIER NONOVERLAPPING RUN
+Vylek run 1795362838-47612236-149312 lasted three minutes and had 12 accepted
+sends/self echoes but zero remote probes/ACKs. It ended at epoch 1795363019;
+Jojo's supplied run began at 1795363247, 228 seconds later. There is no overlapping
+peer capture for that first run. It is unconfirmed delivery, not evidence that
+the channel transport failed. User reports the tester needed another reload.
+
+INDEX AND RESTRICTION OBSERVATIONS
+Both joined TotalWarcraftTest successfully at client-local channel index 7.
+Both logged CHANNEL_INDEX requested=20 callOK=true result=unavailable actual=7.
+The native reorder call did not throw, but index 20 was not established. Its
+unavailable return does not prove an error, occupied slot, or successful move.
+Routing correctly continued using the actual index 7. Do not pad memberships,
+displace another channel or hardcode target 20 to satisfy this preference.
+Both logged RESTRICTIONS addon=true chatLockdown=false. The addon-restricted
+flag cannot be used alone to declare this native route unusable: matched remote
+receipts and ACKs demonstrate delivery despite it in this test.
+
+CROSS-CONTINENT FOLLOW-UP - PASSED
+Both later captures retain 0.7.6 / revision 2 / Forever 1.60.1 build 71037,
+Horde/rppvp/region 1, group=false, combat=false and omitted=0.
+Owner changed characters: Vitals Shienx, guild=false, map=1434, Stranglethorn
+Vale in Eastern Kingdoms. Jojo Stardust remains guild=true, map=1445,
+Dustwallow Marsh in Kalimdor. The remote rows independently carry those map IDs.
+No zone-change rows occur within either successful run.
+
+Vitals run: 1795363672-48445724-540551, label=dummy-contintents (as entered).
+Jojo run: 1795363696-4269268-230193, label=dummy-continents.
+The label spelling differs harmlessly: labels are export annotations, not route
+or membership keys. The production diagnostic decoder accepts either label.
+
+Direction Vitals -> Jojo -> Vitals, probe sequence 3:
+Vitals +35.15: SEND P seq=3, CHANNEL index 7, accepted=true, automatic=true.
+Jojo +11.60: REMOTE_PROBE sender=Vitals Shienx,
+  run=1795363672-48445724-540551, seq=3, map=1434.
+Jojo +12.04: SEND A seq=3, CHANNEL index 7, automatic=true.
+Vitals +36.10: REMOTE_ACK sender=Jojo Stardust, seq=3, map=1445, rtt=0.95.
+
+Direction Jojo -> Vitals -> Jojo, probe sequence 1:
+Jojo +5.02: SEND P seq=1, CHANNEL index 7, automatic=true.
+Vitals +29.23: REMOTE_PROBE sender=Jojo Stardust,
+  run=1795363696-4269268-230193, seq=1, map=1445.
+Vitals +30.13: SEND A seq=1, CHANNEL index 7, automatic=true.
+Jojo +6.56: REMOTE_ACK sender=Vitals Shienx, seq=1, map=1434, rtt=1.55.
+
+A one-off parser checked the original attachments and matched each ACK to the
+sender's probe, the receiver's exact run/sequence receipt, and its ACK send.
+RTTs include the diagnostic's queued replies; they are not raw network ping.
+Both clients have 1 remote probe and 1 remote ACK for this pair of runs.
+Vitals stopped at +41.34 with 4 accepted sends/self echoes; Jojo exported while
+running with 3 accepted sends/self echoes. Both used actual channel index 7;
+the preferred-20 request again left the channel at 7.
+
+Vitals' sequence 1 and 2 were sent before Jojo started this run; Jojo's sequence
+2 was sent after Vitals stopped. Those unmatched probes do not show packet loss.
+The earlier Vitals run 1795363633-48407115-750265 stopped at epoch 1795363661,
+35 seconds before Jojo's cross-continent run, so its zero remote counts do not
+establish a routing failure either. This short overlapping sample establishes
+reach, not long-session reliability or fan-out capacity.
+
+Both clients again returned blank realm names and realmID=0. Cross-internal-
+realm, layer and other ruleset/faction reach remain unestablished. The successful
+cross-continent transport check no longer needs repeating as a prerequisite to
+implementing the public report feed. Full report/map integration, reconnects,
+deduplication, throttling and scale are separate acceptance checks.
+
+SOURCE ATTACHMENTS
+Owner: .codex/attachments/d9e4556b-3bf2-4da1-b6b3-ee00c23ba2a8/Pasted text.txt
+SHA256 0f1e4df8a2298ca2a8647140b14c103f79c2328983e304e5bc53b63b2e893337
+Tester: .codex/attachments/adfe7e37-1011-43c8-b33e-33e1d723355d/Pasted text.txt
+SHA256 2cb9c3636e340342930bed26123c9ab75a086f36f5a2c6aae52c4660fd955f49
+Attachment paths are relative to C:/Users/Brwnber. Both files include earlier
+runs; conclusions above use matching final runs rather than mixing counters.
+
+IMPLEMENTATION IMPLICATION
+The observed route is viable evidence for a wider automatic report feed with
+unguilded participation. Normal production report transport remains GUILD until
+explicit integration is implemented and tested. Preserve scope checks, actual
+channel lookup, deduplication, bounded validation/rate limits and expiration.
+Transport reach does not detect fights where no observation is available.
+No runtime code, installed package, public changelog or immutable release was
+changed when recording these results.

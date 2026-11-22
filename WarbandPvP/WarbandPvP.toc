@@ -3,7 +3,7 @@
 ## Notes: Form parties to seek out world PvP or rally your faction against enemy attacks.
 ## X-Curse-Project-ID: 1819796
 ## Author: TotalWarcraft
-## Version: 0.7.6-dev
+## Version: 0.7.7-dev
 ## Dependencies: Blizzard_MapCanvas
 ## OptionalDeps: OpenMap
 ## SavedVariables: WarbandPvPDB, WarbandPvPDiagnosticsDB
@@ -11,12 +11,12 @@ Model.lua
 Theme.lua
 Windows.lua
 Scope.lua
-GuildTransport.lua
+ReportChannel.lua
+ReportTransport.lua
 Presence.lua
 SessionLog.lua
 Diagnostics.lua
 DamageDiagnostics.lua
-ChannelDiagnostics.lua
 Control.lua
 WarbandProtocol.lua
 Warbands.lua

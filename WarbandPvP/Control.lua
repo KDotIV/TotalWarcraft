@@ -76,7 +76,7 @@ local function execute(verb,sender)
     elseif verb == "report" then
         if not A.testMode then return false,"Test mode must be ON; remote real reports are disabled." end
         -- Use the known guild adapter, never an arbitrary replacement transport.
-        if A.adapter ~= A.GuildSend then return false,"Remote reports require the default guild transport." end
+        if A.adapter ~= A.ReportSend then return false,"Remote reports require the default report transport." end
         return A.Report()
     end
     return true,status()

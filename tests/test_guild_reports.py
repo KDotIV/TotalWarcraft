@@ -24,7 +24,7 @@ WarbandPvP.Report(); assert(sends==1) -- cooldown
 packet = alice.globals().packets[1]
 
 def deliver(lua, data=packet, sender='Alice-TestRealm', prefix='WBP_REPORT1', route='GUILD'):
-    lua.globals().A.OnGuildMessage(prefix, data, route, sender)
+    lua.globals().A.OnReportMessage(prefix, data, route, sender)
 
 deliver(bob)  # explicit recipient opt-in required
 bob.execute("assert(#A.List()==0); SlashCmdList.WARBANDPVP('test on')")

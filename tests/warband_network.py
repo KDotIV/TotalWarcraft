@@ -83,15 +83,16 @@ class Network:
                 for other, peer in self.clients.items():
                     pg = peer.globals()
                     allowed = ((route == 'GUILD' and g.GUILD == pg.GUILD)
+                               or (route == 'CHANNEL' and pg.A.ReportChannelID() and g.A.ReportChannelID())
                                or (route == 'WHISPER' and other == target)
                                or (route == 'PARTY' and other in list(g.PARTY.values())))
                     if allowed:
                         if g.sentPrefixes[i] == 'WBP_CTL1':
                             pg.A.OnControlMessage('WBP_CTL1', packet, route, name)
                         elif g.sentPrefixes[i] == 'WBP_REPORT1':
-                            pg.A.OnGuildMessage('WBP_REPORT1', packet, route, name)
+                            pg.A.OnReportMessage('WBP_REPORT1', packet, route, name, '', 0, pg.A.ReportChannelID() or 0, 'TotalWarcraftReportComms')
                         elif g.sentPrefixes[i] == 'WBP_SCOUT1':
-                            pg.A.OnScoutMessage('WBP_SCOUT1', packet, route, name)
+                            pg.A.OnScoutMessage('WBP_SCOUT1', packet, route, name, '', 0, pg.A.ReportChannelID() or 0, 'TotalWarcraftReportComms')
                         else:
                             pg.A.OnWarbandMessage(g.sentPrefixes[i], packet, route, name)
 

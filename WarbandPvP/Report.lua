@@ -120,7 +120,7 @@ function A.Report(source,combatLocation)
         return ok, ok and "Local report preview created. Nothing was sent." or reason
     end
 --@enddev
---@release     if not A.adapter then return false,"Guild transport unavailable; report not sent." end
+--@release     if not A.adapter then return false,"Report transport unavailable; report not sent." end
     local safe, accepted, message = pcall(A.adapter, request)
     if not safe or accepted ~= true then return false, (safe and message) or "Delivery unavailable; report not sent." end
 --@dev

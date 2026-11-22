@@ -6,7 +6,7 @@ Create Warband opens the rally board. Enable discovery,
 start a warband or join a listing, then accept your party invite.
 Travel to the rally and coordinate with your assigned host.
 
-Eligible outdoor PvP combat sends a report to your guild.
+Eligible outdoor PvP combat shares a report with your faction.
 Read field reports to view locations or rally a warband there.
 Set a report key in Keybindings for manual observations.
 
@@ -27,8 +27,8 @@ The native meter is checked after combat ends. No outgoing
 damage is required. Missing attribution skips the report.
 
 One automatic attempt per combat; a shared two-minute
-cooldown follows a successful report. Guild TotalWarcraft users receive
-a five-minute marker. Auto reports can be toggled on /tw.
+cooldown follows a successful report. Shared-channel users get
+a five-minute marker, including unguilded players. Toggle on /tw.
 Manual report: your keybind or /tw report; duel holds still apply.
 
 "Combatants" counts readable flagged players observed within
@@ -89,7 +89,7 @@ A cooperating warband member may return their affiliation,
 reported membership size, party count and current orders.
 Open Enemy warband from the report when information exists.
 
-Only your same-faction guild report recipients receive the
+Only your same-faction report recipients receive the
 relayed information. It expires within 90 seconds of its update.
 This describes membership, not nearby enemies or live movement.
 No reply leaves the field hidden. It never means "no warband".
@@ -159,7 +159,6 @@ function A.ShowHelp(page)
         f.link:SetScript("OnEditFocusGained",function(self) self:HighlightText() end)
         f.link:SetScript("OnEscapePressed",function(self) self:ClearFocus() end)
         f.status=A.Label(f,30,-490,520,""); f.status:SetSpacing(4)
-        f.channel=A.Button(f,"Channel check",30,-576,245,A.ShowChannelCheck)
         A.Button(f,"Previous",30,-620,110,function() A.ShowHelp(math.max(1,f.page-1)) end)
         f.counter=A.Label(f,260,-627,90,"")
         A.Button(f,"Next",440,-620,110,function() A.ShowHelp(math.min(#pages,f.page+1)) end)
@@ -169,10 +168,10 @@ function A.ShowHelp(page)
     f.title:SetText(pages[f.page][1]); f.body:SetText(pages[f.page][2])
     f.counter:SetText(f.page.." / "..#pages)
     local support=f.page==9
-    f.link:SetShown(support); f.status:SetShown(support); f.channel:SetShown(support)
+    f.link:SetShown(support); f.status:SetShown(support)
     f.link:SetText("https://github.com/KDotIV/TotalWarcraft/issues")
     f.status:SetText("Version: "..A.release.."\nScope: "..(A.scopeRuleset or "unavailable").." / region "..tostring(A.scopeRegion)
-        .."\nGuild messaging: "..tostring(A.guildReady).." | Warband messaging: "..tostring(A.warbands.ready)
+        .."\nReport channel: "..A.ReportChannelStatus().."\nWarband messaging: "..tostring(A.warbands.ready)
         .."\nAuto reports: "..(A.db.autoReports and "on" or "off"))
     f:Show()
 end

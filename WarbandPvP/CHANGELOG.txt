@@ -1,3 +1,16 @@
+TotalWarcraft 0.7.7
+November 22, 2026 - Release - WoW Forever 1.60.1
+
+- PvP reports now use a shared faction report channel, allowing unguilded players
+  to send and receive activity across zones and continents on matching rulesets.
+- Login and reload leave old TotalWarcraft-prefixed channel memberships and join
+  TotalWarcraftReportComms. Each client resolves its own assigned channel number.
+- New reports are transmitted once. Reports received through both the shared
+  channel and legacy guild delivery create one marker and contribute heat once.
+- Available enemy-warband scouting information follows the shared report feed.
+- Connection recovery is bounded; connected clients perform no channel polling.
+  Support status and the session journal show channel availability.
+
 TotalWarcraft 0.7.6
 November 22, 2026 - Release - WoW Forever 1.60.1
 

@@ -1,5 +1,5 @@
 local name, A = ...
-A.release = A.release or "0.7.6-dev"
+A.release = A.release or "0.7.7-dev"
 function A.Print(message) print("|cffedbf69TotalWarcraft:|r " .. message) end
 
 function A.Changed()
@@ -40,19 +40,19 @@ events:SetScript("OnEvent", function(_, event, addon)
         if A.db.ruleset ~= "pvp" and A.db.ruleset ~= "normal" and A.db.ruleset ~= "rp" and A.db.ruleset ~= "rppvp" then A.db.ruleset = "pvp" end
         A.db.muted = A.db.muted == true
         if type(A.db.lastSubmit) ~= "number" or A.db.lastSubmit ~= A.db.lastSubmit or A.db.lastSubmit > GetServerTime() then A.db.lastSubmit = 0 end
-        -- Guild packets use a narrow versioned protocol, never ordinary chat.
+        -- Reports use a narrow versioned protocol, never ordinary chat.
         --@dev
         A.testMode = false
         --@enddev
         if A.RefreshScope then A.RefreshScope() end
-        if A.InitGuildTransport then A.InitGuildTransport() end
+        if A.InitReportTransport then A.InitReportTransport() end
         if A.InitPresence then A.InitPresence() end
         --@dev
         A.InitDiagnostics(); A.InitDamageDiagnostics(); A.InitControl()
         --@enddev
         if A.InitWarbands then A.InitWarbands() end
         A.InitSessionLog()
-        A.InitChannelDiagnostics()
+        A.InitReportChannel()
         A.InitFinder()
         A.InitScouting()
         A.InitAutoReports()
@@ -95,8 +95,6 @@ events:SetScript("OnEvent", function(_, event, addon)
             elseif command == "presence off" then A.SetPresenceEnabled(false)
             elseif command == "presence" or command == "presence status" then A.PrintPresenceStatus()
             elseif command == "export" then A.ShowExport()
-            elseif command == "channel" then A.ShowChannelCheck()
-            elseif command:match("^channel ") then A.ChannelCommand(input:sub(9))
             elseif command == "help" then A.ShowHelp()
             elseif command == "status" then A.ShowHelp(9)
             --@dev

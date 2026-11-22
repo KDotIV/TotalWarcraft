@@ -18,7 +18,7 @@ function UnitDistanceSquared(u)
 end
 A={db={ruleset='pvp'}}
 ''')
-for name in ['Model.lua','GuildTransport.lua','Report.lua']:
+for name in ['Model.lua','ReportTransport.lua','Report.lua']:
     lua.execute('assert(loadstring(...))("WarbandPvP",A)', (root/name).read_text())
 lua.execute('''
 local s=A.Snapshot()

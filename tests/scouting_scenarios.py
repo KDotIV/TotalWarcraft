@@ -17,6 +17,7 @@ function UnitGUID(u) return VISIBLE[u] and ('Player-'..VISIBLE[u].name) or prior
 def setup():
     net=Network()
     scout=net.add('Scout One','Friendly'); friend=net.add('Friend Two','Friendly')
+    friend.execute('inGuild=false')  # shared report/scouting delivery must reach unguilded users
     enemy=net.add('Enemy Three','Opposing')
     for lua in (scout,friend,enemy):
         lua.execute(VISIBLE)
@@ -48,7 +49,7 @@ assert(A.scouting.panel:IsShown() and not A.details:IsShown())
 assert(A.scouting.panel.body.text:find('not live enemy positions',1,true))
 A.BackWindow(); assert(A.details:IsShown() and not A.scouting.panel:IsShown())
 ''')
-    assert get(enemy,'#A.List()')==0  # enemy never receives the friendly guild report
+    assert get(enemy,'#A.List()')==0  # opposite-faction reports never enter the store
     assert len(packet(scout,'S').encode())<=255
     # Repeated / forged relays cannot replace the first snapshot or refresh expiry.
     good=packet(scout,'S'); forged=good.split('\t'); forged[-1]='Forged replacement'
@@ -124,10 +125,10 @@ def check_scouting_order_and_bounds():
     late.globals().A.OnScoutMessage('WBP_SCOUT1',relay,'GUILD','Scout One')
     late.execute('assert(#A.List()==0 and next(A.scouting.orphans))')
     # The same nonce sent by a different reporter cannot attach to this report.
-    late.globals().A.OnGuildMessage('WBP_REPORT1',report,'GUILD','Wrong Observer')
+    late.globals().A.OnReportMessage('WBP_REPORT1',report,'GUILD','Wrong Observer')
     late.execute('assert(not A.List()[1].scout)')
-    late.globals().A.OnGuildMessage('WBP_REPORT1',report,'GUILD','Scout One')
-    late.execute("assert(A.records[A.GuildReportID('Scout One',(...))].scout.state=='known')",relay.split('\t')[2])
+    late.globals().A.OnReportMessage('WBP_REPORT1',report,'GUILD','Scout One')
+    late.execute("assert(A.records[A.ReportID('Scout One',(...))].scout.state=='known')",relay.split('\t')[2])
     # Memory / per-sender / total budgets remain bounded under hostile orphan traffic.
     late.globals().relay=relay
     late.execute(r'''

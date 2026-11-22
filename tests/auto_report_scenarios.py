@@ -74,7 +74,7 @@ advanceTimers(121); fight(); peace(); assert(reportCount()==2)
 ''')
     peer=factory('Peer Reader')
     packet=next(lua.globals().packets[i] for i in range(1,lua.globals().sends+1) if lua.globals().sentPrefixes[i]=='WBP_REPORT1')
-    peer.globals().A.OnGuildMessage('WBP_REPORT1',packet,'GUILD','Auto Observer')
+    peer.globals().A.OnReportMessage('WBP_REPORT1',packet,'GUILD','Auto Observer')
     peer.execute('assert(#A.List()==1)')
 
     # Combat/flag alone, NPC/pet amounts, empty targets, aggregate totals and secrets fail closed.

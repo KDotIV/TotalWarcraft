@@ -86,7 +86,7 @@ function A.BuildUI()
         row:SetScript("OnLeave",function() GameTooltip:Hide(); A.tooltipRecord=nil end)
         p.rows[i]=row
     end
-    p.empty=label(p,35,-270,510,"No active field reports.\n\nEligible outdoor PvP combat creates a guild report.\nManual reports: use your report keybind or /tw report.\nReports expire after five minutes.")
+    p.empty=label(p,35,-270,510,"No active field reports.\n\nEligible outdoor PvP combat shares a faction report.\nManual reports: use your report keybind or /tw report.\nReports expire after five minutes.")
     button(p,"Previous",30,-565,110,function() A.page=math.max(1,A.page-1); A.RefreshUI() end)
     p.page=label(p,240,-571,140,"")
     button(p,"Next",440,-565,110,function() A.page=A.page+1; A.RefreshUI() end)
@@ -100,7 +100,7 @@ function A.RefreshUI()
     local p=A.panel
     if not p or not p:IsShown() then return end
     local list=A.List(); local pages=math.max(1,math.ceil(#list/5)); A.page=math.min(A.page,pages)
-    p.status:SetText(A.guildReady and A.scopeRuleset and "Guild reports" or "Transport unavailable")
+    p.status:SetText(A.reportReady and A.scopeRuleset and ("Reports: "..A.ReportChannelStatus()) or "Transport unavailable")
     p.page:SetText(A.page.." / "..pages); p.empty:SetShown(#list==0)
     for i,row in ipairs(p.rows) do
         local r=list[(A.page-1)*5+i]; row.record=r; row:SetShown(r~=nil)

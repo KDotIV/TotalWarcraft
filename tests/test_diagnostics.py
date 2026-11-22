@@ -116,7 +116,7 @@ for lua in (sender, receiver):
     lua.execute("group=true; SlashCmdList.WARBANDPVP('layer start validation'); A.SetPresenceEnabled(true); A.SetTestMode(true)")
 sender.execute('A.RunReport()')
 receiver.globals().A.OnPresenceMessage('WBP_PRES1', sender.globals().packets[1], 'PARTY', 'Alice-TestRealm')
-receiver.globals().A.OnGuildMessage('WBP_REPORT1', sender.globals().packets[2], 'GUILD', 'Alice-TestRealm')
+receiver.globals().A.OnReportMessage('WBP_REPORT1', sender.globals().packets[2], 'GUILD', 'Alice-TestRealm')
 receiver.execute('''
 local log=A.DiagnosticText()
 assert(log:find('PRESENCE_RECEIVE',1,true) and log:find('REPORT_RECEIVE',1,true))

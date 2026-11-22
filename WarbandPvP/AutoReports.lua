@@ -133,7 +133,7 @@ inspect=function(c)
         trace("REPORT_DAMAGE_CHECK","incoming opposing-player damage confirmed; session="..sid)
         local ok,message=A.Report("automatic",c.loc)
         trace("REPORT_AUTO","accepted="..tostring(ok==true).." "..A.CleanText(message,160))
-        if ok then A.Print("PvP report sent to your guild.") end
+        if ok then A.Print("PvP report submitted to the shared channel.") end
     elseif c.reads>=3 then
         skip("no readable attributable incoming player damage"); cancel(); R.baseline=ids
     else schedule(c) end

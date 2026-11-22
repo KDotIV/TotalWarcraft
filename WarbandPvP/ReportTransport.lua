@@ -1,4 +1,5 @@
 local _, A = ...
+-- Keep the existing prefix and wire IDs for compatible legacy guild reception.
 local PREFIX = "WBP_REPORT1"
 local seq, rates, budget, refill = 0, {}, 12, 0
 local function secret(v) return issecretvalue and issecretvalue(v) end
@@ -25,7 +26,7 @@ local function key(sender)
     end
     return string.format("%.0f-%.0f", a, b)
 end
-function A.GuildReportID(sender,nonce) return "guild:"..key(identity(sender))..":"..nonce end
+function A.ReportID(sender,nonce) return "guild:"..key(identity(sender))..":"..nonce end
 --@dev
 function A.ReportNote(test, observed, unknown, synthetic)
     if test then
@@ -36,9 +37,9 @@ function A.ReportNote(test, observed, unknown, synthetic)
 end
 --@enddev
 
-function A.EncodeGuildReport(r)
+function A.EncodeReport(r)
 --@dev
-    if r.kind ~= "report" or r.demo then return nil, "Guild transport currently supports /tw report only." end
+    if r.kind ~= "report" or r.demo then return nil, "Transport supports player reports only." end
 --@enddev
 --@release     if r.kind ~= "report" then return nil, "Only player reports are supported." end
     seq = seq + 1
@@ -58,7 +59,7 @@ function A.EncodeGuildReport(r)
     return packet
 end
 
-function A.DecodeGuildReport(packet, sender)
+function A.DecodeReport(packet, sender)
     if type(packet) ~= "string" or #packet > 255 or type(sender) ~= "string" or #sender == 0 or #sender > 128 then return end
     local f = {}
     for value in (packet .. "\t"):gmatch("(.-)\t") do f[#f+1] = value; if #f > 13 then return end end
@@ -89,7 +90,7 @@ function A.DecodeGuildReport(packet, sender)
 
     sender = identity(sender)
     return {
-        version=1, id=A.GuildReportID(sender,f[3]), kind="report",
+        version=1, id=A.ReportID(sender,f[3]), kind="report",
         faction=f[8] == "H" and "Horde" or "Alliance", ruleset=f[9],
         mapID=map, x=x/10000, y=y/10000, updatedAt=time, expiresAt=time+300,
 --@dev
@@ -104,16 +105,24 @@ function A.DecodeGuildReport(packet, sender)
     }
 end
 
-function A.GuildSend(r)
+function A.ReportSend(r)
     if not A.RefreshScope() then return false, "Ruleset/region unavailable; network reporting disabled." end
-    if not IsInGuild() then return false, "Join a guild to send reports." end
-    if not A.guildReady then return false, "Guild messaging is unavailable; use /tw status." end
-    local packet, reason = A.EncodeGuildReport(r)
+    if not A.reportReady then return false, "Report messaging is unavailable; use /tw status." end
+    local route="CHANNEL"
+--@dev
+    -- Development fixtures remain guild-only; never inject them into the public feed.
+    if r.test then
+        if not IsInGuild() then return false,"Test reports require a guild." end
+        route="GUILD"
+    end
+--@enddev
+    if route=="CHANNEL" and not A.ReportChannelID() then return false,"Report channel unavailable; use /tw status." end
+    local packet, reason = A.EncodeReport(r)
     if not packet then return false, reason end
     -- Forever's second UnitName return is a surname; use the shared full identity.
     local sender = A.WB and A.WB.UnitName("player") or UnitName("player")
     if secret(sender) or type(sender) ~= "string" then return false, "Character identity unavailable." end
-    local decoded = A.DecodeGuildReport(packet, sender)
+    local decoded = A.DecodeReport(packet, sender)
     if not decoded or not A.Validate(decoded, GetServerTime(), UnitFactionGroup("player"), A.db.ruleset) then
         return false, "Report could not be encoded safely."
     end
@@ -121,31 +130,41 @@ function A.GuildSend(r)
     if decoded.test and not A.testMode then return false, "Enable test mode first." end
 --@enddev
 
-    local ok, result = pcall(C_ChatInfo.SendAddonMessage, PREFIX, packet, "GUILD")
-    local success = Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.Success or 0
-    if not ok or secret(result) or (result ~= success and result ~= true) then
-        if A.Trace then A.Trace("REPORT_SEND", "rejected/unconfirmed") end
-        return false, "Guild send rejected or unconfirmed. No automatic retry."
+    local accepted=false
+    if route=="CHANNEL" then accepted=A.SendReportChannel(PREFIX,packet) end
+--@dev
+    if route=="GUILD" then
+        local ok,result=pcall(C_ChatInfo.SendAddonMessage,PREFIX,packet,"GUILD")
+        accepted=ok and not secret(result) and (result==true or result==(Enum and Enum.SendAddonMessageResult and Enum.SendAddonMessageResult.Success or 0))
     end
-    if A.Trace then A.Trace("REPORT_SEND", "accepted id=" .. decoded.id .. " remoteAck=false") end
+--@enddev
+    if not accepted then
+        if A.Trace then A.Trace("REPORT_SEND", "rejected/unconfirmed") end
+        return false, "Report send rejected or unconfirmed. No automatic retry."
+    end
+    if A.Trace then A.Trace("REPORT_SEND", "accepted route="..route.." id=" .. decoded.id .. " remoteAck=false") end
     -- Show the accepted submission locally. The same wire ID deduplicates self echo.
     local displayed = pcall(A.Receive, decoded)
-    if not displayed then A.Print("Guild send accepted, but the local display failed. Check Lua errors before retrying.") end
+    if not displayed then A.Print("Report send accepted, but the local display failed. Check Lua errors before retrying.") end
     if displayed and A.BeginEnemyScout then A.BeginEnemyScout(decoded,packet:match("^1\t[^\t]+\t([^\t]+)")) end
-    return true, "Guild send accepted; check your guildmate's client for delivery."
+    return true, "Report send accepted; remote delivery is not confirmed."
 end
 
-function A.OnGuildMessage(prefix, packet, route, sender)
+function A.OnReportMessage(prefix, packet, route, sender, _, zoneID, localID, channelName)
     if secret(prefix) or secret(packet) or secret(route) or secret(sender) then return end
-    if prefix ~= PREFIX or route ~= "GUILD" or not A.db or not IsInGuild() then return end
-    if not A.RefreshScope() then return end
+    if prefix ~= PREFIX or not A.db then return end
+    if route=="CHANNEL" then
+        if not A.IsReportChannel(localID,channelName) then return end
+    elseif route~="GUILD" or not IsInGuild() then return end
+    if type(sender)~="string" or #sender==0 or #sender>128 or sender:find("[|%c]") then return end
     local now = GetTime()
     budget = math.min(12, budget + math.max(0, now - refill)); refill = now
     if budget < 1 then return end
     budget = budget - 1
-    local r = A.DecodeGuildReport(packet, sender)
+    if not A.RefreshScope() then return end
+    local r = A.DecodeReport(packet, sender)
 --@dev
-    if not r or (r.test and not A.testMode) then return end
+    if not r or (r.test and (not A.testMode or route~="GUILD")) then return end
 --@enddev
 --@release     if not r then return end
     if not A.Validate(r, GetServerTime(), UnitFactionGroup("player"), A.db.ruleset) then return end
@@ -169,22 +188,22 @@ function A.OnGuildMessage(prefix, packet, route, sender)
 --@release         if A.Trace then A.Trace("REPORT_RECEIVE", "id=" .. r.id .. " sender=" .. A.CleanText(sender,128)) end
         rates[rateKey] = now
 --@dev
-        A.Print((r.test and "[TEST] " or "") .. "Guild report received from " .. A.CleanText(sender,64) .. ".")
+        A.Print((r.test and "[TEST] " or "") .. "Report received from " .. A.CleanText(sender,64) .. ".")
 --@enddev
---@release         A.Print("Guild report received from " .. A.CleanText(sender,64) .. ".")
+--@release         A.Print("Report received from " .. A.CleanText(sender,64) .. ".")
     end
 end
 
-function A.InitGuildTransport()
-    A.adapter = A.GuildSend
+function A.InitReportTransport()
+    A.adapter = A.ReportSend
     local ci = C_ChatInfo
     if not ci or not ci.RegisterAddonMessagePrefix or not ci.SendAddonMessage then return end
     local ok, result = pcall(ci.RegisterAddonMessagePrefix, PREFIX)
     local success = Enum and Enum.RegisterAddonMessagePrefixResult and Enum.RegisterAddonMessagePrefixResult.Success or 0
     local duplicate = Enum and Enum.RegisterAddonMessagePrefixResult and Enum.RegisterAddonMessagePrefixResult.DuplicatePrefix or 1
-    A.guildReady = ok and not secret(result) and (result == true or result == success or result == duplicate)
-    if not A.guildReady then return end
+    A.reportReady = ok and not secret(result) and (result == true or result == success or result == duplicate)
+    if not A.reportReady then return end
     local frame = CreateFrame("Frame")
     frame:RegisterEvent("CHAT_MSG_ADDON")
-    frame:SetScript("OnEvent", function(_, _, ...) A.OnGuildMessage(...) end)
+    frame:SetScript("OnEvent", function(_, _, ...) A.OnReportMessage(...) end)
 end

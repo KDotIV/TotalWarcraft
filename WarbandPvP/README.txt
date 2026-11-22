@@ -1,4 +1,4 @@
-TOTALWARCRAFT — 0.7.6
+TOTALWARCRAFT - 0.7.7
 World of Warcraft: Forever 1.60.1 (Interface 16001)
 
 Formerly Warband-PvP. /tw is primary; /totalwarcraft and /wb also work.
@@ -28,8 +28,9 @@ does not authenticate another client's claims, prove a kill or establish team si
 
 An automatic attempt happens at most once per combat. Successful submissions
 share a two-minute cooldown with /tw report and the report keybind. Failed
-automatic sends do not retry until a later combat. Guild TotalWarcraft users receive a
-five-minute map report. Without a guild, automatic reports are not submitted.
+automatic sends do not retry until a later combat. Matching users receive a
+five-minute map report through TotalWarcraftReportComms. No guild or shared
+party is required.
 "Combatants" is the partial observed flagged-player count, not a confirmed fight
 size. Unknown counts, range gaps and absent scouting fields are hidden.
 
@@ -49,7 +50,7 @@ ENEMY SCOUTING (EXPERIMENTAL)
 Target a visible opposing-faction player before reporting. A cooperating TotalWarcraft
 warband member may reply with their warband's name, ID, reported membership size,
 party count and orders. Open Enemy scouting from the field report for details.
-Your same-faction guild report recipients can see the same snapshot. It expires
+Your same-faction report recipients can see the same snapshot. It expires
 within 90 seconds of the underlying update and does not track enemy movement.
 Membership is self-reported, not a count of nearby enemies or confirmed fighters.
 No usable reply means unknown. Cross-faction addon delivery has not yet been
@@ -109,12 +110,17 @@ and restricted to your outdoor native party/raid. /tw presence off stops it.
 Fresh peers appear as jade map markers and in the group-locations panel.
 Positions expire after 30s. Presence is not proof of combat or a shared layer.
 
-SESSION JOURNAL
-Channel troubleshooting: /tw channel or Help > Support > Channel check. Both
-players explicitly start the bounded automatic check; no combat is needed.
-It prefers empty channel index 20 and verifies the assignment before routing.
-It does not change normal guild report delivery. See CHANNEL_TESTING.txt.
+REPORT CHANNEL
+Login/reload leaves old TotalWarcraft-prefixed channel memberships and joins
+TotalWarcraftReportComms. Other channel memberships are retained. Channel numbers
+are assigned by WoW and may differ between players. No ordinary chat is sent.
+Reports reach matching faction, ruleset and region users through this channel,
+including unguilded players. New reports are sent once; legacy guild reports
+remain readable and duplicate report IDs never create extra markers or heat.
+/tw status shows connectivity; /tw export includes connection and report events.
+Automatic reconnect attempts are bounded and stop once connected or timed out.
 
+SESSION JOURNAL
 /tw export opens a copyable local log of this UI session, including TotalWarcraft actions,
 transport results and group/zone/transfer events. Ctrl+A, Ctrl+C to copy.
 The log is bounded; omitted rows are counted. No chat contents, automatic uploads
