@@ -1,0 +1,41 @@
+TOTALWARCRAFT 0.7.6 - RELEASE UPLOAD RECEIPT
+November 22, 2026. Workflow artifact completed 10:46:52 AM America/New_York.
+
+CurseForge project 1819796, file 9753276, releaseType=release, Forever 1.60.1.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9753276
+Upload accepted; automatic publication after moderation requested. Public
+approval/indexing remains unverified: the web tool could not access the file or
+project file listing. Do not infer rejection from that failure or rerun the upload.
+
+Immutable tag v0.7.6 -> c6228b11dbf867fd9402278048ec2ffb09be1222.
+https://github.com/KDotIV/TotalWarcraft/tree/v0.7.6
+Publish run 45040149860: success. Main CI 45040149970: success.
+https://github.com/KDotIV/TotalWarcraft/actions/runs/45040149860
+All 19 offline suites passed locally and in Linux CI, including compiled
+production incoming-damage checks and opt-in channel troubleshooting.
+The changelog contains only completed reporting behavior changes; no channel or
+developer-tool entries. Only the current version section was sent to CurseForge.
+
+Artifact 14760648476, release-receipt, downloaded and SHA256 verified:
+490eac4e292fb37707ab46d49522f6700ddb25449ed21c89932f729fe9240563.
+Uploaded archive SHA256:
+d018357c6eb96cafc22f2b5f15f174d7779d1e788d0279538228177ec672d4d2.
+Local archive SHA256:
+0dd947372215c72edb3d71b1887c56915d04bc2e99764ca64bffc405c021cd6b.
+All 31 archive entries match byte for byte; ZIP platform metadata differs.
+Local ZIP: releases/TotalWarcraft-0.7.6-release.zip.
+Receipt: releases/curseforge-receipt-0.7.6.json.
+
+Installed 31 hash-verified Release files into:
+E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP.
+Backup: releases/installed-backups/WarbandPvP-before-0.7.6-20261122-154640.zip.
+Restart WoW completely to load this release. /tw channel status shows v2.
+The separate 0.7.6-dev ZIP retains the existing local damage capture and other
+development tools; the Release excludes those tools and remote tester control.
+Channel check is an explicitly started public troubleshooting tool by request.
+
+Acceptance: incoming opposing-player damage is sufficient, as explicitly chosen
+by the owner. The live capture established incoming native attribution, not
+outgoing/reciprocal proof. Full automatic reporting and the preferred index-20
+move still require live regression coverage. Custom-channel remote delivery is
+unverified and has not replaced normal guild report transport.

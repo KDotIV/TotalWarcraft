@@ -1,5 +1,8 @@
 TOTALWARCRAFT - BACKEND AND ADDON HANDOFF
-CURRENT WORK, November 22: 0.7.6 Release prepared; publication receipt pending.
+CURRENT RELEASE, November 22: 0.7.6 uploaded as Release, file 9753276. Both CI
+and publication succeeded. Public approval/indexing remains unverified. Installed
+31 hash-verified Release files locally. See CURSEFORGE_SUBMISSION_0.7.6.txt for
+the immutable tag, receipt, archive hashes, backup and current live limitations.
 User explicitly accepted incoming opposing-player damage as sufficient for an
 automatic report and requested Release distribution (not Alpha). AutoReports.lua
 now uses fresh, native-event-correlated DamageTaken rows after combat. The local
