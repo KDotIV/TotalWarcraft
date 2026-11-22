@@ -32,7 +32,9 @@ function A.Demo()
 end
 
 function A.DevelopmentCommand(command,input)
-    if command:match("^simulate") then A.WarbandCommand("simulate "..(input:match("^%S+%s*(.*)$") or ""))
+    if command=="damage" then A.DamageCommand("")
+    elseif command:match("^damage ") then A.DamageCommand(input:sub(8))
+    elseif command:match("^simulate") then A.WarbandCommand("simulate "..(input:match("^%S+%s*(.*)$") or ""))
     elseif command == "control" then A.ControlCommand("")
     elseif command:match("^control ") then A.ControlCommand(input:sub(9))
     elseif command == "remote" then A.RemoteCommand("")

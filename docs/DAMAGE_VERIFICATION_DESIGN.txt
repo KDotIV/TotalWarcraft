@@ -1,5 +1,19 @@
 TOTALWARCRAFT - DAMAGE VERIFICATION DESIGN
-November 21, 2026. Research/proposal only; not implemented in 0.7.5.
+IMPLEMENTED FOR 0.7.6, November 22: the owner accepted attributable incoming
+opposing-player damage as sufficient. The live build-71037 capture demonstrated
+947 incoming damage from the observed player; the NPC control stayed negative.
+AutoReports.lua now implements bounded post-combat incoming checks. Outgoing and
+reciprocal proof are not required or claimed. Automatic sends happen at the first
+positive read, preserving evidence when a later fight starts. Replay/identity,
+fresh session, context, restricted-value and timer cases are covered offline
+against source and the compiled Release. The new complete automatic path still
+needs live regression coverage; these tests do not claim native server delivery.
+The original research and development-capture notes below remain historical.
+
+November 21, 2026. Production verification remains a proposal, absent from 0.7.5.
+The separate dev build now includes /tw damage capture v1 for live acceptance.
+See WarbandPvP/DAMAGE_TESTING.txt for commands, controls and export instructions.
+It records local candidates only; no verified report/protocol has been added.
 
 RECOMMENDATION
 Validate post-combat C_DamageMeter unit breakdowns on the live Forever client.
@@ -106,8 +120,8 @@ No nearby/involved addon client still means no observer to send such a report.
 The cancelled zero-observer remote-detection experiment remains cancelled.
 
 LIVE ACCEPTANCE BEFORE IMPLEMENTATION
-Use the existing separate dev build; any diagnostic additions must be dev-only,
-bounded and local. No new tool was installed or shipped for this proposal.
+Use the separate dev build's bounded, local /tw damage capture. It is physically
+excluded from production and pauses normal reports during a controlled capture.
 Record the actual GetBuildInfo result, not just the source-mirror branch name.
 1. Meter availability: API existence, IsDamageMeterAvailable and per-field
    readability after combat. Capture current session ID and local source row.

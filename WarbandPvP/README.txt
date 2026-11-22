@@ -1,4 +1,4 @@
-TOTALWARCRAFT — 0.7.5
+TOTALWARCRAFT — 0.7.6
 World of Warcraft: Forever 1.60.1 (Interface 16001)
 
 Formerly Warband-PvP. /tw is primary; /totalwarcraft and /wb also work.
@@ -15,14 +15,16 @@ header to move a window. Show on map closes TotalWarcraft dialogs and opens the 
 
 FIELD REPORTS
 Automatic reports are on by default; toggle on /tw or with /tw auto on/off.
-You and your current target must be in combat. The target must be a visible,
-attackable, living, PvP-flagged opposing player in the outdoor world.
+After combat ends, readable incoming damage must match a visible, attackable,
+PvP-flagged opposing player observed during that fight. Incoming damage is enough;
+outgoing damage is not required. The report uses the captured fight location.
 NPCs, same-faction targets, instances and sanctuary/FFA rules do not qualify.
 Unreadable required checks skip reporting. A reload during combat waits for
 combat to end before reporting automatically. Duel events and outgoing requests
 suppress reports through the duel and a short settling period. Manual reporting
 also respects local duel holds. No blanket city exclusion hides real city raids.
-This is a conservative observation, not verified damage attribution.
+Missing/ambiguous meter data skips the automatic report. This local attribution
+does not authenticate another client's claims, prove a kill or establish team size.
 
 An automatic attempt happens at most once per combat. Successful submissions
 share a two-minute cooldown with /tw report and the report keybind. Failed
@@ -108,6 +110,11 @@ Fresh peers appear as jade map markers and in the group-locations panel.
 Positions expire after 30s. Presence is not proof of combat or a shared layer.
 
 SESSION JOURNAL
+Channel troubleshooting: /tw channel or Help > Support > Channel check. Both
+players explicitly start the bounded automatic check; no combat is needed.
+It prefers empty channel index 20 and verifies the assignment before routing.
+It does not change normal guild report delivery. See CHANNEL_TESTING.txt.
+
 /tw export opens a copyable local log of this UI session, including TotalWarcraft actions,
 transport results and group/zone/transfer events. Ctrl+A, Ctrl+C to copy.
 The log is bounded; omitted rows are counted. No chat contents, automatic uploads

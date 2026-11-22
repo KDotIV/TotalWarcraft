@@ -7,12 +7,12 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "WarbandPvP"
-VERSION = "0.7.5"
+VERSION = "0.7.6"
 PRODUCTION = ["Model.lua", "Theme.lua", "Windows.lua", "Scope.lua", "GuildTransport.lua",
-              "Presence.lua", "SessionLog.lua", "WarbandProtocol.lua", "Warbands.lua", "Finder.lua",
+              "Presence.lua", "SessionLog.lua", "ChannelDiagnostics.lua", "CHANNEL_TESTING.txt", "WarbandProtocol.lua", "Warbands.lua", "Finder.lua",
               "Scouting.lua", "ScoutingUI.lua", "WarbandUI.lua", "UI.lua", "Help.lua", "Activity.lua", "Map.lua", "MapPins.xml", "Report.lua", "AutoReports.lua",
               "Notifications.lua", "Core.lua", "Bindings.xml", "README.txt", "CHANGELOG.txt", "LICENSE.txt"]
-DEVELOPMENT = ["Diagnostics.lua", "Control.lua", "WarbandSimulation.lua", "Development.lua", "WARBAND_TESTING.txt"]
+DEVELOPMENT = ["Diagnostics.lua", "DamageDiagnostics.lua", "Control.lua", "WarbandSimulation.lua", "Development.lua", "WARBAND_TESTING.txt", "DAMAGE_TESTING.txt"]
 
 def compile_lua(text, flavor):
     output, depth = [], 0

@@ -16,14 +16,15 @@ closes the dialog and selects the report or rally's zone.
 
 Use the topic buttons above or Previous / Next below.
 /tw opens the board. /wb remains an alias. /tw help: guide.]]},
-    {"Reports & safeguards", [[Automatic reports require you and your current target to be
-in combat. The target must be a visible, attackable, PvP-flagged
-opposing player. NPCs and same-faction targets do not qualify.
+    {"Reports & safeguards", [[Automatic reports require readable incoming damage attributed
+to an observed, attackable, PvP-flagged opposing player.
+NPC and pet damage alone do not qualify.
 
 Duels, sanctuary/FFA rules and instances suppress automatic
 reports. Loading during combat waits for a fresh fight.
 Unavailable or restricted checks skip automatic reporting.
-This is a conservative observation, not proof of exchanged hits.
+The native meter is checked after combat ends. No outgoing
+damage is required. Missing attribution skips the report.
 
 One automatic attempt per combat; a shared two-minute
 cooldown follows a successful report. Guild TotalWarcraft users receive
@@ -158,6 +159,7 @@ function A.ShowHelp(page)
         f.link:SetScript("OnEditFocusGained",function(self) self:HighlightText() end)
         f.link:SetScript("OnEscapePressed",function(self) self:ClearFocus() end)
         f.status=A.Label(f,30,-490,520,""); f.status:SetSpacing(4)
+        f.channel=A.Button(f,"Channel check",30,-576,245,A.ShowChannelCheck)
         A.Button(f,"Previous",30,-620,110,function() A.ShowHelp(math.max(1,f.page-1)) end)
         f.counter=A.Label(f,260,-627,90,"")
         A.Button(f,"Next",440,-620,110,function() A.ShowHelp(math.min(#pages,f.page+1)) end)
@@ -167,7 +169,7 @@ function A.ShowHelp(page)
     f.title:SetText(pages[f.page][1]); f.body:SetText(pages[f.page][2])
     f.counter:SetText(f.page.." / "..#pages)
     local support=f.page==9
-    f.link:SetShown(support); f.status:SetShown(support)
+    f.link:SetShown(support); f.status:SetShown(support); f.channel:SetShown(support)
     f.link:SetText("https://github.com/KDotIV/TotalWarcraft/issues")
     f.status:SetText("Version: "..A.release.."\nScope: "..(A.scopeRuleset or "unavailable").." / region "..tostring(A.scopeRegion)
         .."\nGuild messaging: "..tostring(A.guildReady).." | Warband messaging: "..tostring(A.warbands.ready)

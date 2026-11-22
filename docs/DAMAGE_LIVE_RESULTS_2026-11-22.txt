@@ -1,0 +1,80 @@
+TOTALWARCRAFT - DAMAGE CAPTURE LIVE RESULTS
+November 22, 2026. User-supplied NPC control and interrupted reciprocal PvP test.
+
+BUILD / CAPTURE
+Forever 1.60.1, build 71037, interface 16001, built November 18, 2026.
+TotalWarcraft 0.7.5-dev, damage diagnostics revision 1; omitted=0.
+Label npc-control. Captured session 2680 was absent from the 30 baseline sessions
+(2650-2679) and correlated with a readable native session-update event.
+No opponent identities were recorded. Three reads completed about 0.5, 2.0 and
+3.5 seconds after the observed combat end. Capture stopped; no report sent.
+
+OBSERVED RESULT
+All three passes returned candidates incoming=0 outgoing=0 exchange=0.
+This control did not misclassify the NPC fight as player damage. It does not yet
+establish that the positive PvP path works or independently exercise every guard.
+
+NATIVE DATA NOW DEMONSTRATED IN THIS CLIENT
+All four requested meter functions were present and usable in this capture.
+DamageTaken returned the local player's readable GUID and NPC-attributed spell
+details. Carnivorous Weed rows had a readable unitName, positive per-unit amount,
+isMob=true, isPet=false and class=MAGE. A class label alone is therefore not a
+player test. The per-unit amounts summed to 824 on pass one and 860 on passes two
+and three. The extra 36 arrived in the later snapshots; retain bounded deferred
+reads rather than treating the first post-combat read as necessarily complete.
+These are aggregate damage records, not a timestamped hit-by-hit event stream.
+
+OUTGOING ATTRIBUTION REMAINS UNESTABLISHED
+DamageDone total=2112, but each spell row had unitName empty and per-unit amount=0.
+The readable spell totals do not identify a victim. Do not substitute those totals
+for missing unit detail or infer a player pair from a selected target.
+EnemyDamageTaken named the NPC and totaled 2112, but no readable matching source
+GUID was available. The diagnostic skipped its source query, as designed. This
+does not establish whether an opposing PLAYER's GUID will be available there.
+
+One session-update event had an unavailable/restricted ID, but another readable
+event identified 2680. That warning did not invalidate the correlated session.
+No code/package/install change is required from this control. Keep revision 1
+for incoming-only, outgoing-only and reciprocal world-PvP tests so the results
+remain comparable. No addon is needed on the opposing player's client.
+
+NEXT ACCEPTANCE
+Check whether DamageTaken returns readable, attributable opposing-player rows
+with isMob=false / isPet=false, and whether the name matches the visible player's
+full Forever identity. Then independently test the outgoing path and reciprocal
+pair. Zero or unavailable results remain useful; never infer absence of damage.
+Production verification remains unimplemented. No production report/heat behavior
+or public release was changed based on this NPC-only result.
+
+FOLLOW-UP: RECIPROCAL WORLD-PVP CAPTURE
+The later export includes the NPC control above followed by label=reciprocal on
+the same build, revision 1, omitted=0. Map 1434, position 0.3862 / 0.4292.
+Fresh session 2692 was absent from baseline 2662-2691 and eventCorrelated=true.
+Two visible Alliance opponents were recorded with distinct readable player GUIDs:
+Gordaine Strongbeard and Slow Chill. The opposing clients did not need this addon
+for the local native meter to expose these records.
+
+The first post-combat read attributed 947 incoming damage to Slow Chill through
+four DamageTaken rows (429 + 271 + 206 + 41). Each row had isMob=false,
+isPet=false, class=MAGE, and the full name matched the observed opponent.
+The diagnostic returned incoming=1, outgoing=0, exchange=0. This demonstrates
+the incoming attribution path on this client; it is not a completed verification.
+
+DamageDone totaled 2146 but still had empty victim names and per-unit amount=0.
+Unlike the NPC control, EnemyDamageTaken exposed both matching opponent GUIDs:
+Gordaine Strongbeard total=1334 and Slow Chill total=812 (sum 2146).
+Each opponent query returned a spellID=0 row naming Vitals Shienx, with a matching
+positive totalAmount but combatSpellDetails.amount=0 and an empty class label.
+Revision 1 requires a positive per-unit amount, so these rows did not qualify.
+This is a promising category-specific outgoing attribution shape, not evidence
+that the player did no outgoing damage. Review native EnemyDamageTaken display
+semantics and contributor identity before accepting a row's totalAmount; do not
+generally replace unavailable per-unit amounts with category or spell totals.
+
+Combat restarted about 0.01 seconds after this first read. The capture correctly
+excluded the encounter before reads two and three, then stopped without sending
+a report. Its final status was excluded, not a successful reciprocal check.
+Next live repeat: arm /tw damage start reciprocal while out of combat, fight an
+opposing player, then remain out of combat at least five seconds before exporting.
+Retain revision 1 until a category-specific diagnostic refinement is reviewed.
+No addon code, installed files or public release changed from this capture review.

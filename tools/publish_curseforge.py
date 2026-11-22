@@ -59,9 +59,11 @@ def prepare(tag):
     archive = Path(manifest['zip'])
     if hashlib.sha256(archive.read_bytes()).hexdigest() != manifest['sha256']:
         raise ValueError('Release archive hash mismatch.')
+    # Publish this version's notes; retain older history in the packaged file.
+    current_changes = changelog.split('\nTotalWarcraft ', 1)[0].rstrip() + '\n'
     metadata = {'displayName': 'TotalWarcraft ' + VERSION,
                 'releaseType': 'release', 'changelogType': 'text',
-                'changelog': changelog, 'isMarkedForManualRelease': False}
+                'changelog': current_changes, 'isMarkedForManualRelease': False}
     return archive, manifest, metadata
 
 

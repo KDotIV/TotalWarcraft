@@ -1,3 +1,16 @@
+TotalWarcraft 0.7.6
+November 22, 2026 - Release - WoW Forever 1.60.1
+
+- Automatic PvP reports now require incoming damage attributed to an observed,
+  attackable, PvP-flagged opposing player. Combat state and targeting alone no
+  longer trigger an automatic report.
+- Damage checks run after combat using a fresh native combat session. NPC/pet
+  damage, ambiguous identities, duels and unavailable attribution do not qualify.
+- Incoming damage is sufficient; reporting does not wait for outgoing damage.
+  An accepted report remains valid if another fight starts afterward.
+- Automatic reports retain the captured fight location. Manual reports and
+  keybindings remain available, with the shared two-minute reporting cooldown.
+
 TotalWarcraft 0.7.5
 November 21, 2026 - Release - WoW Forever 1.60.1
 

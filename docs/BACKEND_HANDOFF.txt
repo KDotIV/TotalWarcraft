@@ -1,11 +1,94 @@
 TOTALWARCRAFT - BACKEND AND ADDON HANDOFF
+CURRENT WORK, November 22: 0.7.6 Release prepared; publication receipt pending.
+User explicitly accepted incoming opposing-player damage as sufficient for an
+automatic report and requested Release distribution (not Alpha). AutoReports.lua
+now uses fresh, native-event-correlated DamageTaken rows after combat. The local
+source GUID, full observed enemy identity, positive per-unit amount and mob/pet
+flags must qualify. Target/combat flags alone no longer trigger reports. Reads
+are bounded to 0.5/2.0/3.5 seconds, stop at the first positive attribution, and
+skip interrupted/ambiguous/unavailable sessions. Fight location and shared
+cooldown are retained. Manual reports and received packets remain observations;
+there is no new wire proof flag, authenticated proof, kill or team-size inference.
+
+ChannelDiagnostics revision 2 is an explicitly started public troubleshooting
+command in this Release: /tw channel and Help > Support > Channel check. Other
+developer tools remain excluded. Saved log is A.db.channelDiagnostics; testing
+never auto-resumes. Native SwapChatChannelsByChannelIndex prefers empty index 20,
+then the actual channel assignment is read again before routing. Occupied/secret
+slots or unavailable/rejected native moves retain the assigned index. No other
+channel is displaced, and no padding memberships are created. Live delivery and
+the native move to an empty 20 remain unverified. Existing guild transport stays.
+Current CurseForge changelog is limited to completed reporting changes and omits
+channel/developer tooling. The publisher sends only the newest version section.
+Historical updates below describe earlier versions and proposals.
+
+DEV ADDITION, November 22: /tw channel start <label> | status | stop | export |
+clear. ChannelDiagnostics.lua / CHANNEL_TESTING.txt are developer-only inputs.
+Dedicated TotalWarcraftTest / TW_CHTEST1; timed CHANNEL probes and CHANNEL ACKs,
+no GUILD/PARTY/WHISPER fallback, ordinary text, discovery scan or PvP records.
+Five-second initial delay; 15-second interval; three-minute deadline. Up to 12
+probes, 72 total send attempts, 16 peers, 40 events/second and 500 persisted rows.
+Counts separate send acceptance, self echo, remote receipt and matching run/seq
+ACK. Native channel rejection notices suspend sends. Stop removes listeners and
+timer, and leaves only membership joined by the test. Reload never resumes it.
+The existing damage diagnostic revision is unchanged. No production transport or
+public release changes. See CHANNEL_TESTING.txt for paired-client test steps;
+actual current-build native CHANNEL delivery remains unverified.
+All 19 offline suites passed; releases/validation-channel-dev.log records them.
+Installed 38 hash-verified dev files into the Forever WarbandPvP addon folder.
+Backup: releases/installed-backups/WarbandPvP-before-0.7.5-dev-20261122-151534.zip.
+Tester ZIP: releases/TotalWarcraft-0.7.5-dev-channel-v1.zip (same bytes as dev ZIP).
+SHA256: 57bee85657e9a29243b4df9fbd912594d2141f49b39ad97c885a97f8fa5f9c92.
+Production ZIP remains bb3daa03120657f2cf1c8e7076ca602bb52ae40d735707a2332b94dcaedc8e07;
+installed DamageDiagnostics.lua remains byte-identical to the earlier v1 capture.
+Full client restart is required to load the new module. No publication performed.
+
+FOLLOW-UP, November 22: reciprocal PvP capture exposed 947 incoming damage from
+the observed opposing player Slow Chill. EnemyDamageTaken exposed both opponent
+GUIDs and local-player-named contributor rows with positive totalAmount but zero
+per-unit amount; revision 1 therefore returned incoming=1/outgoing=0/exchange=0.
+Combat restarted after the first read and correctly excluded the capture. No
+completed reciprocal verification or report. See DAMAGE_LIVE_RESULTS_2026-11-22.txt
+for the category-specific outgoing follow-up and five-second out-of-combat repeat.
+Automatic unguilded report delivery is requested; manual sharing was rejected.
+Transport remains guild-only pending a demonstrated broader delivery route.
+Ruleset filtering is not global network routing. No external HTTP connection or
+new report transport has been implemented or installed.
+
+LIVE UPDATE, November 22: damage-check v1 NPC control returned zero incoming,
+outgoing and exchange candidates; no report sent. Native post-combat DamageTaken
+exposed readable NPC names/amounts/isMob=true on Forever build 71037. DamageDone
+had totals but empty target names/zero per-unit amounts; outgoing attribution is
+not established. See DAMAGE_LIVE_RESULTS_2026-11-22.txt. Actual PvP tests pending;
+keep the installed capture revision unchanged for comparable results.
+
+DEV ADDITION AFTER 0.7.5: /tw damage capture v1, November 21, 2026.
+DamageDiagnostics.lua and DAMAGE_TESTING.txt are developer-only build inputs.
+The one-fight capture reads native meter data only after combat, checks fresh
+event-correlated session IDs, readable per-unit amounts and observed opposing
+identities, then records directional candidates for live review. No broadcasts.
+Normal reports pause while armed; saved auto-report preferences stay unchanged.
+No active timers when stopped; three post-combat reads and a 15-minute arm limit.
+Local bounded export persists under WarbandPvPDiagnosticsDB.damage, never rearms.
+See WarbandPvP/DAMAGE_TESTING.txt. Production 0.7.5 content remains unchanged.
+All 18 offline suites pass, including installed-package dev behavior and
+production exclusion checks. The production ZIP still has SHA256
+bb3daa03120657f2cf1c8e7076ca602bb52ae40d735707a2332b94dcaedc8e07.
+Installed 36 hash-verified dev files at
+E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP.
+Backup: releases/installed-backups/WarbandPvP-before-0.7.5-dev-20261121-192514.zip.
+Dev ZIP SHA256: 5b6f67e4f58e08ea4332019b56f5b084e6ad605f015ef794cb033229f25c9c54.
+Restart WoW, then /tw damage status should show Damage check v1. Native data
+availability/semantics are still awaiting the user's live NPC/one-way/two-way
+tests; no live validation or CurseForge publication of this addition occurred.
+
 CURRENT BUILD: 0.7.5 (Release upload accepted; public availability unverified)
 GitHub tag v0.7.5 -> 23d77af0221ed0be79d4135763ca58f64631c82e. Publish and
 main CI succeeded; CurseForge accepted file 9737819 for Forever 1.60.1.
 See CURSEFORGE_SUBMISSION_0.7.5.txt. Do not rerun the successful upload.
 The initial public file page returned 404; approval/indexing was not confirmed.
-Damage verification remains a proposal: current Forever per-unit meter details
-are a promising post-combat route. See DAMAGE_VERIFICATION_DESIGN.txt for the
+Production damage verification remains a proposal: current Forever per-unit
+meter details are a promising route. See DAMAGE_VERIFICATION_DESIGN.txt for the
 source evidence, identity/secret-value limits and live acceptance requirements.
 No verification code or new diagnostic tool was added to the 0.7.5 release.
 November 21, 2026: remote-zone detection research cancelled at the user's request.

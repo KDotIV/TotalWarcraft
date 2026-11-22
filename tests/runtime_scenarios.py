@@ -95,11 +95,11 @@ advanceTimers(121); assert(not next(A.scouting.rates) and not A.scouting.timer a
         lua.execute('''
 local send=A.adapter; local manual
 A.adapter=function(r) manual=r.manual; return send(r) end
-combat=true
-if automatic then step() else assert(A.Report()) end
+rows={damage('Enemy Person',10)}; fight()
+if automatic then peace() else assert(A.Report()); peace() end
 assert(manual==not automatic and not A.autoReports.timer and reportCount()==1)
 advanceTimers(130); assert(reportCount()==1 and not A.autoReports.timer)
-combat=false; step(); combat=true; step(); assert(reportCount()==2)
+fight(); peace(); assert(reportCount()==2)
 ''')
 
     # Open UI must follow incoming locations, expiry and native roster removal.

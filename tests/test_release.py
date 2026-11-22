@@ -16,9 +16,9 @@ for flavor, directory in [('release', root), ('dev', dev)]:
 with zipfile.ZipFile(manifest['zip']) as z:
     assert all(n.startswith('WarbandPvP/') for n in z.namelist())
     names = {Path(n).name for n in z.namelist()}
-    assert not names.intersection({'Control.lua','Diagnostics.lua','WarbandSimulation.lua','Development.lua','WARBAND_TESTING.txt','CrossedSwords.tga'})
+    assert not names.intersection({'Control.lua','Diagnostics.lua','DamageDiagnostics.lua','DAMAGE_TESTING.txt','WarbandSimulation.lua','Development.lua','WARBAND_TESTING.txt','CrossedSwords.tga'})
     code = '\n'.join(z.read(n).decode() for n in z.namelist() if n.endswith(('.lua','.txt','.toc')))
-    for forbidden in ['WBP_CTL1','WBP_WBT1','testMode','SetTestMode','simulate','synthetic','/tw demo','/tw remote','/tw layer','/tw test','SetTransport','SetWarbandSimulation']:
+    for forbidden in ['WBP_CTL1','WBP_WBT1','testMode','SetTestMode','simulate','synthetic','/tw demo','/tw remote','/tw layer','/tw test','/tw damage','DamageDiagnostic','SetTransport','SetWarbandSimulation']:
         assert forbidden not in code, forbidden
 
 def release_client(name):
@@ -46,7 +46,7 @@ alice.execute("SlashCmdList.WARBANDPVP('show'); assert(A.warbands.panel:IsShown(
 alice.execute('''
 assert(A.buildFlavor=='release' and not A.SetTestMode and not A.ControlCommand and not A.SetWarbandSimulation)
 assert(not WarbandPvP.Receive and not WarbandPvP.SetTransport)
-for _,cmd in ipairs({'test on','remote Bob Two report','control allow Bob Two','simulate 5','demo','pincheck','layer start'}) do SlashCmdList.WARBANDPVP(cmd) end
+for _,cmd in ipairs({'test on','remote Bob Two report','control allow Bob Two','simulate 5','demo','pincheck','layer start','damage start test'}) do SlashCmdList.WARBANDPVP(cmd) end
 assert(sends==0 and not A.testMode and not A.warbands.host)
 A.CloseWindows(); A.ShowHome(); assert(A.home:IsShown())
 A.BuildUI(); A.panel:Show(); assert(not A.home:IsShown())

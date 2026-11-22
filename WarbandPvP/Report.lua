@@ -67,7 +67,10 @@ function A.Snapshot(simulate)
     return result
 end
 
-function A.Report(source)
+function A.Report(source,combatLocation)
+--@dev
+    if A.DamageDiagnosticActive and A.DamageDiagnosticActive() then return false,"Damage capture is local only; /tw damage stop before reporting." end
+--@enddev
     if not A.db then return false, "Addon is not ready." end
     if A.ReportBlockedByDuel and A.ReportBlockedByDuel() then return false,"Reports are paused during or just after a duel." end
     if A.RefreshScope and not A.RefreshScope() then return false, "Ruleset/region unavailable; report not sent. Run /tw status." end
@@ -80,7 +83,7 @@ function A.Report(source)
 --@release     if now - (A.db.lastSubmit or 0) < 120 then return false, "Report cooldown active." end
     if A.lastAttempt and GetTime() - A.lastAttempt < 5 then return false, "Please wait before retrying." end
     A.lastAttempt = GetTime()
-    local loc = A.CurrentLocation()
+    local loc = source=="automatic" and combatLocation or A.CurrentLocation()
     if not loc then return false, "Current location unavailable; report not sent." end
     local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(loc.mapID)
     local request = {

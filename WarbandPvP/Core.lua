@@ -1,5 +1,5 @@
 local name, A = ...
-A.release = A.release or "0.7.5-dev"
+A.release = A.release or "0.7.6-dev"
 function A.Print(message) print("|cffedbf69TotalWarcraft:|r " .. message) end
 
 function A.Changed()
@@ -48,10 +48,11 @@ events:SetScript("OnEvent", function(_, event, addon)
         if A.InitGuildTransport then A.InitGuildTransport() end
         if A.InitPresence then A.InitPresence() end
         --@dev
-        A.InitDiagnostics(); A.InitControl()
+        A.InitDiagnostics(); A.InitDamageDiagnostics(); A.InitControl()
         --@enddev
         if A.InitWarbands then A.InitWarbands() end
         A.InitSessionLog()
+        A.InitChannelDiagnostics()
         A.InitFinder()
         A.InitScouting()
         A.InitAutoReports()
@@ -94,6 +95,8 @@ events:SetScript("OnEvent", function(_, event, addon)
             elseif command == "presence off" then A.SetPresenceEnabled(false)
             elseif command == "presence" or command == "presence status" then A.PrintPresenceStatus()
             elseif command == "export" then A.ShowExport()
+            elseif command == "channel" then A.ShowChannelCheck()
+            elseif command:match("^channel ") then A.ChannelCommand(input:sub(9))
             elseif command == "help" then A.ShowHelp()
             elseif command == "status" then A.ShowHelp(9)
             --@dev

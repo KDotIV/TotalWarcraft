@@ -23,6 +23,8 @@ archive, manifest, metadata = publish.prepare('v' + publish.VERSION)
 assert manifest['flavor'] == 'release' and metadata['releaseType'] == 'release'
 assert not metadata['isMarkedForManualRelease']
 assert metadata['changelog'].startswith('TotalWarcraft ' + publish.VERSION)
+assert '\nTotalWarcraft ' not in metadata['changelog']
+assert all(word not in metadata['changelog'].lower() for word in ['test code','channel check','diagnostic'])
 assert publish.forever_version_id([{'name': '1.60.1', 'gameVersionTypeID': 88568, 'id': 77}]) == 77
 for rows in [[], [{'name':'1.60.1', 'gameVersionTypeID':517, 'id':77}],
              [{'name':'1.60.2', 'gameVersionTypeID':88568, 'id':77}],

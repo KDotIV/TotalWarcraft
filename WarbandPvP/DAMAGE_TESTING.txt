@@ -1,0 +1,96 @@
+TOTALWARCRAFT 0.7.5-dev - DAMAGE CHECK v1
+Development only. Added after the 0.7.5 release; not included in public packages.
+
+PURPOSE
+Test whether Forever's post-combat damage meter exposes attributable player
+damage. Results are local candidates for review, not verified reports, exact
+fight sizes or server-signed proof. Opponents do not need TotalWarcraft.
+No combat-log/secret-value workaround, remote scan or network protocol is used.
+
+SETUP
+1. Exit and restart WoW after installing this build (it adds a Lua module).
+2. Run /tw damage status. Expect "Damage check v1". If it is unknown, verify
+   TotalWarcraft (Developer) is enabled and the correct Forever client restarted.
+3. Run /tw test off to leave any simulated testing mode.
+4. Have an opposing-faction player meet you outdoors, outside a sanctuary,
+   instance or FFA area. Flag for ordinary world PvP. Do NOT use /duel.
+5. Target that player before arming; keep them targeted and visible for the
+   start of combat. Use no pets, damage shields, retaliation procs or DoTs for
+   the initial tests. One simple nonlethal direct hit is easiest to interpret.
+6. Allow normal combat to end before each run. Do not zone, hearth, reload,
+   swap layers or reset the meter between arming and capture completion.
+
+RUN A - NPC CONTROL (recommended first)
+While out of combat, target an NPC, then run:
+  /tw damage start npc-control
+Fight only that NPC and leave combat normally. Wait about four seconds after
+combat ends for "Damage capture complete". Run /tw damage status.
+Expected: zero player-pair candidates, or an unavailable/excluded result.
+NPC damage must not be reported as an opposing-player damage candidate.
+
+RUN B - OPPONENT HITS YOU, YOU DO NOT HIT BACK
+Target the opposing player, then run while out of combat:
+  /tw damage start incoming-only
+Have them hit you once with a simple direct attack and stop attacking. Do not
+right-click/auto-attack, cast damaging spells or use reflected damage yourself.
+Both players stop; wait until your combat state ends, then another four seconds.
+Expected if the API supports it: incoming=1 outgoing=0 exchange=0.
+A result of zero/unavailable is useful evidence about API limitations, not proof
+that no attack happened. Only your addon inspects its local native meter.
+
+RUN C - YOU HIT THEM, THEY DO NOT HIT BACK
+Repeat while out of combat and targeting the same player:
+  /tw damage start outgoing-only
+Hit them once, then stop your auto-attack (/stopattack if needed). They do not
+retaliate. Wait for combat to end and capture completion.
+Expected if a useful outgoing breakdown exists: incoming=0 outgoing=1 exchange=0.
+This checks direction independently before we label a two-way exchange.
+
+RUN D - BOTH HIT EACH OTHER
+  /tw damage start reciprocal
+Exchange one simple hit each, stop, wait for combat end and capture completion.
+Expected if both supported directions match the same opponent:
+incoming=1 outgoing=1 exchange=1. These counts are candidate opponent pairs,
+not event counts, exact team sizes or a production proof verdict.
+
+SAVE RESULTS
+  /tw damage export
+Copy all text with Ctrl+A, Ctrl+C. Labels distinguish runs; logs accumulate
+across runs until cleared, up to 600 rows (oldest rows omitted thereafter).
+Send the export plus what actually happened: run label, attack/spell used,
+which character hit which, whether any NPCs/pets/reflect/DoTs were involved,
+and whether the native damage meter showed damage. Do not need the opponent's
+addon, export, guild membership, party membership or computer access.
+
+If "Native damage meter unavailable" or unreadable data appears, export that
+result and stop. Do not keep repeating fights to force an unsupported API.
+The addon does not enable/reset the native meter or change its settings.
+Do not enable /tw test on: that mode is for synthetic warband/report fixtures.
+
+OTHER COMMANDS / BEHAVIOR
+/tw damage stop   - cancel an active run and keep its log
+/tw damage clear  - cancel and clear only the damage log
+/tw damage status - state, last result and row count; no meter polling
+/tw damage export - managed, draggable export window with normal Back behavior
+Each capture arms for one fight, up to 15 minutes. No idle timer when stopped.
+Normal manual/automatic PvP reports pause while capture is active; the user's
+auto-report setting is preserved. They resume after capture ends. No damage
+capture creates map pins, publishes reports or sends addon messages.
+Logs persist inside the existing WarbandPvPDiagnosticsDB on normal reload/logout.
+Capturing never resumes automatically. /tw export remains the ordinary session
+journal; use /tw damage export for these detailed native-meter observations.
+
+GUARDS / WHAT WE NEED TO REVIEW
+Three reads at approximately 0.5, 2.0 and 3.5 seconds after combat ends; no
+combat-time meter reads. Only one fresh, event-correlated session may qualify.
+Historical/reused sessions, ambiguous names, unreadable identities, NPCs/pets,
+duels, instances, FFA/sanctuary, new combat, zone/transfer changes and resets
+cannot produce a qualified pair result. Only whitelisted readable fields log.
+We need to confirm native category semantics, actual per-unit amount fields,
+Forever name formatting and one-way controls before promoting this to production.
+
+DEVELOPER CHANGELOG
+Added DamageDiagnostics.lua and /tw damage commands, bounded local saved export,
+one-encounter state machine, report pause and post-combat native meter inspection.
+Production packaging physically omits this module, guide, commands and guards.
+The published 0.7.5 release behavior/package remains unchanged.

@@ -14,7 +14,8 @@ Pushing a new version tag runs .github/workflows/release.yml:
 3. Build the production ZIP and run every test before exposing the upload token.
 4. Fetch CurseForge's exact Forever 1.60.1 version ID (type 88568); never guess
    another flavor/version. Upload to project 1819796 with releaseType=release
-   and automatic publication after moderation. Upload the packaged changelog.
+   and automatic publication after moderation. Upload only the current version's
+   changelog section; the packaged changelog retains older release history.
 5. Save the file ID, public URL and archive hash in the Actions run summary and
    artifact. Moderation and CurseForge app indexing remain external processes.
 

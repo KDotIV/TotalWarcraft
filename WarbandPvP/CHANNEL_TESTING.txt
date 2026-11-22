@@ -1,0 +1,77 @@
+TOTALWARCRAFT - AUTOMATIC CUSTOM-CHANNEL DELIVERY CHECK v2
+Available in the Release build. Forever 1.60.1 / Interface 16001.
+
+INSTALL BOTH CLIENTS
+Use the same TotalWarcraft-0.7.6-release ZIP on both accounts. Exit WoW completely,
+replace Interface/AddOns/WarbandPvP with the ZIP's WarbandPvP folder, then launch
+WoW. Do not put WarbandPvP inside another WarbandPvP folder. The organizer's local
+installation is handled by the installer; send the Release ZIP to the other tester.
+/tw channel status must say Channel test v2. /tw > Help > Support also opens
+the check. Other development tools are excluded from the Release.
+
+WHAT THIS MEASURES
+Both players explicitly start a short session. Thereafter, probes and replies
+are automatic timer callbacks, with no further clicking or typing. Both directions
+use C_ChatInfo.SendAddonMessage(prefix, payload, "CHANNEL", tostring(channelID)).
+Only the dedicated TotalWarcraftTest channel and TW_CHTEST1 prefix are used.
+No GUILD/PARTY/WHISPER fallback, ordinary chat messages, /who scan or PvP reports are generated. No heatmap or map pins should appear from this test.
+Channel membership may appear in the game's channel list. Joining the channel
+alone does not demonstrate addon-message delivery.
+Index 20 is preferred on each client. When empty, the check makes one native
+reorder attempt and verifies the actual assignment. Occupied/unreadable slot 20,
+an unavailable API or a rejected move keeps the assigned number. Other channels
+are never displaced and no padding channels are created. Status/export show the
+actual index. Channel names and prefixes, not matching local numbers, identify
+the transport. Different client numbers are valid and do not mix channel traffic.
+
+TEST 1: UNGUILDED RECEIVER
+Use the same region, faction and Forever ruleset. At least the receiving tester
+must be unguilded; neither player needs to leave an existing guild. Do not join
+each other's party or raid. Start in the same zone to isolate channel delivery.
+On BOTH clients run:
+  /tw channel start unguilded
+Wait at least 45-60 seconds without issuing send commands. Probes begin five
+seconds after start, then every 15 seconds. Replies are queued and sent by timer.
+  /tw channel status
+Look for remote probes > 0 and remote ACKs > 0 on BOTH clients. The chat prints
+the first remote receipt and first round-trip ACK. All detailed rows stay in the
+local diagnostic log. A send return of 0/Success or a self-echo is NOT a pass.
+Then on BOTH clients:
+  /tw channel stop
+  /tw channel export
+Copy with Ctrl+A / Ctrl+C and label each export with the character who captured it.
+
+TEST 2: CROSS-CONTINENT
+Keep the unguilded tester unguilded and remain outside a shared party/raid.
+One player stays in Orgrimmar (Kalimdor); the other goes to Stranglethorn Vale
+(Eastern Kingdoms). Wait for travel/loading to finish. On BOTH clients:
+  /tw channel start continents
+Wait 45-60 seconds, then status, stop and export as above. Labels need not match
+for delivery, but using the same labels makes the two exports easy to compare.
+Do not clear between tests: both runs are retained in the bounded export.
+Capture logs even if test 1 fails; test 2 can be deferred if the server rejects
+CHANNEL sends outright. Testing another internal realm is a separate reach check.
+
+INTERPRETATION
+- REMOTE_PROBE: this client received a probe from the named remote client.
+- REMOTE_ACK: that client received our probe and we received its channel reply.
+- SELF_ECHO: our own run returned to us; does not establish another recipient.
+- SEND accepted=true: only local API acceptance, not remote delivery.
+- CHANNEL_NOTICE NOT_ALLOWED_IN_CHANNEL / BANNED / MUTED: further sends pause,
+  but the test continues listening until stopped or its deadline.
+- Three rejected sends also pause sending. No retries through other routes.
+- UNCONFIRMED_ROUTE: event lacked matching channel metadata; not counted as proof.
+- Zero remote counts: delivery unconfirmed, not proof that no addon users exist.
+Compare native realm identifiers recorded on both clients; a successful result
+only establishes reach for those clients, locations and the recorded build.
+
+BOUNDS / CLEANUP
+Each run lasts at most three minutes, sends at most 12 probes and 72 total
+probe/reply attempts, accepts at most 16 peers, and keeps a 500-row log. No timers,
+event listeners, joins or sends run before start or after stop. A channel joined
+by this test is left at stop; an already joined channel is left under your control.
+The log persists across reload/login; testing never resumes automatically.
+  /tw channel clear
+stops the test and clears its own log only. Export first if results are needed.
+Logs include character names, native realm identifiers and map IDs; no ordinary
+chat contents. Review before sharing. Existing normal report behavior is unchanged.

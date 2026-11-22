@@ -1,4 +1,4 @@
-TOTALWARCRAFT 0.7.5
+TOTALWARCRAFT 0.7.6
 World of Warcraft: Forever only (Interface 16001)
 
 Quickly form parties to seek out world PvP or rally your faction to retaliate
@@ -9,7 +9,8 @@ for warbands. One managed dialog is visible at a time, with Back navigation and
 a draggable military frame. No external backend or third-party library is needed.
 
 FEATURES
-- Automatic eligible outdoor PvP reports, with duel/NPC/FFA/instance safeguards.
+- Automatic reports require attributable incoming opposing-player damage after
+  combat, with fresh-session, identity, duel/NPC/pet/FFA/instance safeguards.
   Manual reports remain available via /tw report or a keybind; shared cooldown.
 - Compact known-only tooltips and fading nearby-report clusters: scaled swords,
   pulsing red halo and native red weapons/raid skull for heavy reported activity.
@@ -34,12 +35,14 @@ FEATURES
 - UI controls, slash commands and optional keybindings cover player features.
 
 EVIDENCE LIMITS
-Fight size, PvP participation and exact layers remain unconfirmed. GUID components
+Fight size and exact layers remain unconfirmed. Automatic local reports now use
+attributable incoming player damage; manual and received reports remain claims.
+GUID components
 are not cross-client layer keys. A UUID, map position, listing, native group join
 or transfer event does not establish arrival at the original fight. Parties-only
 is a product choice, not proof that outdoor raids cannot share a layer.
 
-Seventeen offline suites cover isolated Lua clients and the physically
+Nineteen offline suites cover isolated Lua clients and the physically
 stripped release ZIP. The two-client 0.6.1 live simulation established messaging,
 member updates and teardown; it did not validate native grouping or layer arrival.
 Finder calls and the revised 0.7 UI/invitations still require live acceptance.
@@ -56,6 +59,18 @@ The last independently verified public release is 0.7.4:
 https://www.curseforge.com/wow/addons/total-warcraft/files/9736735
 See docs/REFINEMENTS_0.7.3.txt for current live acceptance steps and
 docs/DAMAGE_VERIFICATION_DESIGN.txt for the proposed post-combat damage check.
+
+The separate dev build now includes /tw damage start <label>, status, stop and
+export for local post-combat meter acceptance tests. Normal reports pause while
+it captures one fight; it never broadcasts candidate evidence. See
+WarbandPvP/DAMAGE_TESTING.txt. These tools are physically excluded from Release.
+
+The Release includes /tw channel start <label>, status, stop, export and
+clear for opt-in custom-channel delivery checks with unguilded clients. Timed
+probes and ACKs use only CHANNEL; local acceptance/self-echo do not prove receipt.
+No PvP pins or ordinary chat traffic are generated. See WarbandPvP/CHANNEL_TESTING.txt
+for same-zone and cross-continent checks. Normal report routing remains guild-only.
+Channel index 20 is preferred when empty; native assignment is always verified.
 
 BUILD / INSTALL
   python -m pip install -r requirements-dev.txt

@@ -6,4 +6,4 @@ lua.execute('''
 A.SetTestMode(true); combat=true; step(); assert(reportCount()==0)
 A.SetTestMode(false); A.warbands.simulationCount=5; step(); assert(reportCount()==0)
 ''')
-print('PASS: eligible outdoor target combat, NPC/faction/flag/visibility/restricted checks, duel lifecycle/outgoing/reload suppression, shared cooldown, manual and dev isolation, toggles, failed-send bounds and peer delivery.')
+print('PASS: native incoming player damage, live-shaped rows, NPC/pet rejection, fresh correlated sessions, exclusions, interrupted/restarted combat, captured location, bounded reads, manual cooldown and peer delivery.')
