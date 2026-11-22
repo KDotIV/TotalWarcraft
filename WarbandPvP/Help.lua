@@ -98,8 +98,8 @@ Cross-faction delivery may be blocked by the game.
 Starting or joining makes your own affiliation scoutable by
 visible enemy TotalWarcraft scouts. No external backend is involved.
 
-Session journal / Export keeps a bounded local action log.
-Names and in-game locations may appear. Review before sharing.
+Export keeps bounded combat/UI/network/error logs and addon versions.
+Names, locations and error text may appear. Review before sharing.
 Export before reload / logout; the journal resets each session.]]},
     {"Commands & keybindings", [[/tw                     Open / close the command board
 /tw show                Warband board (start or join)

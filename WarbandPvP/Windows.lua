@@ -5,6 +5,7 @@ local function navigation(f) if f.ctaBack then f.ctaBack:SetEnabled(#history>0) 
 function A.ActiveWindow() return active and active:IsShown() and active or nil end
 function A.RaiseWindow(f) f:SetFrameLevel(80) end
 function A.CloseWindows()
+    A.pendingDetails=nil
     transition=true
     for _,f in ipairs(windows) do f:Hide() end
     active=nil; history={}; transition=false
@@ -34,10 +35,10 @@ function A.RegisterWindow(f)
     if A.StyleWindow then A.StyleWindow(f) end
     local back=CreateFrame("Button",nil,f,"UIPanelButtonTemplate")
     back:SetSize(70,22); back:SetPoint("BOTTOMLEFT",30,36); back:SetText("< Back")
-    back:SetScript("OnClick",A.BackWindow); f.ctaBack=back
+    back:SetScript("OnClick",A.UIAction("back",A.BackWindow)); f.ctaBack=back
     local home=CreateFrame("Button",nil,f,"UIPanelButtonTemplate")
     home:SetSize(130,22); home:SetPoint("BOTTOMRIGHT",-30,36); home:SetText("Command board")
-    home:SetScript("OnClick",function() if A.ShowHome then A.ShowHome() end end)
+    home:SetScript("OnClick",A.UIAction("command board",function() if A.ShowHome then A.ShowHome() end end))
     local handle=CreateFrame("Frame",nil,f)
     handle:SetPoint("TOPLEFT",4,-4); handle:SetSize(f:GetWidth()-44,32)
     handle:EnableMouse(true); handle:RegisterForDrag("LeftButton")
@@ -45,6 +46,7 @@ function A.RegisterWindow(f)
     handle:SetScript("OnDragStop",function() f:StopMovingOrSizing(); f.ctaDragging=false end)
     f.dragHandle=handle
     f:HookScript("OnShow",function()
+        A.Trace("WINDOW_SHOW",f.ctaName or "TotalWarcraft window")
         if not transition then
             if active and active~=f and active:IsShown() then
                 local found
@@ -61,6 +63,7 @@ function A.RegisterWindow(f)
         f:SetScale(math.max(.35,scale)); navigation(f)
     end)
     f:HookScript("OnHide",function()
+        A.Trace("WINDOW_HIDE",f.ctaName or "TotalWarcraft window")
         if f.ctaDragging then f:StopMovingOrSizing(); f.ctaDragging=false end
         if not transition and active==f then active=nil; history={} end
     end)

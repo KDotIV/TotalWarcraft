@@ -86,6 +86,7 @@ local function observe(unit)
     if not c.opponents[guid] then
         if c.count>=64 then c.blocked=true; return end
         c.opponents[guid]=true; c.count=c.count+1
+        trace("REPORT_OPPONENT","visible opposing PvP player="..key.." count="..c.count)
     end
     if c.names[key] and c.names[key]~=guid then c.ambiguous[key]=true end
     c.names[key]=guid
@@ -106,7 +107,10 @@ local function incoming(c,sid)
         local d=field(spell,"combatSpellDetails")
         local key=name(field(d,"unitName"))
         if key and c.names[key] and not c.ambiguous[key] and number(field(d,"amount"),.000001,1e12)
-            and field(d,"isMob")==false and field(d,"isPet")==false then return true end
+            and field(d,"isMob")==false and field(d,"isPet")==false then
+                trace("REPORT_DAMAGE_SOURCE","session="..sid.." enemy="..key.." damage="..field(d,"amount"))
+                return true
+            end
     end
 end
 local inspect
@@ -123,6 +127,7 @@ inspect=function(c)
     c.reads=c.reads+1
     local ids=catalog(); local sid,total=nil,0
     if ids then for id in pairs(ids) do if not c.baseline[id] then sid=id; total=total+1 end end end
+    trace("REPORT_VERIFY","read="..c.reads.." freshSessions="..total.." observedOpponents="..c.count)
     if total>1 or (c.sid and sid and c.sid~=sid) then
         skip("multiple/changed meter sessions"); cancel(); R.baseline=ids; return
     end
@@ -154,6 +159,7 @@ function A.UpdateAutoReports()
         if R.capture then
             if R.capture.state=="combat" then
                 R.capture.state="reading"
+                trace("REPORT_CAPTURE_END","opponents="..R.capture.count.." blocked="..tostring(R.capture.blocked==true))
                 if R.capture.count==0 or R.capture.blocked then cancel(); R.baseline=nil
                 else schedule(R.capture) end
             end
@@ -170,7 +176,6 @@ function A.UpdateAutoReports()
     if R.attempted then cancel(); return end
     if R.awaitPeace then return end
     if not allowed() then if R.capture then R.capture.blocked=true end; return skip("duel/instance/FFA/sanctuary exclusion") end
-    if P.Read(IsInGuild)~=true then return skip("guild required") end
     if (A.db.lastSubmit or 0)>=R.startedAt or GetServerTime()-(A.db.lastSubmit or 0)<120 then
         R.attempted=true; cancel(); return skip("shared report cooldown")
     end
@@ -181,6 +186,7 @@ function A.UpdateAutoReports()
         R.capture={state="combat",baseline=R.baseline,loc=loc,selfGUID=guid,started=GetTime(),
             updated={},updates=0,names={},ambiguous={},opponents={},count=0,reads=0}
         R.baseline=nil
+        trace("REPORT_CAPTURE_START","map="..loc.mapID.." guild="..tostring(P.Read(IsInGuild)==true))
         observe("target"); observe("focus"); observe("targettarget")
         local plates=P.Read(C_NamePlate and C_NamePlate.GetNamePlates)
         if type(plates)=="table" then for i=1,64 do local p=field(plates,i); if not p then break end; observe(field(p,"namePlateUnitToken")) end end

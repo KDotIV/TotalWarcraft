@@ -17,13 +17,16 @@ function A.Label(parent,x,y,width,value,font)
 end
 function A.Button(parent,text,x,y,width,fn)
     local b=CreateFrame("Button",nil,parent,"UIPanelButtonTemplate")
-    b:SetPoint("TOPLEFT",x,y); b:SetSize(width,26); b:SetText(text); b:SetScript("OnClick",fn)
+    b:SetPoint("TOPLEFT",x,y); b:SetSize(width,26); b:SetText(text); b:SetScript("OnClick",A.UIAction(text,fn))
     return b
 end
 function A.Surface(name,width,height,title)
     local f=CreateFrame("Frame",name,UIParent,"BackdropTemplate")
     f:SetSize(width,height); f:SetPoint("CENTER")
     local close=CreateFrame("Button",nil,f,"UIPanelCloseButton"); close:SetPoint("TOPRIGHT",-5,-5)
+    -- This is our own frame, not a Blizzard UIPanel. Avoid HideUIPanel in combat.
+    close:SetScript("OnClick",A.UIAction("close "..name,function() f:Hide() end)); f.ctaClose=close
+    f.ctaName=name
     f.heading=A.Label(f,30,-138,width-60,title,"GameFontNormalLarge")
     table.insert(UISpecialFrames,name); A.RegisterWindow(f); f:Hide()
     return f

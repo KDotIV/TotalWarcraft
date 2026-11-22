@@ -144,8 +144,11 @@ function A.ReportSend(r)
     end
     if A.Trace then A.Trace("REPORT_SEND", "accepted route="..route.." id=" .. decoded.id .. " remoteAck=false") end
     -- Show the accepted submission locally. The same wire ID deduplicates self echo.
-    local displayed = pcall(A.Receive, decoded)
-    if not displayed then A.Print("Report send accepted, but the local display failed. Check Lua errors before retrying.") end
+    local displayed, displayError = pcall(A.Receive, decoded, true)
+    if not displayed then
+        if A.TraceIssue then A.TraceIssue("REPORT_DISPLAY_ERROR",displayError) end
+        A.Print("Report send accepted, but the local display failed. Use /tw export before reloading.")
+    end
     if displayed and A.BeginEnemyScout then A.BeginEnemyScout(decoded,packet:match("^1\t[^\t]+\t([^\t]+)")) end
     return true, "Report send accepted; remote delivery is not confirmed."
 end
@@ -168,7 +171,10 @@ function A.OnReportMessage(prefix, packet, route, sender, _, zoneID, localID, ch
 --@enddev
 --@release     if not r then return end
     if not A.Validate(r, GetServerTime(), UnitFactionGroup("player"), A.db.ruleset) then return end
-    if A.records[r.id] then return end
+    if A.records[r.id] then
+        if A.Trace then A.Trace("REPORT_DUPLICATE","route="..route.." id="..r.id) end
+        return
+    end
 --@dev
     local rateKey = key(identity(sender)) .. (r.test and ":test" or ":real")
     if rates[rateKey] and now - rates[rateKey] < (r.test and 10 or 120) then return end
@@ -183,9 +189,9 @@ function A.OnReportMessage(prefix, packet, route, sender, _, zoneID, localID, ch
     local accepted = A.Receive(r)
     if accepted then
 --@dev
-        if A.Trace then A.Trace("REPORT_RECEIVE", "id=" .. r.id .. " sender=" .. A.CleanText(sender,128) .. " test=" .. tostring(r.test)) end
+        if A.Trace then A.Trace("REPORT_RECEIVE", "route="..route.." id=" .. r.id .. " sender=" .. A.CleanText(sender,128) .. " test=" .. tostring(r.test)) end
 --@enddev
---@release         if A.Trace then A.Trace("REPORT_RECEIVE", "id=" .. r.id .. " sender=" .. A.CleanText(sender,128)) end
+--@release         if A.Trace then A.Trace("REPORT_RECEIVE", "route="..route.." id=" .. r.id .. " sender=" .. A.CleanText(sender,128)) end
         rates[rateKey] = now
 --@dev
         A.Print((r.test and "[TEST] " or "") .. "Report received from " .. A.CleanText(sender,64) .. ".")

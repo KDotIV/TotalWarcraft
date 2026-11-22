@@ -1,5 +1,5 @@
 local name, A = ...
-A.release = A.release or "0.7.7-dev"
+A.release = A.release or "0.7.8-dev"
 function A.Print(message) print("|cffedbf69TotalWarcraft:|r " .. message) end
 
 function A.Changed()
@@ -17,7 +17,8 @@ function A.Changed()
 end
 
 function A.Notify(r)
-    if A.db.muted then return end
+    if A.IsOwnReport(r) then A.Trace("ALERT_SKIP","own report id="..r.id); return end
+    if A.db.muted then A.Trace("ALERT_SKIP","alerts muted id="..r.id); return end
     local now = GetTime()
 --@dev
     local field = r.test and "lastTestNotice" or "lastNotice"
@@ -25,8 +26,7 @@ function A.Notify(r)
 --@enddev
 --@release     local field = "lastNotice"
 --@release     if A[field] and now - A[field] < 30 then return end
-    A[field] = now
-    A.ShowToast(r)
+    if A.ShowToast(r) then A[field] = now end
 end
 
 local events = CreateFrame("Frame")
@@ -52,6 +52,7 @@ events:SetScript("OnEvent", function(_, event, addon)
         --@enddev
         if A.InitWarbands then A.InitWarbands() end
         A.InitSessionLog()
+        A.InitNotifications()
         A.InitReportChannel()
         A.InitFinder()
         A.InitScouting()
@@ -84,6 +85,7 @@ events:SetScript("OnEvent", function(_, event, addon)
         SlashCmdList.WARBANDPVP = function(command)
             local input = command:match("^%s*(.-)%s*$")
             command = input:lower()
+            A.Trace("COMMAND",A.LogValue(command:match("^(%S+)") or "home",32))
             if command == "report" then A.RunReport()
             elseif command == "auto on" then A.SetAutoReportsEnabled(true)
             elseif command == "auto off" then A.SetAutoReportsEnabled(false)

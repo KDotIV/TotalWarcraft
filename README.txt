@@ -1,4 +1,4 @@
-TOTALWARCRAFT 0.7.7
+TOTALWARCRAFT 0.7.8
 World of Warcraft: Forever only (Interface 16001)
 
 Quickly form parties to seek out world PvP or rally your faction to retaliate
@@ -31,7 +31,8 @@ FEATURES
 - Rally to report starts a warband at the last reported location, without assuming
   that the reporter is still present or automatically including them.
 - /tw presence on/off: opt-in location sharing within the outdoor native group.
-- /tw export: bounded local session journal, including group/zone/transfer events.
+- /tw export: bounded combat, report, UI, network and error journal with addon versions.
+- Own reports stay on the map without a popup; combat clicks defer report details.
 - UI controls, slash commands and optional keybindings cover player features.
 
 EVIDENCE LIMITS
@@ -53,9 +54,12 @@ inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
 Version 0.7.7 passed all 19 suites locally and in GitHub CI and was uploaded to
 CurseForge as Release file 9754372. Public approval/indexing is not yet verified.
-All 30 uploaded files match the tested and locally installed production build.
+All 30 uploaded files matched the tested 0.7.7 production build at installation.
 Receipt: docs/CURSEFORGE_SUBMISSION_0.7.7.txt.
 https://www.curseforge.com/wow/addons/total-warcraft/files/9754372
+The 0.7.8 patch adds notification safeguards and expanded diagnostics; all 20
+offline suites passed locally. See docs/UI_SESSION_AUDIT_0.7.8.txt for live checks.
+Release publication is in progress; the upload receipt will be recorded separately.
 See docs/REFINEMENTS_0.7.3.txt for current live acceptance steps and
 docs/DAMAGE_VERIFICATION_DESIGN.txt for the incoming-damage checks and their evidence limits.
 

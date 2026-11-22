@@ -1,4 +1,4 @@
-TOTALWARCRAFT - 0.7.7
+TOTALWARCRAFT - 0.7.8
 World of Warcraft: Forever 1.60.1 (Interface 16001)
 
 Formerly Warband-PvP. /tw is primary; /totalwarcraft and /wb also work.
@@ -122,9 +122,15 @@ Automatic reconnect attempts are bounded and stop once connected or timed out.
 
 SESSION JOURNAL
 /tw export opens a copyable local log of this UI session, including TotalWarcraft actions,
-transport results and group/zone/transfer events. Ctrl+A, Ctrl+C to copy.
-The log is bounded; omitted rows are counted. No chat contents, automatic uploads
-or external backend. Names and in-game locations can appear. Review before sharing.
+combat/report decisions, transport results, window/button actions and group/zone/transfer
+events. It includes blocked/forbidden action details and readable Lua errors delivered to
+Blizzard's error frame, plus client and loaded-addon versions. Ctrl+A, Ctrl+C to copy.
+The journal keeps 1500 recent activity entries and a separate 64-entry issue buffer;
+omitted rows are counted. No chat event capture, automatic uploads or external backend.
+Names, in-game locations and addon error text can appear. Review before sharing.
+Other addons' error handlers remain in control; errors they intercept may be unavailable.
+Your own reports stay on the map without a popup. Clicking another player's popup
+in combat queues its details until combat ends; expired reports are not opened.
 Export before /reload or logout: the release journal resets each session.
 
 SHORTCUTS

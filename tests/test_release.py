@@ -36,6 +36,8 @@ from auto_report_scenarios import check_auto_reports
 from activity_scenarios import check_activity
 check_auto_reports(release_client)
 check_activity(release_client)
+from session_log_scenarios import check_session_ui
+check_session_ui(release_client)
 from runtime_scenarios import check_runtime
 check_runtime(release_client)
 from forever_compat import check_hidden_realms
@@ -67,7 +69,7 @@ assert(A.SessionLogText():find('Names and in-game locations',1,true))
 for i=1,1600 do CLOCK=CLOCK+1; A.Trace('ROW','row-'..i) end
 local text=A.SessionLogText()
 assert(text:find('row%-1600') and not text:find('row%-1\n'))
-local lines=0; for _ in text:gmatch('\n') do lines=lines+1 end; assert(lines<=1502)
+local lines=0; for _ in text:gmatch('\n') do lines=lines+1 end; assert(lines<=1504)
 A.Trace('RESTRICTED','SECRET'); assert(A.SessionLogText():find('<restricted>',1,true))
 for i=1,1000 do A.Trace('FLOOD','ignored') end
 assert(#A.SessionLogText()<1000000)

@@ -137,6 +137,7 @@ function WarbandPvPMapPinMixin:OnMouseEnter()
 end
 function WarbandPvPMapPinMixin:OnMouseLeave() GameTooltip:Hide(); A.tooltipRecord=nil end
 function WarbandPvPMapPinMixin:OnMouseClickAction(button)
+    A.Trace("MAP_PIN_CLICK","button="..A.LogValue(button,24).." report="..(self.record and self.record.id or "none"))
     if button == "LeftButton" and self.record then A.ShowDetails(self.record) end
 end
 
@@ -284,7 +285,8 @@ function A.CurrentLocation()
 end
 
 function A.OpenMap(r)
-    if InCombatLockdown() then A.Print("Open the map after combat to select this location."); return end
+    if A.WB.Read(InCombatLockdown)~=false then A.Trace("UI_DEFER","world map requires leaving combat"); A.Print("Open the map after combat to select this location."); return end
+    A.Trace("MAP_OPEN","requested map="..A.LogValue(r and r.mapID,16))
     if not WorldMapFrame and C_AddOns and C_AddOns.LoadAddOn then C_AddOns.LoadAddOn("Blizzard_WorldMap") end
     if not WorldMapFrame or not WorldMapFrame.SetMapID then A.Print("World map unavailable."); return end
     A.CloseWindows()

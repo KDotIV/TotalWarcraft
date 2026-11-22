@@ -179,7 +179,8 @@ local function newTimer(delay,fn,repeating)
  timers[#timers+1]=timer; return timer
 end
 C_Timer={NewTicker=function(delay,fn) return newTimer(delay,fn,true) end,
- NewTimer=function(delay,fn) return newTimer(delay,fn,false) end}
+ NewTimer=function(delay,fn) return newTimer(delay,fn,false) end,
+ After=function(delay,fn) newTimer(delay,fn,false) end}
 function activeTimers()
  local n=0; for _,t in ipairs(timers) do if not t.cancelled then n=n+1 end end; return n
 end

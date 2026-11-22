@@ -52,7 +52,7 @@ def check_auto_reports(factory):
         lua=factory('Auto Observer'); lua.execute(SETUP); return lua
 
     for condition in ['playerTarget=false','enemy=false','flagged=false','visible=false','attackable=false',
-                      'instance=true','inGuild=false','ffa=true','sanctuary=true','flagged="SECRET"',
+                      'instance=true','ffa=true','sanctuary=true','flagged="SECRET"',
                       'UnitCanAttack=nil','UnitFactionGroup=function() error("restricted") end',
                       'UnitIsPVPSanctuary=function() return "SECRET" end','UnitExists=function() return false end']:
         lua=fresh()
@@ -68,6 +68,7 @@ combat=false; event('PLAYER_REGEN_ENABLED'); advanceTimers(.6)
 assert(reportCount()==1 and #A.List()==1 and not A.autoReports.timer)
 assert(A.List()[1].expiresAt-NOW==300 and A.List()[1].countUnknown)
 assert(A.SessionLogText():find('incoming opposing-player damage confirmed',1,true))
+assert(not A.toast or not A.toast:IsShown())
 -- A new attacker after the first read cannot erase that accepted report.
 fight(); peace(); assert(reportCount()==1)
 advanceTimers(121); fight(); peace(); assert(reportCount()==2)
@@ -76,6 +77,11 @@ advanceTimers(121); fight(); peace(); assert(reportCount()==2)
     packet=next(lua.globals().packets[i] for i in range(1,lua.globals().sends+1) if lua.globals().sentPrefixes[i]=='WBP_REPORT1')
     peer.globals().A.OnReportMessage('WBP_REPORT1',packet,'GUILD','Auto Observer')
     peer.execute('assert(#A.List()==1)')
+
+    # Automatic reporting must work for unguilded users on the shared channel too.
+    unguilded=fresh()
+    unguilded.execute("inGuild=false; rows={damage('Enemy Person',947)}; fight(); peace(); assert(reportCount()==1)")
+    unguilded.execute("assert(sentRoutes[1]=='CHANNEL' and sentTargets[1]=='7'); assert(not A.toast or not A.toast:IsShown())")
 
     # Combat/flag alone, NPC/pet amounts, empty targets, aggregate totals and secrets fail closed.
     for detail in ["damage('Enemy Person',0)", "damage('Enemy Person',10,true)", "damage('Enemy Person',10,false,true)",

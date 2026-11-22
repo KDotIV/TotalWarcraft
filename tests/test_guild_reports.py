@@ -18,7 +18,7 @@ local r=A.List()[1]
 assert(r.test and r.count==4 and r.observedCount==2 and r.syntheticCount==2)
 assert(not r.countUnknown and A.lastSnapshot.players[1].pvpFlagged==false)
 assert(A.lastSnapshot.players[1].simulatedCombat)
-assert(A.toast.title.text:find('[TEST]',1,true) and A.toast.shown)
+assert(not A.toast or not A.toast.shown) -- own report never alerts
 WarbandPvP.Report(); assert(sends==1) -- cooldown
 ''')
 packet = alice.globals().packets[1]

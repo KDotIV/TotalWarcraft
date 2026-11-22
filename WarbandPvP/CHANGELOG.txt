@@ -1,3 +1,13 @@
+TotalWarcraft 0.7.8
+November 22, 2026 - Release - WoW Forever 1.60.1
+
+- Your own reports remain on the map without showing a notification popup.
+- Report details requested during combat wait until combat ends and still expire normally.
+- TotalWarcraft close buttons close their own windows directly, avoiding Blizzard panel actions.
+- Session exports include combat/report decisions, UI actions, blocked functions, readable
+  Lua errors and loaded-addon versions, with bounded buffers and no automatic uploads.
+- Removed a leftover guild requirement from automatic damage-verified reports.
+
 TotalWarcraft 0.7.7
 November 22, 2026 - Release - WoW Forever 1.60.1
 

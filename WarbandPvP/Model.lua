@@ -74,7 +74,7 @@ function A.Prune(now)
     return changed
 end
 
-function A.Receive(r)
+function A.Receive(r, localSubmission)
     if not A.db then return false, "Not initialized" end
 --@dev
     if type(r) == "table" and r.test == true and not A.testMode then return false, "Test mode disabled" end
@@ -85,6 +85,8 @@ function A.Receive(r)
     if not clean then return false, reason end
     A.Prune(now)
     local old = A.records[clean.id]
+    -- Local provenance is never accepted from a wire payload.
+    clean.localSubmission = localSubmission == true or (old and old.localSubmission == true) or nil
     if old and clean.updatedAt <= old.updatedAt then return false, "Stale or duplicate" end
     if not old then
         local size, oldest = 0, nil

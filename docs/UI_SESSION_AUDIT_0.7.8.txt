@@ -1,0 +1,123 @@
+TotalWarcraft 0.7.8 - UI and session journal audit
+November 22, 2026
+
+REPORTED INCIDENT
+The 0.7.7 session exported by Vitals Shienx shows a successful CHANNEL send
+after incoming opposing-player damage was confirmed for meter session 16.
+The reporter saw their own toast, then clicked it while still fighting.
+WoW displayed "Interface action failed because of an AddOn".
+That export contains no blocked-function or click event. It does NOT establish
+which addon/function was blocked or whether any third-party addon caused it.
+
+CHANGES
+- Accepted local submissions carry local-only provenance after validation.
+  Self echoes also compare the normalized full player identity. Neither can
+  produce a toast or consume the next peer-alert cooldown.
+- A clicked report waits for PLAYER_REGEN_ENABLED before opening details.
+  The next-frame callback checks lockdown again. Expired/deleted reports, zone
+  transitions and another open TotalWarcraft window cancel the deferred view.
+  Right-click dismisses only. Map pins and stored own reports remain available.
+- Our close buttons call Hide on their own custom frame. They do not invoke the
+  Blizzard UIPanel manager. This is an additional combat safeguard, not proof
+  that the user's original LEFT-click failure came from the close button.
+- An old IsInGuild condition remained in AutoReports despite the 0.7.7 shared
+  transport. It has been removed. Unguilded users now take the same automatic
+  incoming-damage verification/send path.
+
+SESSION JOURNAL V2
+Relevant lifecycle, combat/target state, verification starts/reads/outcomes,
+observed enemy identities, one matched damage row, report sends/receipts and
+duplicates, channel state, commands (verb only), window/button/map actions,
+UI errors and native blocked/forbidden actions are recorded.
+Existing Finder, invitation, warband, scouting and transfer traces remain.
+Named-addon/function fields are native attribution, not proof of original taint.
+
+Readable Lua messages/stacks delivered to ScriptErrorsFrame are observed using
+a secure post-hook. TotalWarcraft button errors are logged and rethrown.
+No replacement of geterrorhandler/seterrorhandler, no changes to scriptErrors
+CVars, no error suppression and no inspection of error locals. If another error
+handler intercepts an error before Blizzard receives it, this observer cannot
+promise that error will appear. Export states whether the observer attached.
+
+Loaded-addon versions (up to 256), game build, ruleset and faction remain in the
+export header even after old activity is evicted. Names/locations/error text can
+appear. No chat-event subscription, packet contents or automatic upload.
+
+This is a bounded operational journal, not every WoW event or every damage hit:
+1500 activity entries (600-character messages), 64 separately reserved issue
+entries (1600-character messages), finite burst/rate budgets and omission counts.
+Routine floods cannot consume the issue budget. Logging adds no polling timer.
+Export before reload/logout; the journal intentionally resets at the next UI
+session. No dummy data, diagnostic command or development tool was added to
+the release build.
+
+INSTALLED ADDON SOURCE REVIEW (NOT LIVE COMPATIBILITY CERTIFICATION)
+Root: E:/World of Warcraft/_forever_/Interface/AddOns
+- OpenMap v0.8.12: API.lua exposes major 1 callbacks and stitched transforms.
+  TotalWarcraft continues to use its optional public callback/transform API
+  and its own native MapCanvas provider/pin templates. No replacement of
+  OpenMap methods or ownership of its frame/pins.
+- LayerSwap 1.14.45: LayerSwap.lua lines around 5130 already directly hide its
+  close-button parent to avoid HideUIPanel during combat. Our invitation flow
+  remains explicitly scoped; native invite observation is passive and labels
+  outside calls as origin unverified. We do not disable its host feature.
+- DialogueUI 1.0.7 c: its UIParent visibility observer uses a separate child
+  frame. We do not change UIParent scripts or native NPC-interaction handlers.
+- AtlasLoot Forever (AtlasLootClassic) v1.4.7: inspected its addon-message
+  handling and item/chat-link hooks. TotalWarcraft keeps separate prefixes and
+  does not replace SetItemRef or ordinary chat filters.
+- Prat 3.9.117: inspected chat-edit hooks and searched handler/panel integration.
+  No changes made to its chat frames, channel numbering or message filters.
+
+PRIMARY CLIENT SOURCE USED
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_ScriptErrors/Blizzard_ScriptErrors.lua
+https://github.com/Gethe/wow-ui-source/blob/forever/Interface/AddOns/Blizzard_ScriptErrorsFrame/Blizzard_ScriptErrorsFrame.lua
+These show the secure-only AddLuaErrorHandler registration and the normal
+DisplayMessageInternal(message, messageType, stack, locals) route. The addon
+does not attempt secure-only registration.
+
+OFFLINE VALIDATION
+All 20 tests/test_*.py suites passed, including source and compiled Release.
+New shared scenarios cover:
+- own reports, normalized self echoes, cross-route deduplication, peer toasts;
+- no frame creation/native panel actions on a combat toast click;
+- post-combat opening, expiry/removal/zone/window cancellation, right-click;
+- direct custom close in combat, no repeated deferred request on refresh;
+- untrusted local-provenance input rejection;
+- preserving normal error-handler processing and callback return values;
+- blocked/forbidden capture, secret redaction, no locals, inventory, budgets;
+- automatic unguilded damage report over CHANNEL.
+Existing OpenMap transforms, Finder ownership/consent, UI navigation, report
+validation, release stripping and no-idle-timer regressions also pass.
+Offline mocks cannot reproduce the game's taint engine or prove addon coexistence.
+
+LIVE CHECK
+1. Export any old session needed, then /reload with all usual addons enabled.
+2. /tw status should show 0.7.8 and the shared report channel connected.
+3. In real qualifying PvP, your own report should appear on the map without a
+   toast. It may only be submitted after combat ends, when the native damage
+   meter is readable; a later attacker does not invalidate that completed check.
+4. Have a same-scope peer submit /tw report (no opposing player needed for this
+   manual UI check). Click their notification while in combat, including an NPC
+   fight. Details should wait, then open once combat ends if still fresh.
+5. Close a TotalWarcraft window during combat; it should close normally.
+6. Try map navigation with OpenMap, normal NPC dialogue, AtlasLoot and Prat as
+   usual. /tw export before any reload, especially immediately after an error.
+7. Share the export with the action/time that triggered the issue. The named
+   addon and function provide evidence for a targeted follow-up.
+
+PUBLICATION
+Release publication was requested after the local installation and offline
+checks. The existing 0.7.7 upload and immutable tag remain unchanged. The 0.7.8
+publication receipt will record the new file, immutable tag and CI results.
+Native taint behavior and combined-addon compatibility still need live follow-up.
+
+LOCAL INSTALLATION
+Installed the production-flavor 0.7.8 package on November 22, 2026, 12:15 PM
+America/New_York. All 30 files were hash-verified in:
+E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP
+Previous installation backed up to:
+releases/installed-backups/WarbandPvP-before-0.7.8-20261122-171559.zip
+ZIP: releases/TotalWarcraft-0.7.8-release.zip
+Final regression output: releases/validation-0.7.8.log (20 suites, exit 0).
+No other addons or saved settings were modified. /reload loads this Lua patch.

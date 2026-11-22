@@ -24,6 +24,13 @@ function A.CountText(r)
 end
 function A.ShowDetails(r)
     if not r or r.expiresAt <= GetServerTime() or not A.records[r.id] then return end
+    if A.WB.Read(InCombatLockdown) ~= false then
+        A.pendingDetails = r.id
+        A.Trace("UI_DEFER","report details until combat ends id="..r.id)
+        A.Print("Report details will open after combat.")
+        return
+    end
+    A.pendingDetails = nil
     if not A.details then
         local f = A.Surface("WarbandPvPDetails",580,720,"FIELD REPORT")
         A.details = f
@@ -59,7 +66,7 @@ function A.RefreshReportSurfaces()
         if f and f.record then
             local r = A.records[f.record.id]
             if not r or r.expiresAt <= now then f.record=nil; if f.ctaWindow then A.InvalidateWindow(f) else f:Hide() end
-            elseif f == A.details and f:IsShown() then A.ShowDetails(r) end
+            elseif f == A.details and f:IsShown() and A.WB.Read(InCombatLockdown)==false then A.ShowDetails(r) end
         end
     end
     -- A report hovered from a list row may outlive its row unless explicitly cleared.
@@ -68,8 +75,13 @@ function A.RefreshReportSurfaces()
     end
     if A.RefreshScoutUI then A.RefreshScoutUI() end
 end
+function A.IsOwnReport(r)
+    local own=A.WB.Key(A.WB.UnitName("player"))
+    return r and (r.localSubmission == true or (own and A.WB.Key(r.reporter)==own))
+end
 function A.ShowToast(r)
-    if A.ActiveWindow() then return end
+    if A.IsOwnReport(r) then return false end
+    if A.ActiveWindow() then A.Trace("ALERT_SKIP","window open id="..(r.id or "none")); return false end
     if not A.toast then
         local f = surface("Button",nil,300,88)
         A.toast = f; f:SetPoint("TOPRIGHT",UIParent,"TOPRIGHT",-30,-180)
@@ -77,10 +89,11 @@ function A.ShowToast(r)
         f.title=label(f,12,-10,275,"GameFontNormal")
         f.location=label(f,12,-31,275)
         f.hint=label(f,12,-53,275)
-        f:SetScript("OnClick",function(self,button)
-            if button == "LeftButton" and self.record then A.ShowDetails(self.record) end
+        f:SetScript("OnClick",A.UIAction("report notification",function(self,button)
+            A.Trace("ALERT_CLICK","button="..A.LogValue(button,24).." id="..(self.record and self.record.id or "none"))
             self:Hide()
-        end)
+            if button == "LeftButton" and self.record then A.ShowDetails(self.record) end
+        end))
     end
     local f=A.toast; f.record=r
     f.title:SetText(A.DisplayTitle(r))
@@ -89,4 +102,25 @@ function A.ShowToast(r)
     f.hint:SetText((count~="" and count.."\n" or "").."Click: details   Right-click: dismiss")
     if A.toastTimer then A.toastTimer:Cancel() end
     f:Show(); A.toastTimer=C_Timer.NewTimer(10,function() f:Hide(); A.toastTimer=nil end)
+    A.Trace("ALERT_SHOW","id="..r.id)
+    return true
+end
+
+function A.InitNotifications()
+    local frame=CreateFrame("Frame")
+    frame:RegisterEvent("PLAYER_REGEN_ENABLED"); frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    frame:SetScript("OnEvent",function(_,event)
+        if event=="PLAYER_ENTERING_WORLD" then A.pendingDetails=nil; return end
+        if not A.pendingDetails then return end
+        C_Timer.After(0,function()
+            if A.WB.Read(InCombatLockdown)~=false then return end
+            local id=A.pendingDetails; A.pendingDetails=nil
+            if not id then return end
+            local r=A.records[id]
+            if not r or r.expiresAt<=GetServerTime() or A.ActiveWindow() then
+                A.Trace("UI_DEFER_CANCEL","report expired, removed or another window opened id="..id); return
+            end
+            A.UIAction("deferred report details",function() A.ShowDetails(r) end)()
+        end)
+    end)
 end
