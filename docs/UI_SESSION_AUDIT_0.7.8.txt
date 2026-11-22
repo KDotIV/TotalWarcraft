@@ -107,9 +107,10 @@ LIVE CHECK
    addon and function provide evidence for a targeted follow-up.
 
 PUBLICATION
-Release publication was requested after the local installation and offline
-checks. The existing 0.7.7 upload and immutable tag remain unchanged. The 0.7.8
-publication receipt will record the new file, immutable tag and CI results.
+Release publication completed through GitHub Actions after the local and CI
+checks. CurseForge accepted Release file 9756275; public visibility was not yet
+confirmed. See CURSEFORGE_SUBMISSION_0.7.8.txt for the immutable tag and receipt.
+The existing 0.7.7 upload and immutable tag remain unchanged.
 Native taint behavior and combined-addon compatibility still need live follow-up.
 
 LOCAL INSTALLATION
@@ -121,3 +122,6 @@ releases/installed-backups/WarbandPvP-before-0.7.8-20261122-171559.zip
 ZIP: releases/TotalWarcraft-0.7.8-release.zip
 Final regression output: releases/validation-0.7.8.log (20 suites, exit 0).
 No other addons or saved settings were modified. /reload loads this Lua patch.
+The final Release changelog was installed again at 12:27 PM, with all 30 files
+verified against the uploaded artifact. Backup:
+releases/installed-backups/WarbandPvP-before-0.7.8-20261122-172721.zip

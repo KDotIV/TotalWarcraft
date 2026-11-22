@@ -1,0 +1,47 @@
+TOTALWARCRAFT 0.7.8 - RELEASE UPLOAD RECEIPT
+November 22, 2026. Workflow artifact completed 12:27:21 PM America/New_York.
+
+CurseForge project 1819796, file 9756275, releaseType=release, Forever 1.60.1.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9756275
+Upload accepted; automatic publication after moderation requested.
+Public availability was not confirmed: the browser returned 404 for the new
+file page during verification. The author portal was not signed in in that
+browser. The upload receipt is confirmed, but approval/indexing state is not.
+Do not repeat the upload merely because the public page is not visible yet.
+
+Immutable tag v0.7.8 -> 4adbfdbf590b40819f54a3b08c67e5bd2aabd97c.
+https://github.com/KDotIV/TotalWarcraft/tree/v0.7.8
+Publish run 45049493007: success. Main CI 45049492930: success.
+https://github.com/KDotIV/TotalWarcraft/actions/runs/45049493007
+All 20 offline suites passed locally and in Linux CI before upload, including
+the actual compiled Release package and its exclusion of development tools.
+Only the 0.7.8 changelog section was submitted to CurseForge.
+
+The changelog includes:
+- No notification popup for the reporter's own activity; map pins retained.
+- Combat-deferred report details with normal expiry.
+- Direct close of TotalWarcraft windows instead of Blizzard panel actions.
+- Expanded bounded session journal, UI/block/error details and addon versions.
+- Removal of the leftover guild gate from automatic damage-verified reports.
+The original live blocked function remains unidentified. The safeguards and
+logging are implemented and regression-tested; combined-addon native taint
+behavior still needs the follow-up described in UI_SESSION_AUDIT_0.7.8.txt.
+
+Artifact 14764554360, release-receipt, downloaded and SHA256 verified:
+3f4b137de25042eeeb9203020d396c461b7c2474460572d7a93818f81313b486.
+Uploaded archive SHA256:
+ca702e77ccece3cc8f9c723d2cd7c02d4b6796f839273e16cdfed79219413c23.
+Local archive SHA256:
+25bf852aa5cdb2cb2490ba910c093bbb3e9f6ca500e102b7b834f9e58e6e9c8b.
+All 30 archive entries match byte for byte; ZIP platform metadata differs.
+All 30 uploaded entries also match the installed files.
+Local ZIP: releases/TotalWarcraft-0.7.8-release.zip.
+Uploaded ZIP: releases/TotalWarcraft-0.7.8-uploaded-release.zip.
+Receipt: releases/curseforge-receipt-0.7.8.json.
+Final local regression output: releases/validation-0.7.8.log.
+
+Refreshed the local production installation with the final release changelog:
+E:/World of Warcraft/_forever_/Interface/AddOns/WarbandPvP.
+Backup: releases/installed-backups/WarbandPvP-before-0.7.8-20261122-172721.zip.
+No other addons or saved settings were modified. Export any old log needed,
+then /reload to load the patch. Export again before reloading if an error occurs.

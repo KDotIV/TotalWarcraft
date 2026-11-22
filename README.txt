@@ -52,14 +52,14 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
-Version 0.7.7 passed all 19 suites locally and in GitHub CI and was uploaded to
-CurseForge as Release file 9754372. Public approval/indexing is not yet verified.
-All 30 uploaded files matched the tested 0.7.7 production build at installation.
-Receipt: docs/CURSEFORGE_SUBMISSION_0.7.7.txt.
-https://www.curseforge.com/wow/addons/total-warcraft/files/9754372
-The 0.7.8 patch adds notification safeguards and expanded diagnostics; all 20
-offline suites passed locally. See docs/UI_SESSION_AUDIT_0.7.8.txt for live checks.
-Release publication is in progress; the upload receipt will be recorded separately.
+Version 0.7.8 passed all 20 suites locally and in GitHub CI and was uploaded to
+CurseForge as Release file 9756275. The public file page returned 404 during
+verification; approval/indexing state is not yet confirmed.
+All 30 uploaded files match the tested and installed 0.7.8 production build.
+Receipt: docs/CURSEFORGE_SUBMISSION_0.7.8.txt.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9756275
+See docs/UI_SESSION_AUDIT_0.7.8.txt for the notification and journal audit and
+the remaining live compatibility checks with other addons.
 See docs/REFINEMENTS_0.7.3.txt for current live acceptance steps and
 docs/DAMAGE_VERIFICATION_DESIGN.txt for the incoming-damage checks and their evidence limits.
 
