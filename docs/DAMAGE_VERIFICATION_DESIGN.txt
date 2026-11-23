@@ -1,5 +1,5 @@
 TOTALWARCRAFT - DAMAGE VERIFICATION DESIGN
-LOCAL FIX FOR 0.7.10, November 23: user chose strict NPC protection with verified
+IMPLEMENTED FOR 0.7.10, November 23: user chose strict NPC protection with verified
 reports allowed after combat. The latest 0.7.9 live battle found an opponent and
 a fresh session, but all 14 in-combat checks had unavailable attribution. Capture
 now survives combat end/death; native reads wait for combat AND lockdown to clear.

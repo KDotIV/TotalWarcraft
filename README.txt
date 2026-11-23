@@ -58,7 +58,12 @@ Public packages use the production build flavor and CurseForge Release stage.
 Version 0.7.10 restores strict post-combat verification after the 0.7.9 live test
 recorded 14 checks with no readable attribution during a 70-second PvP fight.
 It retains captures through death and reports at the captured fight location.
-This local fix has not been published. See docs/LIVE_ACTIVITY_REPORTING.txt.
+CurseForge accepted 0.7.10 as Release file 9777566 after all 20 suites passed in
+GitHub CI. All 30 uploaded files match the local build. Public approval/indexing
+remains unconfirmed; the file page returned HTTP 403 during verification.
+Receipt: docs/CURSEFORGE_SUBMISSION_0.7.10.txt.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9777566
+Live-test details: docs/LIVE_ACTIVITY_REPORTING.txt.
 Version 0.7.9 introduced five-second in-combat checks, which failed that live test.
 All 20 suites passed locally and in GitHub CI. CurseForge accepted Release file
 9775730; all 30 uploaded files match the tested local package. The public file

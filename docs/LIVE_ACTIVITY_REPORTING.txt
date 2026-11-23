@@ -1,6 +1,6 @@
 TOTALWARCRAFT - AUTOMATIC REPORTING LIVE RESULTS AND FIX
 
-0.7.10 LOCAL FIX - November 23, 2026
+0.7.10 FIX - November 23, 2026
 User selected: keep strict NPC protection; allow verified reports after combat.
 
 The 0.7.9 battle export (Forever build 71037, map 1417) retains a complete final
@@ -35,7 +35,8 @@ updates, persistent restrictions, unrelated secret rows, NPC/pet-only damage,
 restarts, stale callbacks and timer expiration, against source and compiled Release.
 These fixtures do not reconstruct damage values absent from the supplied log.
 
-The 0.7.10 fix is local and still needs a live test before claiming success.
+The 0.7.10 fix was uploaded as CurseForge Release file 9777566. It still needs a
+live test before claiming successful reporting. See CURSEFORGE_SUBMISSION_0.7.10.txt.
 All 20 offline suites passed, including the compiled production package.
 Validation output: releases/validation-0.7.10.log.
 Package for the live check: releases/TotalWarcraft-0.7.10-release.zip.

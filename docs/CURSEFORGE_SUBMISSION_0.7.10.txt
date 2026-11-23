@@ -1,0 +1,47 @@
+TOTALWARCRAFT 0.7.10 - RELEASE UPLOAD RECEIPT
+November 23, 2026. Upload accepted at 1:02:47 PM America/New_York.
+
+CurseForge project 1819796, file 9777566, releaseType=release, Forever 1.60.1.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9777566
+Upload accepted; automatic publication after moderation requested.
+Public availability remains unconfirmed: the public file page returned HTTP 403
+during verification. This does not establish approval or rejection. Do not repeat
+the successful upload because the public page cannot be verified.
+
+Immutable tag v0.7.10 -> 9c875debe3045d5955266cd4cb5127466f42fd16.
+https://github.com/KDotIV/TotalWarcraft/tree/v0.7.10
+Publish run 45234064104: success. Main CI 45234064517: success.
+https://github.com/KDotIV/TotalWarcraft/actions/runs/45234064104
+https://github.com/KDotIV/TotalWarcraft/actions/runs/45234064517
+All 20 offline suites passed locally before release preparation and again in
+Linux CI before upload. The final release notes passed local publication checks.
+The compiled Release package excludes development tools. Only the 0.7.10
+changelog section was submitted to CurseForge.
+
+RELEASE BEHAVIOR
+- Restore strict post-combat verification after 0.7.9 failed to read live damage.
+- Retain the observed opponents and fight location through combat end/death.
+- Read only after combat and lockdown clear, with at most three bounded checks
+  beginning around 0.5 seconds after combat end, then 2.0 and 3.5 seconds.
+- Require positive per-unit damage attributed to an observed opposing player;
+  either incoming or outgoing can qualify. No target/flag/aggregate fallback.
+- Retain NPC/pet, duel, instance, identity, one-attempt and cooldown safeguards.
+- Short fights can report afterward. Resumed combat/context changes cancel reads.
+- Offline tests include a 70-second fight ending in death with lingering lockdown.
+  The corrected flow still requires live client verification.
+
+VERIFICATION
+Artifact 14848177711, release-receipt, downloaded and SHA256 verified:
+57b0f3ed3b65aacddd1b3c7dd542266f64a1497dd882ce6b3780bb6967d0abd7.
+Uploaded archive SHA256:
+be7f0d478e325f79dcd3745a045a168909200bf8f7b41bb8e9c22b297f785c01.
+Local final archive SHA256:
+e525ff0f4bf4edcaa37127a30b19ca6b1895a34980c4b8406613506f6dde86c8.
+All 30 archive entries match byte for byte; ZIP platform metadata differs.
+Local ZIP: releases/TotalWarcraft-0.7.10-release.zip.
+Uploaded ZIP: releases/TotalWarcraft-0.7.10-uploaded-release.zip.
+Receipt artifact: releases/TotalWarcraft-0.7.10-release-receipt.zip.
+Receipt: releases/curseforge-receipt-0.7.10.json.
+Local regression output: releases/validation-0.7.10.log.
+
+No local WoW installation or saved settings were changed during publication.
