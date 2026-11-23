@@ -6,4 +6,4 @@ lua.execute('''
 A.SetTestMode(true); combat=true; step(); assert(reportCount()==0)
 A.SetTestMode(false); A.warbands.simulationCount=5; step(); assert(reportCount()==0)
 ''')
-print('PASS: native incoming player damage, live-shaped rows, NPC/pet rejection, fresh correlated sessions, exclusions, interrupted/restarted combat, captured location, bounded reads, manual cooldown and peer delivery.')
+print('PASS: five-second in-combat incoming/outgoing activity, Wide Guy regression, NPC/pet/secret rejection, fresh damage, exclusions, timer cancellation, current location, cooldown and peer delivery.')

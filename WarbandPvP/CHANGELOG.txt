@@ -1,3 +1,18 @@
+TotalWarcraft 0.7.9
+November 23, 2026 - Release - WoW Forever 1.60.1
+
+- Automatic captures check for PvP activity every five seconds during combat.
+  New readable incoming OR outgoing damage attributed to an observed opposing
+  player can trigger a report while the fight continues.
+- Ending combat cancels the pending check. Fights ending before a successful
+  check do not send a delayed automatic report; already sent reports remain.
+- NPC/pet, duel, instance, identity and shared two-minute cooldown safeguards
+  remain. Each combat has at most one automatic submission attempt.
+- Reports use the current location when submitted. Session logs show combat
+  checks, damage direction, missing sessions and unavailable attribution.
+- Forever restricts native damage details during combat. Unreadable attribution
+  skips the report; live in-combat reporting still needs client verification.
+
 TotalWarcraft 0.7.8
 November 22, 2026 - Release - WoW Forever 1.60.1
 

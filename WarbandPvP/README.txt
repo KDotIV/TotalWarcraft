@@ -1,4 +1,4 @@
-TOTALWARCRAFT - 0.7.8
+TOTALWARCRAFT - 0.7.9
 World of Warcraft: Forever 1.60.1 (Interface 16001)
 
 Formerly Warband-PvP. /tw is primary; /totalwarcraft and /wb also work.
@@ -15,15 +15,19 @@ header to move a window. Show on map closes TotalWarcraft dialogs and opens the 
 
 FIELD REPORTS
 Automatic reports are on by default; toggle on /tw or with /tw auto on/off.
-After combat ends, readable incoming damage must match a visible, attackable,
-PvP-flagged opposing player observed during that fight. Incoming damage is enough;
-outgoing damage is not required. The report uses the captured fight location.
+Capture starts a five-second timer. While combat continues, each tick checks for
+new readable incoming OR outgoing damage attributed to a visible, attackable,
+PvP-flagged opposing player observed during that fight. One direction is enough.
+The report uses your location at that tick. Ending combat cancels the timer;
+there is no delayed automatic report after the fight.
 NPCs, same-faction targets, instances and sanctuary/FFA rules do not qualify.
 Unreadable required checks skip reporting. A reload during combat waits for
-combat to end before reporting automatically. Duel events and outgoing requests
+the next fresh fight before reporting automatically. Duel events and outgoing requests
 suppress reports through the duel and a short settling period. Manual reporting
 also respects local duel holds. No blanket city exclusion hides real city raids.
-Missing/ambiguous meter data skips the automatic report. This local attribution
+Forever may restrict native damage details during combat. Missing/restricted or
+ambiguous attribution skips that tick; it never falls back to targeting or NPC
+damage. The live in-combat path still needs acceptance testing. This attribution
 does not authenticate another client's claims, prove a kill or establish team size.
 
 An automatic attempt happens at most once per combat. Successful submissions

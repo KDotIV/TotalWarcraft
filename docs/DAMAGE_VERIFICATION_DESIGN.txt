@@ -1,4 +1,13 @@
 TOTALWARCRAFT - DAMAGE VERIFICATION DESIGN
+IMPLEMENTED FOR 0.7.9, November 23: automatic capture checks every five seconds during
+combat and cancels at combat end. Readable DamageTaken OR DamageDone per-unit
+amounts must increase for an observed opposing player in a fresh, event-correlated
+session. Aggregate spell/session totals never substitute for unit attribution.
+Later ticks require changes since the last readable snapshot; a missing snapshot
+requires re-priming before a subsequent increase can qualify. The current tick's
+location is reported. One automatic attempt per fight and the shared cooldown
+remain. See docs/LIVE_ACTIVITY_REPORTING.txt for the supplied log and limitations.
+
 IMPLEMENTED FOR 0.7.6, November 22: the owner accepted attributable incoming
 opposing-player damage as sufficient. The live build-71037 capture demonstrated
 947 incoming damage from the observed player; the NPC control stayed negative.

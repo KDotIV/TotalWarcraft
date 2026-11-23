@@ -1,4 +1,4 @@
-TOTALWARCRAFT 0.7.8
+TOTALWARCRAFT 0.7.9
 World of Warcraft: Forever only (Interface 16001)
 
 Quickly form parties to seek out world PvP or rally your faction to retaliate
@@ -9,8 +9,10 @@ for warbands. One managed dialog is visible at a time, with Back navigation and
 a draggable military frame. No external backend or third-party library is needed.
 
 FEATURES
-- Automatic reports require attributable incoming opposing-player damage after
-  combat, with fresh-session, identity, duel/NPC/pet/FFA/instance safeguards.
+- Automatic reports check every five seconds during combat for new attributable
+  incoming or outgoing opposing-player damage. Ending combat cancels the timer.
+  Fresh-session, identity, duel/NPC/pet/FFA/instance safeguards remain in place.
+  Restricted live meter data skips reporting; live acceptance is still required.
   Manual reports remain available via /tw report or a keybind; shared cooldown.
 - Compact known-only tooltips and fading nearby-report clusters: scaled swords,
   pulsing red halo and native red weapons/raid skull for heavy reported activity.
@@ -37,7 +39,7 @@ FEATURES
 
 EVIDENCE LIMITS
 Fight size and exact layers remain unconfirmed. Automatic local reports now use
-attributable incoming player damage; manual and received reports remain claims.
+attributable incoming or outgoing player damage; manual and received reports remain claims.
 GUID components
 are not cross-client layer keys. A UUID, map position, listing, native group join
 or transfer event does not establish arrival at the original fight. Parties-only
@@ -52,6 +54,9 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
+Version 0.7.9 adds five-second checks during combat, with incoming or outgoing
+player attribution and cancellation at combat end. Native in-combat attribution
+still needs live acceptance. See docs/LIVE_ACTIVITY_REPORTING.txt.
 Version 0.7.8 passed all 20 suites locally and in GitHub CI and was uploaded to
 CurseForge as Release file 9756275. The public file page returned 404 during
 verification; approval/indexing state is not yet confirmed.

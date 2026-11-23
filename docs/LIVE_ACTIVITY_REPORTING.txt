@@ -1,0 +1,62 @@
+TOTALWARCRAFT - FIVE-SECOND ACTIVITY CAPTURE
+November 23, 2026. Prepared for TotalWarcraft 0.7.9 Release.
+
+REFERENCE LOG
+The supplied 0.7.8 release session identifies the local character as Vitals Shienx
+and the opposing player as wide-guy. The first capture starts at +587.801 and
+ends at +598.788, approximately eleven seconds later. Subsequent short captures
+last around five to six seconds. Some restarts interrupt pending post-combat
+checks; completed checks repeatedly skip with no attributable incoming damage.
+The export establishes observation of Wide Guy, not damage direction or amount.
+NPC captures correctly record zero opponents. No private log is copied here.
+
+BEHAVIOR
+- Start one five-second timer when an eligible fresh capture begins.
+- Check while still in combat, repeating every five seconds until submission,
+  combat end, invalidation or the existing fifteen-minute capture limit.
+- Require a fresh correlated native session, readable local source identity,
+  positive new per-unit damage, and an unambiguous observed opposing player.
+- DamageTaken and DamageDone are independent; either direction can qualify.
+  Both use combatSpellDetails.amount and reject mob/pet unit details. TotalAmount
+  is never accepted in place of missing per-unit attribution.
+- Compare each tick with prior readable amounts, retaining high-water marks.
+  An unreadable/missing sample requires re-priming before later growth qualifies.
+  Unseen player names are included in baselines so later targeting cannot replay
+  old damage. Rows, identities, sessions and capture lifetime remain bounded.
+- Submit at the current position while still in the captured map. Preserve one
+  attempt per combat, shared two-minute cooldown and existing channel transport.
+- Cancel at combat end, disable/reload, zone/transfer/reset, or invalid context.
+  Short fights do not produce delayed reports. No idle timer is left running.
+- Journal records interval=5, phase=combat checks, accepted direction/opponent,
+  and missing session / restricted attribution / no recent evidence separately.
+
+NATIVE LIMITATION
+Blizzard marks GetCombatSessionFromID and GetCombatSessionSourceFromID as
+SecretWhenInCombat. Protected fields remain unusable. The new timer does not
+bypass this: calls are guarded and every field is checked before use. If live
+damage attribution is unavailable, it skips instead of substituting UNIT_COMBAT,
+health changes, target selection or combat flags, which cannot exclude unrelated
+NPC damage. Five-second reports on the current live client are NOT established.
+The prior live DamageDone samples also lacked victim attribution. This change
+accepts that direction only if readable per-unit evidence actually exists.
+
+Source checked November 23:
+https://raw.githubusercontent.com/Gethe/wow-ui-source/734f065329cff4992835b01a84f210a297db91b6/Interface/AddOns/Blizzard_APIDocumentationGenerated/DamageMeterDocumentation.lua
+
+ACCEPTANCE
+All 20 offline suites passed with .venv\Scripts\python.exe tools/run_tests.py,
+including the compiled Release and deterministic packaging checks.
+Offline scenarios run against source and the physically compiled Release:
+five-second timing, incoming/outgoing branches, eleven-second Wide Guy scenario,
+current location, short fights and rapid restarts, stale callbacks, NPC/pet and
+unseen-player rows, secret/error/empty/malformed data, stale/changed sessions,
+restricted-to-readable transitions, exclusions, manual cooldown, no retry after
+failure, unguilded channel delivery and bounded timers. These are synthetic API
+fixtures, not a replay of native damage absent from the supplied log.
+
+Live acceptance still needed: ordinary NPC fight; NPC fight with a flagged enemy
+selected; incoming-only and outgoing-only outdoor PvP lasting over ten seconds;
+combat ending before five seconds; and a zone change/duel. Export with /tw export
+afterward. A successful live case must show phase=combat and REPORT_AUTO before
+PLAYER_REGEN_ENABLED. If attribution is restricted, the expected result is a
+logged skip; do not describe that as successful live activity detection.

@@ -2,6 +2,7 @@ local _,A=...
 local P=A.WB
 local R={}
 A.autoReports=R
+local INTERVAL=5
 local function secret(v) return issecretvalue and issecretvalue(v) end
 local function field(t,k)
     if secret(t) or type(t)~="table" then return end
@@ -30,7 +31,9 @@ local function quiet()
     return P.Read(UnitAffectingCombat,"player")==false and P.Read(InCombatLockdown)==false
 end
 local function meter(fn,...)
-    if quiet() then return P.Read(field(C_DamageMeter,fn),...) end
+    -- Native meter results may be secret in combat. Readable fields only;
+    -- never use aggregate totals, combat flags or targets to replace attribution.
+    return P.Read(field(C_DamageMeter,fn),...)
 end
 local function catalog()
     if meter("IsDamageMeterAvailable")~=true then return end
@@ -91,8 +94,8 @@ local function observe(unit)
     if c.names[key] and c.names[key]~=guid then c.ambiguous[key]=true end
     c.names[key]=guid
 end
-local function incoming(c,sid)
-    local kind=field(field(Enum,"DamageMeterType"),"DamageTaken")
+local function damage(c,sid,category)
+    local kind=field(field(Enum,"DamageMeterType"),category)
     if not number(kind,0,100) then return end
     local rows=array(field(meter("GetCombatSessionFromID",sid,kind),"combatSources"),64)
     if not rows then return end
@@ -103,45 +106,78 @@ local function incoming(c,sid)
     if count~=1 or not matched then return end
     local spells=array(field(meter("GetCombatSessionSourceFromID",sid,kind,c.selfGUID,nil),"combatSpells"),512)
     if not spells then return end
+    local totals={}
     for _,spell in ipairs(spells) do
         local d=field(spell,"combatSpellDetails")
         local key=name(field(d,"unitName"))
-        if key and c.names[key] and not c.ambiguous[key] and number(field(d,"amount"),.000001,1e12)
-            and field(d,"isMob")==false and field(d,"isPet")==false then
-                trace("REPORT_DAMAGE_SOURCE","session="..sid.." enemy="..key.." damage="..field(d,"amount"))
-                return true
-            end
+        local amount=field(d,"amount")
+        -- A partial/restricted snapshot cannot establish a later damage delta.
+        if not key or not number(amount,0,1e12) or field(d,"isMob")==nil or field(d,"isPet")==nil then return end
+        if field(d,"isMob")==false and field(d,"isPet")==false then
+            totals[key]=(totals[key] or 0)+amount
+            if totals[key]>1e12 then return end
+        end
     end
+    return totals
 end
 local inspect
 local function schedule(c)
-    R.timer=C_Timer.NewTimer(c.reads==0 and .5 or 1.5,function()
+    R.timer=C_Timer.NewTimer(INTERVAL,function()
+        if R.capture~=c then return end
         R.timer=nil
-        if R.capture==c then inspect(c) end
+        inspect(c)
     end)
 end
 inspect=function(c)
+    A.UpdateAutoReports()
+    if R.capture~=c then return end
     local loc=location()
-    if not quiet() or not allowed() or not loc or loc.mapID~=c.loc.mapID or c.blocked
-        or GetTime()-c.started>900 or not A.db.autoReports then cancel(); R.baseline=nil; return end
+    if P.Read(UnitAffectingCombat,"player")~=true or not allowed() or not loc or loc.mapID~=c.loc.mapID or c.blocked
+        or GetTime()-c.started>=900 or not A.db.autoReports then
+        skip("activity capture invalidated"); cancel(); R.baseline=nil; R.awaitPeace=true; return
+    end
     c.reads=c.reads+1
     local ids=catalog(); local sid,total=nil,0
     if ids then for id in pairs(ids) do if not c.baseline[id] then sid=id; total=total+1 end end end
-    trace("REPORT_VERIFY","read="..c.reads.." freshSessions="..total.." observedOpponents="..c.count)
+    trace("REPORT_VERIFY","phase=combat read="..c.reads.." freshSessions="..total.." observedOpponents="..c.count)
     if total>1 or (c.sid and sid and c.sid~=sid) then
-        skip("multiple/changed meter sessions"); cancel(); R.baseline=ids; return
+        skip("multiple/changed meter sessions"); cancel(); R.baseline=nil; R.awaitPeace=true; return
     end
     c.sid=sid or c.sid
-    if total==1 and c.updated[sid] and incoming(c,sid) then
-        -- Incoming damage suffices; later fights cannot erase this completed observation.
-        cancel(); R.baseline=ids; R.attempted=true
-        trace("REPORT_DAMAGE_CHECK","incoming opposing-player damage confirmed; session="..sid)
-        local ok,message=A.Report("automatic",c.loc)
-        trace("REPORT_AUTO","accepted="..tostring(ok==true).." "..A.CleanText(message,160))
-        if ok then A.Print("PvP report submitted to the shared channel.") end
-    elseif c.reads>=3 then
-        skip("no readable attributable incoming player damage"); cancel(); R.baseline=ids
-    else schedule(c) end
+    local fresh=total==1 and c.updated[sid] and c.updated[sid]>=c.checkedAt
+    c.checkedAt=GetTime()
+    local readable=false
+    for _,category in ipairs({"DamageTaken","DamageDone"}) do
+        local previous=c.damage[category]
+        local totals=total==1 and c.updated[sid] and damage(c,sid,category) or nil
+        c.damage[category]=totals
+        if totals then readable=true end
+        if totals and previous then
+            for key,amount in pairs(totals) do
+                local before=previous[key] or 0
+                if fresh and amount>before and c.names[key] and not c.ambiguous[key] then
+                    local direction=category=="DamageTaken" and "incoming" or "outgoing"
+                    trace("REPORT_DAMAGE_SOURCE","session="..sid.." enemy="..key.." direction="..direction.." damage="..(amount-before))
+                    cancel(); R.baseline=nil; R.attempted=true
+                    trace("REPORT_DAMAGE_CHECK",direction.." opposing-player damage confirmed during combat; session="..sid)
+                    local ok,message=A.Report("automatic",loc)
+                    trace("REPORT_AUTO","accepted="..tostring(ok==true).." "..A.CleanText(message,160))
+                    if ok then A.Print("PvP report submitted to the shared channel.") end
+                    return
+                end
+            end
+            -- Keep high-water marks so disappearing/reordered rows cannot replay damage.
+            for key,amount in pairs(previous) do totals[key]=math.max(totals[key] or 0,amount) end
+            local count=0; for _ in pairs(totals) do count=count+1 end
+            if count>512 then
+                skip("damage identity capacity"); cancel(); R.baseline=nil; R.awaitPeace=true; return
+            end
+        end
+    end
+    if total~=1 or not c.updated[sid] then skip("fresh correlated live meter session unavailable")
+    elseif not readable then skip("live damage attribution unavailable/restricted")
+    else skip("no recent readable attributable player damage during combat") end
+    schedule(c)
 end
 function A.UpdateAutoReports()
     if not A.db then return end
@@ -157,21 +193,16 @@ function A.UpdateAutoReports()
         R.startedAt=nil
         if R.duelCombat then R.duelUntil=math.max(R.duelUntil or 0,GetTime()+10); R.duelCombat=nil end
         if R.capture then
-            if R.capture.state=="combat" then
-                R.capture.state="reading"
-                trace("REPORT_CAPTURE_END","opponents="..R.capture.count.." blocked="..tostring(R.capture.blocked==true))
-                if R.capture.count==0 or R.capture.blocked then cancel(); R.baseline=nil
-                else schedule(R.capture) end
-            end
+            trace("REPORT_CAPTURE_END","opponents="..R.capture.count.." blocked="..tostring(R.capture.blocked==true))
+            cancel(); R.baseline=nil
         end
         R.awaitPeace=nil
         if not R.capture then
-            if not R.baseline then R.baseline=catalog() end
+            if not R.baseline and quiet() then R.baseline=catalog() end
             R.attempted=nil; R.skip=nil
         end
         return
     end
-    if R.capture and R.capture.state=="reading" then cancel(); R.baseline=nil; R.awaitPeace=true end
     if not R.startedAt then R.startedAt=GetServerTime(); R.attempted=nil end
     if R.attempted then cancel(); return end
     if R.awaitPeace then return end
@@ -183,10 +214,12 @@ function A.UpdateAutoReports()
         if not R.baseline then R.awaitPeace=true; return skip("fresh out-of-combat meter baseline unavailable") end
         local loc=location(); local guid=P.Read(UnitGUID,"player")
         if not loc or not name(guid) then R.awaitPeace=true; return skip("identity/location unavailable") end
-        R.capture={state="combat",baseline=R.baseline,loc=loc,selfGUID=guid,started=GetTime(),
-            updated={},updates=0,names={},ambiguous={},opponents={},count=0,reads=0}
+        R.capture={state="combat",baseline=R.baseline,loc=loc,selfGUID=guid,started=GetTime(),checkedAt=GetTime(),
+            updated={},updates=0,names={},ambiguous={},opponents={},count=0,reads=0,
+            damage={DamageTaken={},DamageDone={}}}
         R.baseline=nil
-        trace("REPORT_CAPTURE_START","map="..loc.mapID.." guild="..tostring(P.Read(IsInGuild)==true))
+        trace("REPORT_CAPTURE_START","map="..loc.mapID.." interval="..INTERVAL.." guild="..tostring(P.Read(IsInGuild)==true))
+        schedule(R.capture)
         observe("target"); observe("focus"); observe("targettarget")
         local plates=P.Read(C_NamePlate and C_NamePlate.GetNamePlates)
         if type(plates)=="table" then for i=1,64 do local p=field(plates,i); if not p then break end; observe(field(p,"namePlateUnitToken")) end end
@@ -231,7 +264,7 @@ function A.InitAutoReports()
                 local c=R.capture
                 if c then
                     if not c.updated[sid] then c.updates=c.updates+1 end
-                    if c.updates>64 then c.blocked=true else c.updated[sid]=true end
+                    if c.updates>64 then c.blocked=true else c.updated[sid]=GetTime() end
                 elseif R.baseline and not R.baseline[sid] then R.baseline=nil end
             end
         end
