@@ -57,6 +57,11 @@ Public packages use the production build flavor and CurseForge Release stage.
 Version 0.7.9 adds five-second checks during combat, with incoming or outgoing
 player attribution and cancellation at combat end. Native in-combat attribution
 still needs live acceptance. See docs/LIVE_ACTIVITY_REPORTING.txt.
+All 20 suites passed locally and in GitHub CI. CurseForge accepted Release file
+9775730; all 30 uploaded files match the tested local package. The public file
+page returned HTTP 403 during verification, so moderation/indexing remains
+unconfirmed. Receipt: docs/CURSEFORGE_SUBMISSION_0.7.9.txt.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9775730
 Version 0.7.8 passed all 20 suites locally and in GitHub CI and was uploaded to
 CurseForge as Release file 9756275. The public file page returned 404 during
 verification; approval/indexing state is not yet confirmed.

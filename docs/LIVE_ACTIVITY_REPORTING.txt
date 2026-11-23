@@ -1,5 +1,6 @@
 TOTALWARCRAFT - FIVE-SECOND ACTIVITY CAPTURE
-November 23, 2026. Prepared for TotalWarcraft 0.7.9 Release.
+November 23, 2026. Uploaded as TotalWarcraft 0.7.9 Release.
+Receipt and publication limits: docs/CURSEFORGE_SUBMISSION_0.7.9.txt.
 
 REFERENCE LOG
 The supplied 0.7.8 release session identifies the local character as Vitals Shienx

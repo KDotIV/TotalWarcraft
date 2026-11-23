@@ -1,0 +1,44 @@
+TOTALWARCRAFT 0.7.9 - RELEASE UPLOAD RECEIPT
+November 23, 2026. Upload accepted at 11:16:56 AM America/New_York.
+
+CurseForge project 1819796, file 9775730, releaseType=release, Forever 1.60.1.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9775730
+Upload accepted; automatic publication after moderation requested.
+Public availability remains unconfirmed: the public file page returned HTTP 403
+during verification. This does not establish approval or rejection. Do not repeat
+the successful upload because the public page cannot yet be verified.
+
+Immutable tag v0.7.9 -> 3a18c7a08cc5082d55db5e0c8a4551d06664ffd5.
+https://github.com/KDotIV/TotalWarcraft/tree/v0.7.9
+Publish run 45214642345: success. Main CI 45214642467: success.
+https://github.com/KDotIV/TotalWarcraft/actions/runs/45214642345
+https://github.com/KDotIV/TotalWarcraft/actions/runs/45214642467
+All 20 offline suites passed locally and in Linux CI before upload, including
+the compiled Release package and its exclusion of development tools.
+Only the 0.7.9 changelog section was submitted to CurseForge.
+
+RELEASE BEHAVIOR
+- Five-second automatic checks while combat continues; either readable incoming
+  or outgoing damage attributed to an observed opposing player can qualify.
+- Combat end cancels pending checks; no delayed automatic report after the fight.
+  Reports already broadcast retain their normal lifetime.
+- NPC/pet, duel, instance, identity, one-attempt and shared-cooldown safeguards.
+- Current-position reporting and journal entries for checks/evidence/skips.
+- Native damage details may be restricted during combat. Unreadable attribution
+  skips the report. Offline success does not establish live combat availability.
+
+VERIFICATION
+Artifact 14837034196, release-receipt, downloaded and SHA256 verified:
+77e4adc82cbc458c7ac648b215c08746ed48b83ebddddbdf6a341af881fafd0e.
+Uploaded archive SHA256:
+1c656957fa9840ff6bbba7c9345237f4fa92d839d6d0f16abbbc6e35e8a525fc.
+Local archive SHA256:
+53b209bbf3ddbd0cfb92f183fdc62a0709e783b554d8c114420cdd35e89e779e.
+All 30 archive entries match byte for byte; ZIP platform metadata differs.
+Local ZIP: releases/TotalWarcraft-0.7.9-release.zip.
+Uploaded ZIP: releases/TotalWarcraft-0.7.9-uploaded-release.zip.
+Receipt artifact: releases/TotalWarcraft-0.7.9-release-receipt.zip.
+Receipt: releases/curseforge-receipt-0.7.9.json.
+Local regression output: releases/validation-0.7.9.log.
+
+No local WoW installation or saved settings were changed during this release.
