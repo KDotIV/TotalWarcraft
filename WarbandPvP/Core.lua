@@ -1,5 +1,5 @@
 local name, A = ...
-A.release = A.release or "0.7.9-dev"
+A.release = A.release or "0.7.10-dev"
 function A.Print(message) print("|cffedbf69TotalWarcraft:|r " .. message) end
 
 function A.Changed()

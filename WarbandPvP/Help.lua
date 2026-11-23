@@ -16,15 +16,15 @@ closes the dialog and selects the report or rally's zone.
 
 Use the topic buttons above or Previous / Next below.
 /tw opens the board. /wb remains an alias. /tw help: guide.]]},
-    {"Reports & safeguards", [[Every five seconds in combat, check for new damage to/from
+    {"Reports & safeguards", [[After combat ends, check for readable damage to/from
 an observed, attackable, PvP-flagged opposing player.
 NPC and pet damage alone do not qualify.
 
 Duels, sanctuary/FFA rules and instances suppress automatic
 reports. Loading during combat waits for a fresh fight.
 Unavailable or restricted checks skip automatic reporting.
-Either damage direction is enough. Combat ending cancels
-the timer; no delayed automatic report follows the fight.
+Either damage direction is enough. Death retains the capture.
+Up to three checks follow combat; restarting combat cancels.
 
 One automatic attempt per combat; a shared two-minute
 cooldown follows a successful report. Shared-channel users get

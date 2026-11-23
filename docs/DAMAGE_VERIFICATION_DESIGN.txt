@@ -1,4 +1,13 @@
 TOTALWARCRAFT - DAMAGE VERIFICATION DESIGN
+LOCAL FIX FOR 0.7.10, November 23: user chose strict NPC protection with verified
+reports allowed after combat. The latest 0.7.9 live battle found an opponent and
+a fresh session, but all 14 in-combat checks had unavailable attribution. Capture
+now survives combat end/death; native reads wait for combat AND lockdown to clear.
+Three bounded reads start at 0.5 seconds, then 2.0 and 3.5 seconds after combat end.
+Either readable per-unit damage direction qualifies. Resumed combat invalidates
+pending reads; no in-combat damage guesses are used. Report the captured location.
+See LIVE_ACTIVITY_REPORTING.txt for the live evidence and regression coverage.
+
 IMPLEMENTED FOR 0.7.9, November 23: automatic capture checks every five seconds during
 combat and cancels at combat end. Readable DamageTaken OR DamageDone per-unit
 amounts must increase for an observed opposing player in a fresh, event-correlated

@@ -1,3 +1,20 @@
+TotalWarcraft 0.7.10
+November 23, 2026 - Release - WoW Forever 1.60.1
+
+- Restore strict verification after combat. Forever can hide the native damage
+  attribution that 0.7.9 required during combat, preventing automatic reports.
+- Keep the observed opponents and fight location when combat ends or the player
+  dies. Read damage only after combat and lockdown clear, starting around half
+  a second after combat ends with up to three bounded checks.
+- Readable incoming OR outgoing damage attributed to an observed opposing player
+  can qualify. NPC/pet, duel, instance, identity and shared-cooldown guards remain.
+  Targets, combat flags and aggregate damage totals alone never qualify.
+- Short fights can report after combat. Resumed combat and context changes cancel
+  pending reads. Reports use the captured fight location rather than a graveyard.
+- Session logs identify post-combat verification and waits for combat lockdown.
+- Offline regression tests cover the corrected flow; live verification is still
+  required before claiming successful reporting on the current client.
+
 TotalWarcraft 0.7.9
 November 23, 2026 - Release - WoW Forever 1.60.1
 

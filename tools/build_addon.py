@@ -7,7 +7,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "WarbandPvP"
-VERSION = "0.7.9"
+VERSION = "0.7.10"
 PRODUCTION = ["Model.lua", "Theme.lua", "Windows.lua", "Scope.lua", "ReportChannel.lua", "ReportTransport.lua",
               "Presence.lua", "SessionLog.lua", "WarbandProtocol.lua", "Warbands.lua", "Finder.lua",
               "Scouting.lua", "ScoutingUI.lua", "WarbandUI.lua", "UI.lua", "Help.lua", "Activity.lua", "Map.lua", "MapPins.xml", "Report.lua", "AutoReports.lua",

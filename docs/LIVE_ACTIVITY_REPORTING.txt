@@ -1,4 +1,49 @@
-TOTALWARCRAFT - FIVE-SECOND ACTIVITY CAPTURE
+TOTALWARCRAFT - AUTOMATIC REPORTING LIVE RESULTS AND FIX
+
+0.7.10 LOCAL FIX - November 23, 2026
+User selected: keep strict NPC protection; allow verified reports after combat.
+
+The 0.7.9 battle export (Forever build 71037, map 1417) retains a complete final
+capture despite 222 older journal entries being omitted. Capture starts at
++3692.408 with one opposing player, Galahad Oathkeeper. At +3697.412 it records
+freshSessions=1 observedOpponents=1 and skips with live damage attribution
+unavailable/restricted. Fourteen checks continue through +3762.452. Combat ends
+with the player's death at +3762.890, roughly 70.5 seconds after capture started.
+No submission or readable damage evidence is recorded. The timer and opponent
+observation worked; 0.7.9 could not obtain usable attribution, then discarded
+the capture at combat end. The native API's SecretWhenInCombat behavior is
+consistent with this failure; the journal does not isolate the exact hidden field.
+
+The corrected flow retains capture through combat end/death and reads native
+damage only after combat AND lockdown clear. It starts at 0.5 seconds after
+combat ends, retrying at 2.0 and 3.5 seconds as needed. One readable positive
+per-unit record attributed to an observed opposing player is sufficient, incoming
+or outgoing. No retaliation is required. Unrelated unreadable rows do not erase
+readable positive evidence; aggregate totals never substitute for attribution.
+
+NPC/pet flags, fresh correlated session, unique local source and opponent names,
+duel/FFA/instance exclusions, bounded data, one-attempt policy and shared cooldown
+remain. Missing data fails closed after the bounded reads. Resumed combat or a
+context change cancels pending verification. Captures have a fifteen-minute
+deadline and cancelled callbacks cannot clear newer timers. The saved fight
+location is used even if the player releases or moves before the read.
+
+Regression scenarios model a 70-second fight, no native reads during combat,
+death with briefly lingering lockdown, target loss and changed position, then
+post-combat attribution. They also cover short fights, delayed rows/session
+updates, persistent restrictions, unrelated secret rows, NPC/pet-only damage,
+restarts, stale callbacks and timer expiration, against source and compiled Release.
+These fixtures do not reconstruct damage values absent from the supplied log.
+
+The 0.7.10 fix is local and still needs a live test before claiming success.
+All 20 offline suites passed, including the compiled production package.
+Validation output: releases/validation-0.7.10.log.
+Package for the live check: releases/TotalWarcraft-0.7.10-release.zip.
+Expected journal: REPORT_DEFER, REPORT_VERIFY phase=post-combat, then either
+REPORT_DAMAGE_CHECK / REPORT_AUTO or an explicit final skip reason. Export after
+combat without reloading. No new combat should begin until the bounded reads end.
+
+HISTORICAL 0.7.9 IMPLEMENTATION (SUPERSEDED BY THE FIX ABOVE)
 November 23, 2026. Uploaded as TotalWarcraft 0.7.9 Release.
 Receipt and publication limits: docs/CURSEFORGE_SUBMISSION_0.7.9.txt.
 

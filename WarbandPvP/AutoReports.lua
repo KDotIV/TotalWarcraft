@@ -2,7 +2,7 @@ local _,A=...
 local P=A.WB
 local R={}
 A.autoReports=R
-local INTERVAL=5
+local CAPTURE_LIMIT=900
 local function secret(v) return issecretvalue and issecretvalue(v) end
 local function field(t,k)
     if secret(t) or type(t)~="table" then return end
@@ -31,9 +31,9 @@ local function quiet()
     return P.Read(UnitAffectingCombat,"player")==false and P.Read(InCombatLockdown)==false
 end
 local function meter(fn,...)
-    -- Native meter results may be secret in combat. Readable fields only;
-    -- never use aggregate totals, combat flags or targets to replace attribution.
-    return P.Read(field(C_DamageMeter,fn),...)
+    -- Forever hides native damage attribution in combat. Wait for both combat
+    -- and lockdown to end; never substitute totals or target/combat flags.
+    if quiet() then return P.Read(field(C_DamageMeter,fn),...) end
 end
 local function catalog()
     if meter("IsDamageMeterAvailable")~=true then return end
@@ -106,78 +106,71 @@ local function damage(c,sid,category)
     if count~=1 or not matched then return end
     local spells=array(field(meter("GetCombatSessionSourceFromID",sid,kind,c.selfGUID,nil),"combatSpells"),512)
     if not spells then return end
-    local totals={}
     for _,spell in ipairs(spells) do
         local d=field(spell,"combatSpellDetails")
         local key=name(field(d,"unitName"))
         local amount=field(d,"amount")
-        -- A partial/restricted snapshot cannot establish a later damage delta.
-        if not key or not number(amount,0,1e12) or field(d,"isMob")==nil or field(d,"isPet")==nil then return end
-        if field(d,"isMob")==false and field(d,"isPet")==false then
-            totals[key]=(totals[key] or 0)+amount
-            if totals[key]>1e12 then return end
+        if key and c.names[key] and not c.ambiguous[key] and number(amount,.000001,1e12)
+            and field(d,"isMob")==false and field(d,"isPet")==false then
+            trace("REPORT_DAMAGE_SOURCE","session="..sid.." enemy="..key.." category="..category.." damage="..amount)
+            return true
         end
     end
-    return totals
 end
 local inspect
 local function schedule(c)
-    R.timer=C_Timer.NewTimer(INTERVAL,function()
-        if R.capture~=c then return end
+    if R.timer then R.timer:Cancel() end
+    local delay=c.state=="combat" and CAPTURE_LIMIT or (c.reads==0 and .5 or 1.5)
+    local timer
+    timer=C_Timer.NewTimer(delay,function()
+        if R.capture~=c or R.timer~=timer then return end
         R.timer=nil
         inspect(c)
     end)
+    R.timer=timer
 end
 inspect=function(c)
     A.UpdateAutoReports()
     if R.capture~=c then return end
     local loc=location()
-    if P.Read(UnitAffectingCombat,"player")~=true or not allowed() or not loc or loc.mapID~=c.loc.mapID or c.blocked
-        or GetTime()-c.started>=900 or not A.db.autoReports then
+    if not allowed() or not loc or loc.mapID~=c.loc.mapID or c.blocked
+        or GetTime()-c.started>=CAPTURE_LIMIT or not A.db.autoReports then
         skip("activity capture invalidated"); cancel(); R.baseline=nil; R.awaitPeace=true; return
     end
+    if c.state~="reading" then return end
     c.reads=c.reads+1
+    if not quiet() then
+        trace("REPORT_VERIFY","phase=post-combat read="..c.reads.." waiting=lockdown")
+        if c.reads>=3 then
+            skip("combat lockdown did not clear"); cancel(); R.baseline=nil
+        else schedule(c) end
+        return
+    end
     local ids=catalog(); local sid,total=nil,0
     if ids then for id in pairs(ids) do if not c.baseline[id] then sid=id; total=total+1 end end end
-    trace("REPORT_VERIFY","phase=combat read="..c.reads.." freshSessions="..total.." observedOpponents="..c.count)
+    trace("REPORT_VERIFY","phase=post-combat read="..c.reads.." freshSessions="..total.." observedOpponents="..c.count)
     if total>1 or (c.sid and sid and c.sid~=sid) then
         skip("multiple/changed meter sessions"); cancel(); R.baseline=nil; R.awaitPeace=true; return
     end
     c.sid=sid or c.sid
-    local fresh=total==1 and c.updated[sid] and c.updated[sid]>=c.checkedAt
-    c.checkedAt=GetTime()
-    local readable=false
-    for _,category in ipairs({"DamageTaken","DamageDone"}) do
-        local previous=c.damage[category]
-        local totals=total==1 and c.updated[sid] and damage(c,sid,category) or nil
-        c.damage[category]=totals
-        if totals then readable=true end
-        if totals and previous then
-            for key,amount in pairs(totals) do
-                local before=previous[key] or 0
-                if fresh and amount>before and c.names[key] and not c.ambiguous[key] then
-                    local direction=category=="DamageTaken" and "incoming" or "outgoing"
-                    trace("REPORT_DAMAGE_SOURCE","session="..sid.." enemy="..key.." direction="..direction.." damage="..(amount-before))
-                    cancel(); R.baseline=nil; R.attempted=true
-                    trace("REPORT_DAMAGE_CHECK",direction.." opposing-player damage confirmed during combat; session="..sid)
-                    local ok,message=A.Report("automatic",loc)
-                    trace("REPORT_AUTO","accepted="..tostring(ok==true).." "..A.CleanText(message,160))
-                    if ok then A.Print("PvP report submitted to the shared channel.") end
-                    return
-                end
-            end
-            -- Keep high-water marks so disappearing/reordered rows cannot replay damage.
-            for key,amount in pairs(previous) do totals[key]=math.max(totals[key] or 0,amount) end
-            local count=0; for _ in pairs(totals) do count=count+1 end
-            if count>512 then
-                skip("damage identity capacity"); cancel(); R.baseline=nil; R.awaitPeace=true; return
+    if total==1 and c.updated[sid] then
+        for _,category in ipairs({"DamageTaken","DamageDone"}) do
+            if damage(c,sid,category) then
+                local direction=category=="DamageTaken" and "incoming" or "outgoing"
+                cancel(); R.baseline=ids; R.attempted=true
+                trace("REPORT_DAMAGE_CHECK",direction.." opposing-player damage confirmed after combat; session="..sid)
+                local ok,message=A.Report("automatic",c.loc)
+                trace("REPORT_AUTO","accepted="..tostring(ok==true).." "..A.CleanText(message,160))
+                if ok then A.Print("PvP report submitted to the shared channel.") end
+                return
             end
         end
     end
-    if total~=1 or not c.updated[sid] then skip("fresh correlated live meter session unavailable")
-    elseif not readable then skip("live damage attribution unavailable/restricted")
-    else skip("no recent readable attributable player damage during combat") end
-    schedule(c)
+    if c.reads>=3 then
+        skip((total~=1 or not c.updated[sid]) and "fresh correlated meter session unavailable"
+            or "no readable attributable player damage after combat")
+        cancel(); R.baseline=ids
+    else schedule(c) end
 end
 function A.UpdateAutoReports()
     if not A.db then return end
@@ -193,8 +186,16 @@ function A.UpdateAutoReports()
         R.startedAt=nil
         if R.duelCombat then R.duelUntil=math.max(R.duelUntil or 0,GetTime()+10); R.duelCombat=nil end
         if R.capture then
-            trace("REPORT_CAPTURE_END","opponents="..R.capture.count.." blocked="..tostring(R.capture.blocked==true))
-            cancel(); R.baseline=nil
+            local c=R.capture
+            if c.state=="combat" then
+                c.state="reading"
+                trace("REPORT_CAPTURE_END","opponents="..c.count.." blocked="..tostring(c.blocked==true))
+                if c.count==0 or c.blocked then cancel(); R.baseline=nil
+                else
+                    trace("REPORT_DEFER","waiting for post-combat damage attribution")
+                    schedule(c)
+                end
+            end
         end
         R.awaitPeace=nil
         if not R.capture then
@@ -202,6 +203,9 @@ function A.UpdateAutoReports()
             R.attempted=nil; R.skip=nil
         end
         return
+    end
+    if R.capture and R.capture.state=="reading" then
+        skip("combat resumed before verification"); cancel(); R.baseline=nil; R.awaitPeace=true
     end
     if not R.startedAt then R.startedAt=GetServerTime(); R.attempted=nil end
     if R.attempted then cancel(); return end
@@ -214,11 +218,10 @@ function A.UpdateAutoReports()
         if not R.baseline then R.awaitPeace=true; return skip("fresh out-of-combat meter baseline unavailable") end
         local loc=location(); local guid=P.Read(UnitGUID,"player")
         if not loc or not name(guid) then R.awaitPeace=true; return skip("identity/location unavailable") end
-        R.capture={state="combat",baseline=R.baseline,loc=loc,selfGUID=guid,started=GetTime(),checkedAt=GetTime(),
-            updated={},updates=0,names={},ambiguous={},opponents={},count=0,reads=0,
-            damage={DamageTaken={},DamageDone={}}}
+        R.capture={state="combat",baseline=R.baseline,loc=loc,selfGUID=guid,started=GetTime(),
+            updated={},updates=0,names={},ambiguous={},opponents={},count=0,reads=0}
         R.baseline=nil
-        trace("REPORT_CAPTURE_START","map="..loc.mapID.." interval="..INTERVAL.." guild="..tostring(P.Read(IsInGuild)==true))
+        trace("REPORT_CAPTURE_START","map="..loc.mapID.." verification=post-combat guild="..tostring(P.Read(IsInGuild)==true))
         schedule(R.capture)
         observe("target"); observe("focus"); observe("targettarget")
         local plates=P.Read(C_NamePlate and C_NamePlate.GetNamePlates)
@@ -238,7 +241,7 @@ function A.InitAutoReports()
     A.db.autoReports=A.db.autoReports~=false
     if R.events then R.events:UnregisterAllEvents() end
     local f=CreateFrame("Frame"); R.events=f
-    for _,event in ipairs({"PLAYER_REGEN_DISABLED","PLAYER_REGEN_ENABLED","PLAYER_TARGET_CHANGED","PLAYER_FOCUS_CHANGED",
+    for _,event in ipairs({"PLAYER_REGEN_DISABLED","PLAYER_REGEN_ENABLED","PLAYER_DEAD","PLAYER_TARGET_CHANGED","PLAYER_FOCUS_CHANGED",
         "NAME_PLATE_UNIT_ADDED","PLAYER_LOGIN","PLAYER_ENTERING_WORLD","ZONE_CHANGED_NEW_AREA","SHARD_TRANSFER","SHARD_TRANSFER_IMMINENT",
         "DAMAGE_METER_COMBAT_SESSION_UPDATED","DAMAGE_METER_RESET","DUEL_REQUESTED","DUEL_TO_THE_DEATH_REQUESTED",
         "DUEL_INBOUNDS","DUEL_OUTOFBOUNDS","DUEL_FINISHED"}) do pcall(f.RegisterEvent,f,event) end

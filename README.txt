@@ -1,4 +1,4 @@
-TOTALWARCRAFT 0.7.9
+TOTALWARCRAFT 0.7.10
 World of Warcraft: Forever only (Interface 16001)
 
 Quickly form parties to seek out world PvP or rally your faction to retaliate
@@ -9,10 +9,11 @@ for warbands. One managed dialog is visible at a time, with Back navigation and
 a draggable military frame. No external backend or third-party library is needed.
 
 FEATURES
-- Automatic reports check every five seconds during combat for new attributable
-  incoming or outgoing opposing-player damage. Ending combat cancels the timer.
+- Automatic reports retain combat captures through combat end/death, then make
+  up to three checks for attributable incoming or outgoing opposing-player damage.
   Fresh-session, identity, duel/NPC/pet/FFA/instance safeguards remain in place.
-  Restricted live meter data skips reporting; live acceptance is still required.
+  Native damage is only read after combat and lockdown clear; live acceptance
+  of the 0.7.10 fix is still required.
   Manual reports remain available via /tw report or a keybind; shared cooldown.
 - Compact known-only tooltips and fading nearby-report clusters: scaled swords,
   pulsing red halo and native red weapons/raid skull for heavy reported activity.
@@ -54,9 +55,11 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
-Version 0.7.9 adds five-second checks during combat, with incoming or outgoing
-player attribution and cancellation at combat end. Native in-combat attribution
-still needs live acceptance. See docs/LIVE_ACTIVITY_REPORTING.txt.
+Version 0.7.10 restores strict post-combat verification after the 0.7.9 live test
+recorded 14 checks with no readable attribution during a 70-second PvP fight.
+It retains captures through death and reports at the captured fight location.
+This local fix has not been published. See docs/LIVE_ACTIVITY_REPORTING.txt.
+Version 0.7.9 introduced five-second in-combat checks, which failed that live test.
 All 20 suites passed locally and in GitHub CI. CurseForge accepted Release file
 9775730; all 30 uploaded files match the tested local package. The public file
 page returned HTTP 403 during verification, so moderation/indexing remains
