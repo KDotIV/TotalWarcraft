@@ -35,6 +35,8 @@ alice, bob = release_client('Alice One'), release_client('Bob Two')
 from auto_report_scenarios import check_auto_reports
 from activity_scenarios import check_activity
 check_auto_reports(release_client)
+from live_activity_scenarios import check_live_activity
+check_live_activity(release_client)
 check_activity(release_client)
 from session_log_scenarios import check_session_ui
 check_session_ui(release_client)

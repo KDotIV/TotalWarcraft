@@ -16,24 +16,24 @@ closes the dialog and selects the report or rally's zone.
 
 Use the topic buttons above or Previous / Next below.
 /tw opens the board. /wb remains an alias. /tw help: guide.]]},
-    {"Reports & safeguards", [[After combat ends, check for readable damage to/from
-an observed, attackable, PvP-flagged opposing player.
-NPC and pet damage alone do not qualify.
+    {"Reports & safeguards", [[During your combat, five-second checks can report damage
+to a visible, hostile, PvP-flagged player or NPC still fighting.
+This signals faction activity; its attacker is unconfirmed.
+Unflagged mobs, pets and selecting a target do not qualify.
 
 Duels, sanctuary/FFA rules and instances suppress automatic
 reports. Loading during combat waits for a fresh fight.
-Unavailable or restricted checks skip automatic reporting.
-Either damage direction is enough. Death retains the capture.
-Up to three checks follow combat; restarting combat cancels.
+If no live report was sent, up to three post-combat checks
+can verify damage to/from an observed opposing player.
+Death retains that capture; restarting combat cancels it.
 
 One automatic attempt per combat; a shared two-minute
 cooldown follows a successful report. Shared-channel users get
 a five-minute marker, including unguilded players. Toggle on /tw.
 Manual report: your keybind or /tw report; duel holds still apply.
 
-"Combatants" counts readable flagged players observed within
-100 yards. It is partial, not a verified fight size. Unavailable
-counts and enemy affiliations are omitted from the tooltip.]]},
+"Combatants" is a partial flagged-player sample within 100yd.
+It is neither a complete scan nor a verified fight size.]]},
     {"Reading the map", [[Crimson crossed swords: a reported PvP location.
 Recent nearby reports strengthen the color and grow the pin
 slightly. Multiple reporters add a slow pulsing red glow.

@@ -101,10 +101,44 @@ advanceTimers(2); assert(reportCount()==1 and A.List()[1].x==.25)
 ''')
 
     # Reused/uncorrelated/ambiguous/changed sessions and source identity are not proof.
+    # A completed NPC session can reach the catalog after its combat-end event.
+    # Its earlier update already identifies it as belonging to the previous fight.
+    lua=fresh()
+    lua.execute('''
+playerTarget=false; combat=true; event('PLAYER_REGEN_DISABLED')
+currentSession=11; event('DAMAGE_METER_COMBAT_SESSION_UPDATED',7,11)
+peace(); assert(reportCount()==0 and reads==0 and not A.autoReports.timer)
+sessions[#sessions+1]={sessionID=11}
+playerTarget=true; rows={damage('Wide Guy',304)}; fight(); peace()
+assert(reportCount()==1, 'a delayed prior NPC session must not block fresh PvP attribution')
+''')
+
+    # An idle update can precede catalog insertion too. Never reuse that old
+    # session's player damage to qualify the next fight with no player damage.
+    lua=fresh()
+    lua.execute('''
+currentSession=11; event('DAMAGE_METER_COMBAT_SESSION_UPDATED',7,11)
+sessions[#sessions+1]={sessionID=11}
+local oldQueries=0
+C_DamageMeter.GetCombatSessionFromID=function(sid)
+ native(); reads=reads+1
+ if sid==11 then oldQueries=oldQueries+1 end
+ return {combatSources={{isLocalPlayer=true,sourceGUID='Player-player'}}}
+end
+C_DamageMeter.GetCombatSessionSourceFromID=function(sid)
+ native()
+ return {combatSpells=sid==11 and {damage('Wide Guy',999)} or {}}
+end
+fight(); peace()
+assert(reportCount()==0 and reads==6 and oldQueries==0, 'only the current session may be inspected')
+assert(A.SessionLogText():find('category=DamageTaken rows=0',1,true))
+''')
+
     for mutation in [
         "sessions={{sessionID=10}}; currentSession=10",
         "A.autoReports.capture.updated={}",
         "sessions[#sessions+1]={sessionID=99}",
+        "sessions[#sessions+1]={sessionID=99}; event('DAMAGE_METER_COMBAT_SESSION_UPDATED',7,99)",
         "C_DamageMeter.GetCombatSessionFromID=function() return {combatSources={{isLocalPlayer=true,sourceGUID='Wrong'}}} end",
         "C_DamageMeter.GetCombatSessionFromID=function() return {combatSources={{isLocalPlayer=true,sourceGUID='Player-player'},{isLocalPlayer=true,sourceGUID='Player-player'}}} end",
         "C_DamageMeter.GetCombatSessionSourceFromID=function() return 'SECRET' end",
@@ -132,6 +166,21 @@ advanceTimers(2); assert(reportCount()==1 and A.List()[1].x==.25)
     lua=fresh(); lua.execute("rows={damage('Wide Guy',10)}; fight(); A.SetAutoReportsEnabled(false); peace(); assert(reportCount()==0); A.SetAutoReportsEnabled(true); fight(); peace(); assert(reportCount()==1)")
     lua=fresh(); lua.execute("C_DamageMeter=nil; A.InitAutoReports(); fight(); peace(); assert(reportCount()==0); assert(A.Report())")
     lua=fresh(); lua.execute("rows={damage('Wide Guy',10)}; combat=true; currentSession=11; sessions[#sessions+1]={sessionID=11}; event('DAMAGE_METER_COMBAT_SESSION_UPDATED',7,11); peace(); assert(reportCount()==1)")
+
+    # Session history is bounded, ignores restricted/invalid IDs, and resets with
+    # the native meter so a legitimately reused post-reset ID remains eligible.
+    lua=fresh()
+    lua.execute('''
+for i=1,70 do event('DAMAGE_METER_COMBAT_SESSION_UPDATED',7,1000+i) end
+event('DAMAGE_METER_COMBAT_SESSION_UPDATED',7,'SECRET')
+event('DAMAGE_METER_COMBAT_SESSION_UPDATED',7,0/0)
+local n=0; for _ in pairs(A.autoReports.knownSessions) do n=n+1 end
+assert(n==64 and #A.autoReports.sessionHistory==64 and activeTimers()==0)
+assert(not A.autoReports.knownSessions[1001] and A.autoReports.knownSessions[1070])
+event('DAMAGE_METER_COMBAT_SESSION_UPDATED',7,11)
+event('DAMAGE_METER_RESET')
+rows={damage('Wide Guy',10)}; fight(); peace(); assert(reportCount()==1)
+''')
 
     # Regression from the 0.7.9 battle: opponent seen throughout 70 seconds,
     # death ends combat, and only then is native damage attribution readable.
@@ -172,6 +221,8 @@ advanceTimers(10); event('PLAYER_REGEN_ENABLED'); assert(reportCount()==1)
     lua=fresh(); lua.execute("fight(); peace(); assert(reads==6 and reportCount()==0 and not A.autoReports.timer)")
     lua=fresh(); lua.execute("rows={damage('Wide Guy',10)}; fight(); A.autoReports.capture.updated={}; combat=false; event('PLAYER_REGEN_ENABLED'); advanceTimers(.6); assert(reportCount()==0); event('DAMAGE_METER_COMBAT_SESSION_UPDATED',7,currentSession); advanceTimers(1.5); assert(reportCount()==1)")
     lua=fresh(); lua.execute("rows={damage('Wide Guy',10)}; fight(); C_DamageMeter.GetCombatSessionSourceFromID=function() return 'SECRET' end; peace(); assert(reportCount()==0 and not A.autoReports.timer)")
+    lua.execute("assert(A.SessionLogText():find('details_unavailable_or_invalid',1,true))")
+    lua=fresh(); lua.execute("rows={damage('Wide Guy',10,true),damage('Wide Guy',10,false,true),damage('Unseen Enemy',10),damage('Wide Guy',0)}; fight(); peace(); assert(reportCount()==0); assert(A.SessionLogText():find('rows=4 npc=1 pet=1 flags=0 name=0 unobserved=1 ambiguous=0 amount=1',1,true))")
 
     # Cancelled/stale timers cannot send or clear a newer timer, including the
     # capture deadline replaced by the reader at death/combat end.

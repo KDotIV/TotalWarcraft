@@ -1,4 +1,4 @@
-TOTALWARCRAFT - 0.7.10
+TOTALWARCRAFT - 0.7.11
 World of Warcraft: Forever 1.60.1 (Interface 16001)
 
 Formerly Warband-PvP. /tw is primary; /totalwarcraft and /wb also work.
@@ -15,23 +15,28 @@ header to move a window. Show on map closes TotalWarcraft dialogs and opens the 
 
 FIELD REPORTS
 Automatic reports are on by default; toggle on /tw or with /tw auto on/off.
-Capture records the fight location and visible, attackable, PvP-flagged opposing
-players. After combat ends (including death), up to three checks look for readable
-incoming OR outgoing damage attributed to an observed opponent in that fight.
-The first check is about half a second after combat ends; later checks follow
-1.5 seconds apart. Both combat and combat lockdown must clear before reading.
-One direction is enough. Reports use the captured fight location, not a graveyard
-or a new position reached after combat. Short fights can qualify too.
-NPCs, same-faction targets, instances and sanctuary/FFA rules do not qualify.
-Unreadable required checks skip reporting. A reload during combat waits for
-the next fresh fight before reporting automatically. Duel events and outgoing requests
-suppress reports through the duel and a short settling period. Manual reporting
-also respects local duel holds. No blanket city exclusion hides real city raids.
-Forever restricts native damage details during combat, so verification waits.
-Missing/restricted or ambiguous post-combat attribution skips reporting; it never
-falls back to targeting or NPC damage. Resuming combat cancels pending reads.
-The 0.7.10 fix still needs live acceptance after the 0.7.9 failure. This attribution
-does not authenticate another client's claims, prove a kill or establish team size.
+While you are in combat, a five-second check can report a recent damage event on
+a visible, hostile, PvP-flagged opposing player or NPC that is still in combat.
+Flagged faction NPC activity intentionally qualifies. Ordinary unflagged mobs,
+controlled pets, healing, selecting a target and damage to you alone do not.
+This reports observed faction activity, without identifying who dealt the hit.
+A flagged opponent fighting a mob can therefore qualify. Live reports use your
+current location; they do not claim the opponent's exact coordinates.
+
+If no live report was attempted, combat end/death retains the stricter fallback:
+up to three checks for readable incoming or outgoing player-attributed damage.
+These start at 0.5 seconds, then 2.0 and 3.5 seconds after combat ends, only after
+combat and lockdown clear. One direction is enough. This fallback still excludes
+NPC/pet damage and uses the captured fight location. Restarting combat cancels it.
+Ending combat cancels the live pulse; a short fight can still qualify through
+the verified fallback. Missing/restricted required evidence skips that path.
+
+Duels, same-faction players, instances and sanctuary/FFA rules remain excluded.
+A reload during combat waits for the next fresh fight. Manual reporting respects
+duel holds. No blanket city exclusion hides real city raids.
+Detection uses units exposed by the client, not a complete 100-yard scan or
+native minimap tracking. The five-second path and revised session handling need
+live testing. Reports do not prove a kill, exact team size or shared layer.
 
 An automatic attempt happens at most once per combat. Successful submissions
 share a two-minute cooldown with /tw report and the report keybind. Failed

@@ -1,0 +1,134 @@
+TOTALWARCRAFT - FLAGGED COMBAT ACTIVITY AND NATIVE TRACKING
+November 25, 2026. Local 0.7.11 implementation; not published or live-validated.
+
+ACCEPTED PRODUCT RULE
+The owner now accepts activity involving PvP-flagged faction NPCs. This replaces
+the previous blanket NPC exclusion for live activity. Reports describe activity,
+not a proven player-to-player damage pair. Ordinary unflagged mobs stay excluded.
+The earlier delayed-session fix and duplicate binding-header fix remain included.
+
+IMPLEMENTATION
+Start one timer with the local player's eligible combat capture. At five-second
+intervals, check recent readable UNIT_COMBAT WOUND occurrences affecting exposed
+target, focus, targettarget, mouseover or nameplate1..64 units. Ignore amount,
+flagText and school payloads, including secret values. The affected unit must be
+visible, attackable, PvP-flagged and outside sanctuary/FFA rules. Players must be
+opposing-faction; nonplayers must explicitly not be player-controlled. NPC faction
+text is not required to say Alliance/Horde: a hostile flagged NPC can be Neutral.
+
+Keep at most 32 recipient GUIDs per five-second window, with a separate budget of
+64 eligible-token WOUND events per second. Duplicate unit tokens share one GUID.
+At the tick, re-read the unit's GUID, type, visibility and flags and require it
+still be in combat. Use only an occurrence no more than five seconds old. Consume
+the window after an unsuccessful check; token reuse cannot inherit evidence.
+Nameplate removal drops its observation. No enumeration of arbitrary GUIDs,
+continuous nameplate sweep, per-frame work, tracking toggle or idle pulse.
+
+One qualifying observation permits one submission attempt for that local combat.
+Use the observer's current map position, not a claimed opponent position. The
+existing report channel, two-minute shared cooldown, five-minute marker lifetime,
+same-faction audience and unknown fight-size semantics are unchanged. NPCs never
+inflate the existing player snapshot count. No packet claims attacker attribution
+or upgrades a received report to verified evidence. The generic PvP activity label
+includes this accepted faction-NPC activity; precise evidence is in the journal.
+
+Duels, instances, sanctuary/FFA rules, context changes, disabled reporting and
+restricted required fields still block automatic reporting. Captures end at
+fifteen minutes. A failed send does not retry within that combat. Damage-event
+floods use a separate budget so they cannot consume lifecycle-event handling.
+The listener logs registration success/failure, first eligible recipient per
+window, evidence type, first empty check and combat-end WOUND/self-WOUND counts.
+This helps distinguish missing target events from missing native damage records.
+
+When combat ends, the live pulse is cancelled. If no report was attempted, the
+existing three-read post-combat path can still verify attributable damage to/from
+an observed opposing player. This fallback retains its stricter NPC/pet/session
+checks, captured fight location, death handling and cancellation on resumed combat.
+The live path works without a damage meter or baseline; the fallback requires it.
+
+SCOPE AND EXPECTED GAPS
+This implementation watches during the observer's own combat. It does not add
+passive bystander reporting, a guaranteed 100-yard scan, or native minimap dots.
+The 100-yard filter in A.Snapshot only measures already exposed players when
+distance is readable; it is not the activity detector's radius.
+Damage to self alone cannot identify an attacker and is not live evidence. A
+player who only receives damage may rely on the post-combat verified fallback.
+A visible flagged opponent being damaged by an ordinary mob can qualify, because
+the live event identifies the recipient, not its attacker. A selected flagged
+opponent with no recipient damage events does not qualify. A short NPC fight that
+ends before a successful tick does not produce a delayed heuristic report.
+UNIT_COMBAT delivery for target/nameplate/NPC tokens and field readability need
+live acceptance on the current Forever build. Offline tests cannot establish it.
+
+TRACK HUMANOIDS / FIND MINERALS RESEARCH
+Primary sources: Blizzard's public UI source mirror, forever branch, reviewed
+November 25. The minimap TOC loads the Mainline family code with Camelot overrides.
+
+The tracking UI enumerates available tracking MODES, reads their active state,
+and applies a selected filter through C_Minimap.SetTracking. GetTrackingInfo
+returns mode metadata (name, icon, active state, type/subtype, spell ID); it does
+not return found creatures or mineral deposits. MINIMAP_UPDATE_TRACKING has no
+unit/node-list payload. Blizzard's handler refreshes the tracking menu's state.
+
+The Minimap frame exposes native UpdateBlips() with no returned objects. The
+Lua UI calls it on target changes; dot enumeration/detection is not implemented
+as a reusable Lua radius scan in the inspected code. Inference: the native client
+owns that detection/rendering work. The public Lua source does not reveal its
+internal scan interval, server/client split, complete visibility rules or fixed
+range. Do not call it a documented five-second pulse or invent a yard limit.
+C_Minimap.GetViewRadius returns the displayed minimap view radius; it does not
+establish unit-detection coverage or expose a list of detected objects.
+
+No supported API was found in the inspected tracking/frame interfaces for
+enumerating all live tracking dots with GUIDs, positions and combat state, or
+registering a custom PvP-combat tracking category. UpdateBlips is not such an API.
+Changing blip art or parsing mouseover labels would not provide reliable combat
+attribution. This addon does not alter the user's tracking spells or minimap.
+
+RECOMMENDED APPROACH
+Use client-exposed unit events as observations and a bounded five-second reporting
+check. Retain the existing shared-report transport to combine observers' coverage.
+Consider a passive nearby observer only after live tests establish useful token
+coverage and range behavior. The next research step is measured client coverage,
+not increasing a numeric radius that does not create additional observations.
+
+PRIMARY SOURCE LINKS
+Tracking modes, metadata, view radius and tracking-update event:
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/MinimapDocumentation.lua
+Native minimap frame methods, including UpdateBlips (no result):
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/MinimapFrameAPIDocumentation.lua
+Loaded family/game files:
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_Minimap/Blizzard_Minimap.toc
+Tracking menu and PLAYER_TARGET_CHANGED -> UpdateBlips:
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_Minimap/Mainline/Minimap.lua
+Applying tracking filters:
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_FrameXMLUtil/Mainline/MinimapUtil.lua
+UNIT_COMBAT payload and unit predicates:
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua
+
+OFFLINE VALIDATION
+All 20 suites passed with .venv\Scripts\python.exe tools/run_tests.py. The new
+scenarios run against both source and the physically compiled Release. They cover
+five-second timing; flagged players and Neutral-faction flagged NPCs; absent meter;
+secret amounts; unflagged/self/heal/pet exclusions; revalidation, expiry and token
+reuse/removal; current observer position; short fights/death/fallback; duel/reset/
+disable/reload; manual cooldown; single failed-send attempt; event floods; 32-unit
+capacity; and unavailable event registration. Help retains its 18-line budget.
+Output: releases/validation-0.7.11.log.
+Package: releases/TotalWarcraft-0.7.11-release.zip.
+These tests do not establish native event coverage, measured frame-time cost or
+successful live reporting. No installation, Git push or CurseForge upload occurred.
+
+LIVE ACCEPTANCE
+1. Fight an unflagged mob while selecting a flagged opponent: no live report
+   unless that flagged recipient actually produces WOUND observations.
+2. Damage an opposing player for over five seconds: expect REPORT_ACTIVITY,
+   REPORT_ACTIVITY_CHECK evidence=observed-flagged-damage and REPORT_AUTO before
+   combat ends. The affected unit must still be eligible at the tick.
+3. Repeat against a hostile PvP-flagged faction NPC. Expect recipient=pvp-npc;
+   no NPC addition to observed player count. Ordinary NPC control stays negative.
+4. Repeat a short fight, target swap, nameplate disappearance, duel, death,
+   incoming-only fight and a reporting-disabled fight. No stale/duplicate sends.
+5. Export without reloading. If registration succeeds but target events do not
+   arrive, preserve the log and use its WOUND/self-WOUND counts to guide the next
+   investigation. Do not call the feature live-validated from offline tests.

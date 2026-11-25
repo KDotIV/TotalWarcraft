@@ -1,4 +1,12 @@
 TOTALWARCRAFT - DAMAGE VERIFICATION DESIGN
+IMPLEMENTED LOCALLY FOR 0.7.11, November 25: user now accepts PvP-flagged NPC
+activity. During local combat, five-second checks can report recent UNIT_COMBAT
+WOUND occurrences on visible, hostile, flagged players/NPCs still in combat.
+No attacker identity or positive amount is inferred. This live path is independent
+of the meter. Strict post-combat player attribution below remains the fallback.
+See FLAGGED_ACTIVITY_AND_TRACKING_0.7.11.txt for current behavior and live limits.
+The older implementation decisions below are historical.
+
 IMPLEMENTED FOR 0.7.10, November 23: user chose strict NPC protection with verified
 reports allowed after combat. The latest 0.7.9 live battle found an opponent and
 a fresh session, but all 14 in-combat checks had unavailable attribution. Capture

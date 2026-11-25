@@ -3,6 +3,7 @@ local P=A.WB
 local R={}
 A.autoReports=R
 local CAPTURE_LIMIT=900
+local ACTIVITY_INTERVAL, ACTIVITY_UNITS=5,32
 local function secret(v) return issecretvalue and issecretvalue(v) end
 local function field(t,k)
     if secret(t) or type(t)~="table" then return end
@@ -44,6 +45,26 @@ local function catalog()
         if not number(id,1,2147483647) or id%1~=0 then return end
         ids[id]=true
     end
+    return ids
+end
+local function rememberSession(sid)
+    -- Catalog insertion can lag behind a session-update event and combat end.
+    -- Keep a bounded history so a previous NPC/cooldown fight cannot become a
+    -- second "fresh" session in the next capture. Never mutate its frozen baseline.
+    R.knownSessions=R.knownSessions or {}; R.sessionHistory=R.sessionHistory or {}
+    if R.knownSessions[sid] then return false end
+    local slot=R.historyNext or 1
+    local old=R.sessionHistory[slot]
+    if old then R.knownSessions[old]=nil end
+    R.sessionHistory[slot]=sid; R.knownSessions[sid]=true
+    R.historyNext=slot%64+1
+    return true
+end
+local function captureBaseline()
+    if not R.baseline then return end
+    local ids={}
+    for sid in pairs(R.baseline) do ids[sid]=true end
+    for sid in pairs(R.knownSessions or {}) do ids[sid]=true end
     return ids
 end
 local function cancel()
@@ -94,33 +115,107 @@ local function observe(unit)
     if c.names[key] and c.names[key]~=guid then c.ambiguous[key]=true end
     c.names[key]=guid
 end
+local function activityUnit(unit)
+    if secret(unit) or type(unit)~="string" then return end
+    if unit=="target" or unit=="focus" or unit=="targettarget" or unit=="mouseover" then return true end
+    local index=tonumber(unit:match("^nameplate(%d+)$"))
+    return index and index>=1 and index<=64
+end
+local function activityOpponent(unit)
+    if not activityUnit(unit) or P.Read(UnitExists,unit)~=true or P.Read(UnitIsVisible,unit)~=true
+        or P.Read(UnitIsPVP,unit)~=true or P.Read(UnitCanAttack,"player",unit)~=true
+        or P.Read(UnitIsPVPFreeForAll,unit)~=false or P.Read(UnitIsPVPSanctuary,unit)~=false then return end
+    local player=P.Read(UnitIsPlayer,unit)
+    if player==true then
+        local own,other=P.Read(UnitFactionGroup,"player"),P.Read(UnitFactionGroup,unit)
+        if not ((own=="Horde" and other=="Alliance") or (own=="Alliance" and other=="Horde")) then return end
+    elseif player~=false or P.Read(UnitPlayerControlled,unit)~=false then
+        return -- Unknown identity and controlled pets are not faction NPCs.
+    end
+    local guid=P.Read(UnitGUID,unit)
+    if not name(guid) then return end
+    return guid,player and "player" or "pvp-npc"
+end
+local function wound(unit,action)
+    -- UNIT_COMBAT identifies the affected unit, never the attacker. Only the
+    -- readable WOUND occurrence is used; no amount, flagText or school is read.
+    if secret(action) or action~="WOUND" or not R.activityEvents then return end
+    local active=R.capture
+    if active and active.state=="combat" then
+        active.woundEvents=math.min(100000,active.woundEvents+1)
+        if not secret(unit) and unit=="player" then active.selfWounds=math.min(100000,active.selfWounds+1) end
+    end
+    if not activityUnit(unit) then return end
+    local second=math.floor(GetTime())
+    if R.woundSecond~=second then R.woundSecond=second; R.woundBudget=64 end
+    if R.woundBudget<=0 then return end
+    R.woundBudget=R.woundBudget-1
+    if not R.capture then A.UpdateAutoReports() end
+    local c=R.capture
+    if not c or c.state~="combat" or c.blocked then return end
+    local guid,kind=activityOpponent(unit)
+    if not guid then return end
+    if not c.wounds[guid] then
+        if c.woundCount>=ACTIVITY_UNITS then return end
+        c.woundCount=c.woundCount+1
+        trace("REPORT_ACTIVITY","recipient="..kind.." unit="..unit.." guid="..guid.." attribution=unknown")
+    end
+    c.wounds[guid]={unit=unit,at=GetTime(),kind=kind}
+end
+local function liveActivity(c)
+    local now=GetTime()
+    for guid,row in pairs(c.wounds) do
+        if now-row.at<=ACTIVITY_INTERVAL then
+            local current,kind=activityOpponent(row.unit)
+            if current==guid and kind==row.kind and P.Read(UnitAffectingCombat,row.unit)==true then
+                return kind
+            end
+        end
+    end
+    -- Consume each window; an old hit or a reused unit token cannot qualify later.
+    if c.woundCount>0 then trace("REPORT_ACTIVITY_SKIP","no recent eligible flagged recipient still in combat") end
+    c.wounds={}; c.woundCount=0
+end
 local function damage(c,sid,category)
     local kind=field(field(Enum,"DamageMeterType"),category)
-    if not number(kind,0,100) then return end
+    if not number(kind,0,100) then return false,"category_unavailable" end
     local rows=array(field(meter("GetCombatSessionFromID",sid,kind),"combatSources"),64)
-    if not rows then return end
+    if not rows then return false,"sources_unavailable_or_invalid" end
     local count,matched=0,false
     for _,s in ipairs(rows) do
         if field(s,"isLocalPlayer")==true then count=count+1; matched=field(s,"sourceGUID")==c.selfGUID end
     end
-    if count~=1 or not matched then return end
+    if count~=1 then return false,"local_source_count="..count end
+    if not matched then return false,"local_guid_unavailable_or_mismatch" end
     local spells=array(field(meter("GetCombatSessionSourceFromID",sid,kind,c.selfGUID,nil),"combatSpells"),512)
-    if not spells then return end
+    if not spells then return false,"details_unavailable_or_invalid" end
+    local rejected={name=0,unobserved=0,ambiguous=0,npc=0,pet=0,flags=0,amount=0}
     for _,spell in ipairs(spells) do
         local d=field(spell,"combatSpellDetails")
         local key=name(field(d,"unitName"))
         local amount=field(d,"amount")
-        if key and c.names[key] and not c.ambiguous[key] and number(amount,.000001,1e12)
-            and field(d,"isMob")==false and field(d,"isPet")==false then
+        local mob,pet=field(d,"isMob"),field(d,"isPet")
+        local reason
+        if mob==true then reason="npc"
+        elseif pet==true then reason="pet"
+        elseif mob~=false or pet~=false then reason="flags"
+        elseif not key then reason="name"
+        elseif not c.names[key] then reason="unobserved"
+        elseif c.ambiguous[key] then reason="ambiguous"
+        elseif not number(amount,.000001,1e12) then reason="amount" end
+        if reason then rejected[reason]=rejected[reason]+1
+        else
             trace("REPORT_DAMAGE_SOURCE","session="..sid.." enemy="..key.." category="..category.." damage="..amount)
             return true
         end
     end
+    return false,"rows="..#spells.." npc="..rejected.npc.." pet="..rejected.pet.." flags="..rejected.flags
+        .." name="..rejected.name.." unobserved="..rejected.unobserved.." ambiguous="..rejected.ambiguous.." amount="..rejected.amount
 end
 local inspect
 local function schedule(c)
     if R.timer then R.timer:Cancel() end
-    local delay=c.state=="combat" and CAPTURE_LIMIT or (c.reads==0 and .5 or 1.5)
+    local delay=c.state=="combat" and ACTIVITY_INTERVAL or (c.reads==0 and .5 or 1.5)
     local timer
     timer=C_Timer.NewTimer(delay,function()
         if R.capture~=c or R.timer~=timer then return end
@@ -137,6 +232,23 @@ inspect=function(c)
         or GetTime()-c.started>=CAPTURE_LIMIT or not A.db.autoReports then
         skip("activity capture invalidated"); cancel(); R.baseline=nil; R.awaitPeace=true; return
     end
+    if c.state=="combat" then
+        local kind=liveActivity(c)
+        if kind then
+            cancel(); R.attempted=true
+            trace("REPORT_ACTIVITY_CHECK","evidence=observed-flagged-damage recipient="..kind.." attribution=unknown range=client-visible")
+            local ok,message=A.Report("automatic",loc)
+            trace("REPORT_AUTO","accepted="..tostring(ok==true).." evidence=observed-flagged-damage "..A.CleanText(message,160))
+            if ok then A.Print("Faction combat activity reported to the shared channel.") end
+        else
+            if not c.activityChecked then
+                trace("REPORT_ACTIVITY_CHECK","evidence=none woundEvents="..c.woundEvents.." selfWounds="..c.selfWounds)
+                c.activityChecked=true
+            end
+            schedule(c)
+        end
+        return
+    end
     if c.state~="reading" then return end
     c.reads=c.reads+1
     if not quiet() then
@@ -146,16 +258,24 @@ inspect=function(c)
         else schedule(c) end
         return
     end
-    local ids=catalog(); local sid,total=nil,0
-    if ids then for id in pairs(ids) do if not c.baseline[id] then sid=id; total=total+1 end end end
-    trace("REPORT_VERIFY","phase=post-combat read="..c.reads.." freshSessions="..total.." observedOpponents="..c.count)
+    local ids=catalog(); local sid,total,correlated=nil,0,0; local fresh={}
+    if ids then for id in pairs(ids) do if not c.baseline[id] then
+        sid=id; total=total+1; fresh[#fresh+1]=id
+        if c.updated[id] then correlated=correlated+1 end
+    end end end
+    table.sort(fresh)
+    local shown={}; for i=1,math.min(8,#fresh) do shown[i]=tostring(fresh[i]) end
+    trace("REPORT_VERIFY","phase=post-combat read="..c.reads.." freshSessions="..total.." observedOpponents="..c.count
+        .." correlated="..correlated.." catalog="..(ids and "readable" or "unavailable")
+        .." freshIDs="..(#shown>0 and table.concat(shown,",") or "none"))
     if total>1 or (c.sid and sid and c.sid~=sid) then
         skip("multiple/changed meter sessions"); cancel(); R.baseline=nil; R.awaitPeace=true; return
     end
     c.sid=sid or c.sid
     if total==1 and c.updated[sid] then
         for _,category in ipairs({"DamageTaken","DamageDone"}) do
-            if damage(c,sid,category) then
+            local verified,reason=damage(c,sid,category)
+            if verified then
                 local direction=category=="DamageTaken" and "incoming" or "outgoing"
                 cancel(); R.baseline=ids; R.attempted=true
                 trace("REPORT_DAMAGE_CHECK",direction.." opposing-player damage confirmed after combat; session="..sid)
@@ -164,6 +284,7 @@ inspect=function(c)
                 if ok then A.Print("PvP report submitted to the shared channel.") end
                 return
             end
+            trace("REPORT_ATTRIBUTION","session="..sid.." category="..category.." "..reason)
         end
     end
     if c.reads>=3 then
@@ -189,8 +310,12 @@ function A.UpdateAutoReports()
             local c=R.capture
             if c.state=="combat" then
                 c.state="reading"
-                trace("REPORT_CAPTURE_END","opponents="..c.count.." blocked="..tostring(c.blocked==true))
-                if c.count==0 or c.blocked then cancel(); R.baseline=nil
+                trace("REPORT_CAPTURE_END","opponents="..c.count.." blocked="..tostring(c.blocked==true)
+                    .." woundEvents="..c.woundEvents.." selfWounds="..c.selfWounds)
+                c.wounds={}; c.woundCount=0
+                if c.count==0 or c.blocked or not c.baseline then
+                    if c.count>0 and not c.baseline then skip("post-combat meter baseline unavailable") end
+                    cancel(); R.baseline=nil
                 else
                     trace("REPORT_DEFER","waiting for post-combat damage attribution")
                     schedule(c)
@@ -215,13 +340,13 @@ function A.UpdateAutoReports()
         R.attempted=true; cancel(); return skip("shared report cooldown")
     end
     if not R.capture then
-        if not R.baseline then R.awaitPeace=true; return skip("fresh out-of-combat meter baseline unavailable") end
         local loc=location(); local guid=P.Read(UnitGUID,"player")
         if not loc or not name(guid) then R.awaitPeace=true; return skip("identity/location unavailable") end
-        R.capture={state="combat",baseline=R.baseline,loc=loc,selfGUID=guid,started=GetTime(),
-            updated={},updates=0,names={},ambiguous={},opponents={},count=0,reads=0}
+        R.capture={state="combat",baseline=captureBaseline(),loc=loc,selfGUID=guid,started=GetTime(),
+            updated={},updates=0,names={},ambiguous={},opponents={},count=0,reads=0,wounds={},woundCount=0,woundEvents=0,selfWounds=0}
         R.baseline=nil
-        trace("REPORT_CAPTURE_START","map="..loc.mapID.." verification=post-combat guild="..tostring(P.Read(IsInGuild)==true))
+        trace("REPORT_CAPTURE_START","map="..loc.mapID.." activityInterval=5 postCombatFallback="..tostring(R.capture.baseline~=nil)
+            .." guild="..tostring(P.Read(IsInGuild)==true))
         schedule(R.capture)
         observe("target"); observe("focus"); observe("targettarget")
         local plates=P.Read(C_NamePlate and C_NamePlate.GetNamePlates)
@@ -238,14 +363,25 @@ function A.SetAutoReportsEnabled(enabled)
 end
 function A.InitAutoReports()
     cancel(); R.baseline=nil; R.startedAt=nil; R.awaitPeace=true
+    R.knownSessions=nil; R.sessionHistory=nil; R.historyNext=nil
+    R.woundSecond=nil; R.woundBudget=0; R.activityEvents=false
     A.db.autoReports=A.db.autoReports~=false
     if R.events then R.events:UnregisterAllEvents() end
     local f=CreateFrame("Frame"); R.events=f
     for _,event in ipairs({"PLAYER_REGEN_DISABLED","PLAYER_REGEN_ENABLED","PLAYER_DEAD","PLAYER_TARGET_CHANGED","PLAYER_FOCUS_CHANGED",
-        "NAME_PLATE_UNIT_ADDED","PLAYER_LOGIN","PLAYER_ENTERING_WORLD","ZONE_CHANGED_NEW_AREA","SHARD_TRANSFER","SHARD_TRANSFER_IMMINENT",
+        "NAME_PLATE_UNIT_ADDED","NAME_PLATE_UNIT_REMOVED","UNIT_COMBAT","PLAYER_LOGIN","PLAYER_ENTERING_WORLD","ZONE_CHANGED_NEW_AREA","SHARD_TRANSFER","SHARD_TRANSFER_IMMINENT",
         "DAMAGE_METER_COMBAT_SESSION_UPDATED","DAMAGE_METER_RESET","DUEL_REQUESTED","DUEL_TO_THE_DEATH_REQUESTED",
-        "DUEL_INBOUNDS","DUEL_OUTOFBOUNDS","DUEL_FINISHED"}) do pcall(f.RegisterEvent,f,event) end
+        "DUEL_INBOUNDS","DUEL_OUTOFBOUNDS","DUEL_FINISHED"}) do
+        local ok,result=pcall(f.RegisterEvent,f,event)
+        if event=="UNIT_COMBAT" then
+            R.activityEvents=ok and not secret(result) and result~=false
+            trace("REPORT_ACTIVITY_EVENTS",R.activityEvents and "UNIT_COMBAT registered" or "UNIT_COMBAT unavailable")
+        end
+    end
     f:SetScript("OnEvent",function(_,event,...)
+        -- Damage traffic has its own budget. Floods cannot starve combat-end,
+        -- transfer, disable or duel handling on the lifecycle event path.
+        if event=="UNIT_COMBAT" then wound(...); return end
         local second=math.floor(GetTime())
         if R.second~=second then R.second=second; R.budget=100 end
         R.budget=R.budget-1
@@ -258,21 +394,37 @@ function A.InitAutoReports()
         elseif event=="PLAYER_ENTERING_WORLD" or event=="ZONE_CHANGED_NEW_AREA" or event=="SHARD_TRANSFER"
             or event=="SHARD_TRANSFER_IMMINENT" or event=="DAMAGE_METER_RESET" then
             cancel(); R.baseline=nil; R.awaitPeace=true
+            if event=="DAMAGE_METER_RESET" then R.knownSessions=nil; R.sessionHistory=nil; R.historyNext=nil end
         elseif event=="DAMAGE_METER_COMBAT_SESSION_UPDATED" then
             -- A meter notification may arrive before PLAYER_REGEN_DISABLED.
             -- Capture the already-observed combat transition before assigning it.
             if not R.capture and P.Read(UnitAffectingCombat,"player")==true then A.UpdateAutoReports() end
             local _,sid=...
             if number(sid,1,2147483647) and sid%1==0 then
+                local first=rememberSession(sid)
                 local c=R.capture
                 if c then
-                    if not c.updated[sid] then c.updates=c.updates+1 end
+                    if not c.updated[sid] then
+                        c.updates=c.updates+1
+                        trace("REPORT_METER_SESSION","phase="..c.state.." id="..sid.." prior="..tostring(c.baseline~=nil and c.baseline[sid]==true))
+                    end
                     if c.updates>64 then c.blocked=true else c.updated[sid]=GetTime() end
-                elseif R.baseline and not R.baseline[sid] then R.baseline=nil end
+                else
+                    if first then trace("REPORT_METER_SESSION","phase=uncaptured id="..sid) end
+                    if R.baseline and not R.baseline[sid] then R.baseline=nil end
+                end
             end
         end
         A.UpdateAutoReports()
         if event=="NAME_PLATE_UNIT_ADDED" then observe(...) end
+        if event=="NAME_PLATE_UNIT_REMOVED" and R.capture then
+            local unit=...
+            if activityUnit(unit) then
+                for guid,row in pairs(R.capture.wounds) do if row.unit==unit then
+                    R.capture.wounds[guid]=nil; R.capture.woundCount=R.capture.woundCount-1
+                end end
+            end
+        end
     end)
     if not R.duelHook and type(hooksecurefunc)=="function" and type(StartDuel)=="function" then
         R.duelHook=pcall(hooksecurefunc,"StartDuel",duelRequested)

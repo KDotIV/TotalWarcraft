@@ -1,3 +1,27 @@
+TotalWarcraft 0.7.11
+November 25, 2026 - Release - WoW Forever 1.60.1
+
+- During your combat, check every five seconds for recent damage events on a
+  visible, hostile, PvP-flagged player or NPC that remains in combat. Flagged
+  faction NPCs now intentionally qualify as activity. Live reports use your
+  current location and do not claim to identify the attacker.
+- Ordinary unflagged mobs, controlled pets, healing, target selection and damage
+  to you alone do not qualify. Keep duel/instance exclusions and shared cooldown.
+- Use bounded event observations (32 recipients per window), with no combat-time
+  damage-meter reads or idle scan. No complete 100-yard detection claim.
+- Keep strict post-combat player-damage verification as a fallback when no live
+  report was attempted. Short fights can still use that verified path.
+- Remember prior damage-meter session updates even when the session list is late.
+  A finished NPC or cooldown fight's delayed entry no longer counts as a second
+  fresh session in the next PvP capture. History is bounded and clears on reset.
+- The post-combat fallback still requires fresh, correlated player-attributed
+  damage. Truly ambiguous new sessions still skip that fallback.
+- Journal entries identify session updates, fresh IDs and rejected damage rows,
+  including missing details, NPC/pet records and unmatched opponent identities.
+- Declare the keybinding category once to remove duplicate-header warnings.
+- Live 0.7.10 logs confirm three verified local reports and accepted channel sends;
+  later failures motivated this fix. Live activity and session handling need live testing.
+
 TotalWarcraft 0.7.10
 November 23, 2026 - Release - WoW Forever 1.60.1
 

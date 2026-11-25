@@ -1,4 +1,4 @@
-TOTALWARCRAFT 0.7.10
+TOTALWARCRAFT 0.7.11
 World of Warcraft: Forever only (Interface 16001)
 
 Quickly form parties to seek out world PvP or rally your faction to retaliate
@@ -9,11 +9,14 @@ for warbands. One managed dialog is visible at a time, with Back navigation and
 a draggable military frame. No external backend or third-party library is needed.
 
 FEATURES
-- Automatic reports retain combat captures through combat end/death, then make
-  up to three checks for attributable incoming or outgoing opposing-player damage.
-  Fresh-session, identity, duel/NPC/pet/FFA/instance safeguards remain in place.
-  Native damage is only read after combat and lockdown clear; live acceptance
-  of the 0.7.10 fix is still required.
+- During your combat, automatic reports check every five seconds for recent
+  damage to a visible, hostile, PvP-flagged player or NPC still in combat.
+  Flagged faction NPCs intentionally qualify; ordinary unflagged mobs, pets,
+  target selection and damage to self alone do not. No native meter reads in combat.
+  Strict post-combat player-damage verification remains a fallback, including
+  death/short fights. Both paths share exclusions, cooldown and a single attempt.
+  Live 0.7.10 logs confirm the verified send path. The new 0.7.11 activity path
+  and delayed-session fix are tested offline and still need live acceptance.
   Manual reports remain available via /tw report or a keybind; shared cooldown.
 - Compact known-only tooltips and fading nearby-report clusters: scaled swords,
   pulsing red halo and native red weapons/raid skull for heavy reported activity.
@@ -39,14 +42,17 @@ FEATURES
 - UI controls, slash commands and optional keybindings cover player features.
 
 EVIDENCE LIMITS
-Fight size and exact layers remain unconfirmed. Automatic local reports now use
-attributable incoming or outgoing player damage; manual and received reports remain claims.
+Fight size and exact layers remain unconfirmed. Live reports observe damage to
+eligible flagged units without identifying the attacker. A flagged enemy fighting
+an ordinary mob can qualify. The fallback verifies player-attributed damage after
+combat. Manual and received reports remain claims. Detection is limited to units
+exposed by the client; the report snapshot's 100-yard cutoff is not a scan radius.
 GUID components
 are not cross-client layer keys. A UUID, map position, listing, native group join
 or transfer event does not establish arrival at the original fight. Parties-only
 is a product choice, not proof that outdoor raids cannot share a layer.
 
-Nineteen offline suites cover isolated Lua clients and the physically
+Twenty offline suites cover isolated Lua clients and the physically
 stripped release ZIP. The two-client 0.6.1 live simulation established messaging,
 member updates and teardown; it did not validate native grouping or layer arrival.
 Finder calls and the revised 0.7 UI/invitations still require live acceptance.
@@ -55,6 +61,10 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
+Version 0.7.11 is prepared locally, not yet published. It adds five-second activity
+reports for flagged players/NPCs and fixes delayed sessions and binding headers.
+Research and live checks: docs/FLAGGED_ACTIVITY_AND_TRACKING_0.7.11.txt.
+Earlier log review and session fix: docs/AUTO_REPORT_SESSION_FIX_0.7.11.txt.
 Version 0.7.10 restores strict post-combat verification after the 0.7.9 live test
 recorded 14 checks with no readable attribution during a 70-second PvP fight.
 It retains captures through death and reports at the captured fight location.

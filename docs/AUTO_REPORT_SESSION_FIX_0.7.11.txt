@@ -1,0 +1,85 @@
+TOTALWARCRAFT - 0.7.10 LIVE LOG REVIEW / 0.7.11 SESSION FIX
+Reviewed November 25, 2026. Local 0.7.11 build; not published.
+This records the earlier strict-session fix. The owner subsequently broadened
+activity to include PvP-flagged NPCs. Current behavior and tracking research are
+in FLAGGED_ACTIVITY_AND_TRACKING_0.7.11.txt; this strict path remains a fallback.
+
+OBSERVED IN THE USER'S LOG
+Addon 0.7.10 Release, Forever 1.60.1 build 71091, interface 16001.
+No journal entries or issue entries were omitted. Export at +3819.808.
+
+Three early captures verified incoming player-attributed damage and submitted:
+  +1129.215: session 401, per-unit amount 1481.
+  +1321.832: session 403, per-unit amount 304 (after player death).
+  +1583.875: session 404, per-unit amount 1395.
+Each records REPORT_DAMAGE_CHECK, REPORT_SEND accepted route=CHANNEL,
+ALERT_SKIP own report, REPORT_AUTO accepted=true, then a channel duplicate.
+This confirms the local verification/send path. The echo is not a remote-client
+acknowledgement. Own-report popups are intentionally suppressed; records last
+five minutes, so all three had expired well before this export. The log does not
+prove the user saw a map pin or that another client displayed these reports.
+
+Later failures:
+  +3525.296: two fresh sessions; multiple/changed meter sessions.
+  +3703.344, +3704.849, +3706.349: one fresh session, one observed opponent;
+    all three reads failed to find readable attributable player damage.
+  +3773.168: two fresh sessions; multiple/changed meter sessions.
+Other captures with zero opponents ended without an automatic report. One
+earlier combat was excluded by the shared report cooldown. The only Lua warnings
+are three duplicate WARBANDPVP binding-header declarations; no Lua error is logged.
+
+REPRODUCED CODE DEFECT
+0.7.10 records native session-update IDs only inside its active capture. A capture
+with no opponents is discarded immediately at combat end, taking those IDs with
+it. If catalog insertion lags behind the update/end event, the immediate baseline
+can omit that completed session. Once it appears alongside the next PvP session,
+verification sees two "fresh" sessions and rejects the encounter. An idle update
+can also precede catalog insertion and be lost by the baseline refresh.
+
+A regression fixture reproduces this order and fails against 0.7.10. The live
+export records neither candidate IDs nor meter-update events, so it cannot prove
+that this exact ordering caused either of the two multi-session rejections.
+It also cannot isolate the missing damage field in the single-session rejection.
+
+CORRECTION
+Keep the last 64 distinct readable session-update IDs in a bounded ring and set,
+including NPC/cooldown captures and idle updates. At capture start, copy the
+out-of-combat catalog baseline and those prior IDs into a frozen baseline (at
+most 128 IDs). Updates during the capture never change that baseline. A meter
+notification that first reveals combat still starts the capture BEFORE recording
+its ID, so it remains eligible as current-fight evidence. Clear history on native
+meter reset and addon initialization. This history fix adds no polling timer or
+combat meter read; the separate activity feature adds a five-second combat check.
+
+Truly multiple new sessions still fail closed. Never pick the newest/largest
+session or reuse an earlier fight's damage. NPC/pet flags, positive per-unit
+amounts, observed opposing-player identities, fresh session correlation, combat/
+lockdown gates, duel/instance/FFA exclusions, cooldown and one attempt remain.
+
+The journal now logs each capture's first update per session, whether it was in
+the baseline, fresh IDs (up to eight), correlation count and catalog readability.
+Failed attribution logs the category and source/details failure, or row counts
+rejected for NPC, pet, unavailable flags/name, unseen/ambiguous name, or invalid/
+nonpositive amount. Each row has one rejection reason; these are counts, not
+proof that no damage occurred. Existing three-read and export bounds remain.
+Bindings.xml declares its category once while retaining all four actions.
+
+VALIDATION / LIMITS
+All 20 offline suites passed with .venv\Scripts\python.exe tools/run_tests.py,
+including the source and compiled Release scenarios. Output is recorded in
+releases/validation-0.7.11.log. Package: releases/TotalWarcraft-0.7.11-release.zip.
+The new delayed-NPC-session regression was observed failing before the fix.
+Regression cases exercise delayed prior NPC catalog insertion, idle updates,
+old positive player damage excluded from the next empty encounter, two genuinely
+new correlated sessions, the pre-combat notification order, 64-ID history bounds,
+reset/reused IDs and precise attribution rejection counts. These run against
+source and the physically compiled Release, alongside the existing guards.
+This fixes a reproduced ordering defect; it does not reconstruct missing native
+records or establish that every PvP fight can be verified on the live client.
+
+NEXT LIVE CHECK
+Use the 0.7.11 build, fight NPCs then an opposing player, and export after combat
+without reloading. The fallback preserves strict NPC protection. If it still skips,
+REPORT_METER_SESSION / REPORT_VERIFY / REPORT_ATTRIBUTION now identify which
+session or required evidence failed. A subsequent implementation in this same
+unpublished version adds the activity path described in the follow-up document.
