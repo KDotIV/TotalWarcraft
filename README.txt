@@ -61,8 +61,12 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
-Version 0.7.11 is prepared locally, not yet published. It adds five-second activity
-reports for flagged players/NPCs and fixes delayed sessions and binding headers.
+CurseForge accepted 0.7.11 as Release file 9811578 after all 20 suites passed in
+GitHub CI. All 30 uploaded files match the tested local build. Approval/client
+indexing remains unconfirmed. It adds five-second flagged-player/NPC activity
+reports and fixes delayed sessions and binding headers.
+Receipt: docs/CURSEFORGE_SUBMISSION_0.7.11.txt.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9811578
 Research and live checks: docs/FLAGGED_ACTIVITY_AND_TRACKING_0.7.11.txt.
 Earlier log review and session fix: docs/AUTO_REPORT_SESSION_FIX_0.7.11.txt.
 Version 0.7.10 restores strict post-combat verification after the 0.7.9 live test

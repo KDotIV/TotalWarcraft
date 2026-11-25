@@ -1,5 +1,5 @@
 TOTALWARCRAFT - 0.7.10 LIVE LOG REVIEW / 0.7.11 SESSION FIX
-Reviewed November 25, 2026. Local 0.7.11 build; not published.
+Reviewed November 25, 2026. Uploaded as CurseForge Release file 9811578.
 This records the earlier strict-session fix. The owner subsequently broadened
 activity to include PvP-flagged NPCs. Current behavior and tracking research are
 in FLAGGED_ACTIVITY_AND_TRACKING_0.7.11.txt; this strict path remains a fallback.
@@ -82,4 +82,4 @@ Use the 0.7.11 build, fight NPCs then an opposing player, and export after comba
 without reloading. The fallback preserves strict NPC protection. If it still skips,
 REPORT_METER_SESSION / REPORT_VERIFY / REPORT_ATTRIBUTION now identify which
 session or required evidence failed. A subsequent implementation in this same
-unpublished version adds the activity path described in the follow-up document.
+version adds the activity path described in the follow-up document.

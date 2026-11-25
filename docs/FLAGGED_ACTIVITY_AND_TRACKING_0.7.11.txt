@@ -1,5 +1,6 @@
 TOTALWARCRAFT - FLAGGED COMBAT ACTIVITY AND NATIVE TRACKING
-November 25, 2026. Local 0.7.11 implementation; not published or live-validated.
+November 25, 2026. Uploaded as CurseForge Release file 9811578; not live-validated.
+Public approval/indexing remains unconfirmed. See CURSEFORGE_SUBMISSION_0.7.11.txt.
 
 ACCEPTED PRODUCT RULE
 The owner now accepts activity involving PvP-flagged faction NPCs. This replaces
@@ -117,7 +118,8 @@ capacity; and unavailable event registration. Help retains its 18-line budget.
 Output: releases/validation-0.7.11.log.
 Package: releases/TotalWarcraft-0.7.11-release.zip.
 These tests do not establish native event coverage, measured frame-time cost or
-successful live reporting. No installation, Git push or CurseForge upload occurred.
+successful live reporting. Publication receipt: CURSEFORGE_SUBMISSION_0.7.11.txt.
+No local WoW installation or saved settings were changed.
 
 LIVE ACCEPTANCE
 1. Fight an unflagged mob while selecting a flagged opponent: no live report

@@ -1,20 +1,22 @@
 TOTALWARCRAFT - AUTOMATIC REPORTING LIVE RESULTS AND FIX
 
-CURRENT LOCAL 0.7.11 BEHAVIOR - November 25, 2026
+CURRENT 0.7.11 RELEASE BEHAVIOR - November 25, 2026
 The owner broadened the rule to accept PvP-flagged NPC activity. A new five-second
 path observes readable WOUND occurrences on eligible flagged units during local
 combat, without requiring a native meter or claiming attacker attribution. The
-strict post-combat player-damage path remains a fallback. Nothing is published.
+strict post-combat player-damage path remains a fallback. CurseForge accepted
+Release file 9811578; public approval/indexing and live behavior remain unconfirmed.
+Receipt: CURSEFORGE_SUBMISSION_0.7.11.txt.
 Implementation, tracking research and live checks:
 FLAGGED_ACTIVITY_AND_TRACKING_0.7.11.txt.
 
-0.7.10 LIVE FOLLOW-UP / LOCAL 0.7.11 FIX - November 25, 2026
+0.7.10 LIVE FOLLOW-UP / 0.7.11 FIX - November 25, 2026
 The latest export confirms three verified reports and accepted channel sends,
 followed by two multi-session skips and one missing-attribution skip. Own-report
 popups were suppressed and all three accepted reports had expired before export.
 Version 0.7.11 fixes a reproduced delayed prior-session ordering defect and logs
-the evidence needed to distinguish remaining failures. It is prepared locally,
-not yet published or live-validated. See AUTO_REPORT_SESSION_FIX_0.7.11.txt.
+the evidence needed to distinguish remaining failures. It is uploaded as Release
+file 9811578 and still needs live validation. See AUTO_REPORT_SESSION_FIX_0.7.11.txt.
 
 0.7.10 FIX - November 23, 2026
 User selected: keep strict NPC protection; allow verified reports after combat.

@@ -1,0 +1,51 @@
+TOTALWARCRAFT 0.7.11 - RELEASE UPLOAD RECEIPT
+November 25, 2026. CurseForge upload accepted.
+
+CurseForge project 1819796, file 9811578, releaseType=release, Forever 1.60.1.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9811578
+Automatic publication after moderation requested. Public approval and client
+indexing remain unconfirmed: the public file page was inaccessible to the web
+tool. This is not evidence of rejection. Do not repeat the successful upload.
+
+Immutable tag v0.7.11 -> bb07a5dfcde23e8e73a7642509499cc0619a892d.
+https://github.com/KDotIV/TotalWarcraft/tree/v0.7.11
+Publish run 45650282801: success. Publish job 139332618879: success.
+https://github.com/KDotIV/TotalWarcraft/actions/runs/45650282801
+Main CI 45650283008: success.
+https://github.com/KDotIV/TotalWarcraft/actions/runs/45650283008
+All 20 offline suites passed locally and in Linux CI, including the physically
+compiled Release. Final release-note changes passed the local publishing checks.
+Only this version's changelog section was submitted to CurseForge.
+
+RELEASE CONTENT
+- Five-second combat checks for recent damage occurrences affecting visible,
+  hostile, PvP-flagged players or NPCs still in combat. NPC activity intentionally
+  qualifies; the attacker is not identified. Current observer position is used.
+- Ordinary unflagged mobs, controlled pets, healing, target selection and damage
+  to self alone do not qualify. No native damage-meter reads during combat.
+- Bounded events and 32 recipients per window; no idle scan or 100-yard radar.
+- Strict post-combat player-damage verification remains the fallback, including
+  short fights and death. Both paths share cooldown and one-attempt safeguards.
+- Prior session-update history prevents delayed earlier sessions from appearing
+  fresh in a later fight. Duplicate binding headers and diagnostics are fixed.
+- Live event delivery/field readability still require in-game verification.
+Research and acceptance: FLAGGED_ACTIVITY_AND_TRACKING_0.7.11.txt.
+
+ARTIFACT VERIFICATION
+Artifact 15038274526, release-receipt, downloaded and SHA256 verified:
+dd3f391ff043ce26c6e9bae03d8afe5a621602bce80864296d58e39caea7afb4.
+Uploaded ZIP SHA256 (matches the CurseForge receipt):
+c2fe80a91702f67bdcfa37eba1e70d3bfd941cd30840ed159d40057367c1a134.
+Tested local final ZIP SHA256:
+2fc3ff23614278bd8b08c0ef8b713c2dd3a5f5e49fbfafd93a88da35df94c951.
+All 30 ZIP entries match byte for byte; ZIP platform metadata differs.
+Local ZIP: releases/TotalWarcraft-0.7.11-release.zip.
+Uploaded ZIP: releases/TotalWarcraft-0.7.11-uploaded-release.zip.
+Artifact: releases/TotalWarcraft-0.7.11-release-receipt.zip.
+Receipt: releases/curseforge-receipt-0.7.11.json.
+Local test output: releases/validation-0.7.11.log.
+
+The GitHub connector returned internal errors for jobs/logs/artifacts. Verification
+used GitHub's REST API and the existing Git credential helper for the authenticated
+artifact download. No credential was logged or persisted. The download redirect
+received no GitHub authorization header. No local WoW installation/settings changed.

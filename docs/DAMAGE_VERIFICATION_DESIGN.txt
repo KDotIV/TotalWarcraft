@@ -1,5 +1,5 @@
 TOTALWARCRAFT - DAMAGE VERIFICATION DESIGN
-IMPLEMENTED LOCALLY FOR 0.7.11, November 25: user now accepts PvP-flagged NPC
+IMPLEMENTED FOR 0.7.11, November 25: user now accepts PvP-flagged NPC
 activity. During local combat, five-second checks can report recent UNIT_COMBAT
 WOUND occurrences on visible, hostile, flagged players/NPCs still in combat.
 No attacker identity or positive amount is inferred. This live path is independent
