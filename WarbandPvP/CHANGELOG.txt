@@ -1,3 +1,17 @@
+TotalWarcraft 0.7.12
+November 27, 2026 - Release - WoW Forever 1.60.1
+
+- Fix a startup failure that could prevent detected PvP activity from being sent.
+  Keep an existing report-channel connection and continue joining even if old
+  TotalWarcraft channels remain listed or the channel list is unavailable.
+- Retry an unavailable connection after combat, within bounded retry limits.
+  Failed reports are not replayed and native channel restrictions remain respected.
+- Include join attempts and cleanup results in the session journal.
+- Omit routine cooldown, facing, range, resource and interrupted-cast messages
+  from the journal. Count them as uiErrorsFiltered in the export header instead.
+  Keep unexpected UI messages, Lua errors and blocked addon actions visible.
+  The game's normal spell feedback is unchanged.
+
 TotalWarcraft 0.7.11
 November 25, 2026 - Release - WoW Forever 1.60.1
 

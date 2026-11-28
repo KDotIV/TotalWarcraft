@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from lupa.lua51 import LuaRuntime
 from wow_mock import BOOT, ROOT
+from auto_report_scenarios import SETUP
 
 sys.path.insert(0, str(ROOT.parent / 'tools'))
 from build_addon import build
@@ -30,20 +31,45 @@ def deliver(lua, payload, sender, route='CHANNEL', index=None, name=NAME, prefix
 
 
 def check(root):
-    # Preflight snapshots names before any renumbering; only prefix matches leave.
+    # Preserve the active report channel; legacy cleanup cannot block readiness.
     lua = factory(root, setup="""
 channels={[1]='General',[2]='totalwarcraft-old',[3]='Trade',[7]='TotalWarcraftTest',
  [8]='TotalWarcraftReportComms',[9]='OtherTotalWarcraft',[10]='TotalWarcraftFans'}
 A.db.channelDiagnostics={entries={'old dummy data'}}
 """)
     lua.execute("""
-assert(#channelLeaves==4 and channelJoins==0 and not A.db.channelDiagnostics)
+assert(#channelLeaves==3 and channelJoins==0 and not A.db.channelDiagnostics)
 assert(channels[1]=='General' and channels[3]=='Trade' and channels[9]=='OtherTotalWarcraft')
-assert(not A.ReportChannelID() and not A.Report())
+assert(A.ReportChannelID()==8)
 advanceTimers(1)
-assert(A.ReportChannelID()==7 and channelJoins==1 and activeTimers()==0)
+assert(A.ReportChannelID()==8 and channelJoins==0 and activeTimers()==0)
 emitEvent('PLAYER_LOGIN'); emitEvent('PLAYER_ENTERING_WORLD')
-assert(channelJoins==1 and #channelLeaves==4 and advanceTimers(300)==0 and sends==0)
+assert(channelJoins==0 and #channelLeaves==3 and advanceTimers(300)==0 and sends==0)
+""")
+
+    # 0.7.11 live failure: cleanup can retain listed memberships even after leave
+    # attempts, preventing any join. A usable current channel must remain usable.
+    stuck=factory(root,setup="channels[7]='TotalWarcraftReportComms'; channels[8]='TotalWarcraftLegacy'; LeaveChannelByName=function() end")
+    stuck.execute("assert(A.ReportChannelID()==7 and channelJoins==0); assert(A.Report()); assert(sends==1)")
+    for setup in ["channels[5]='TotalWarcraftOld'; LeaveChannelByName=function() end",
+                  "channels[5]='TotalWarcraftOld'; LeaveChannelByName=function() error('unavailable') end",
+                  "GetChannelList=nil", "GetChannelList=function() error('unavailable') end",
+                  "GetChannelList=function() return 1,'SECRET',false end"]:
+        recovered=factory(root,setup=setup)
+        recovered.execute("assert(A.ReportChannelID()==7 and channelJoins==1 and activeTimers()==0); assert(A.Report())")
+
+    # Real five-second automatic sends survive the stuck legacy cleanup from the
+    # live log, for both players and flagged NPCs, with or without a prior channel.
+    for existing in [False, True]:
+        for player in ['true', 'false']:
+            activity=factory(root,setup="channels[5]='TotalWarcraftOld'; LeaveChannelByName=function() end; "
+                             + ("channels[7]='TotalWarcraftReportComms'" if existing else ""))
+            activity.execute(SETUP + "\nplayerTarget=" + player + """
+function UnitPlayerControlled(u) return UnitIsPlayer(u) end
+fight(); advanceTimers(4); event('UNIT_COMBAT','target','WOUND'); advanceTimers(1)
+assert(combat and reportCount()==1 and sentRoutes[1]=='CHANNEL' and #A.List()==1)
+assert(A.SessionLogText():find('REPORT_AUTO accepted=true evidence=observed-flagged-damage',1,true))
+peace(); assert(reportCount()==1 and not A.autoReports.timer and not A.reportChannel.timer)
 """)
 
     # Two unguilded users on different continents and different LOCAL indexes.
@@ -98,14 +124,16 @@ assert(A.ReportChannelID()==11 and activeTimers()==0)
 CLOCK=CLOCK+5; assert(A.Report() and sentTargets[1]=='11')
 """)
 
-    # Native rejection, missing/secret APIs and blocked cleanup all fail boundedly.
-    for setup in ["GetChannelList=nil", "GetChannelList=function() return 1,'SECRET',false end",
-                  "channels[5]='TotalWarcraftOld'; LeaveChannelByName=function() end",
-                  "JoinTemporaryChannel=function() error('unavailable') end",
+    # Native rejection and missing/secret channel identity still fail boundedly.
+    for setup in ["JoinTemporaryChannel=function() error('unavailable') end",
                   "JoinTemporaryChannel=function() channelJoins=channelJoins+1; return 0 end",
                   "GetChannelName=function() return 'SECRET' end"]:
         fail=factory(root,setup=setup)
         fail.execute("advanceTimers(31); assert(not A.ReportChannelID() and activeTimers()==0 and sends==0); assert(channelJoins<=3); assert(advanceTimers(300)==0)")
+
+    # Recover on leaving combat, without an idle retry loop or resending a report.
+    recovery=factory(root,setup="nativeJoin=JoinTemporaryChannel; JoinTemporaryChannel=function() return false end")
+    recovery.execute("advanceTimers(31); assert(not A.ReportChannelID() and activeTimers()==0); JoinTemporaryChannel=nativeJoin; emitEvent('PLAYER_REGEN_ENABLED'); assert(A.ReportChannelID()==7 and channelJoins==1 and sends==0 and activeTimers()==0)")
 
     retry=factory(root)
     retry.execute("""
@@ -116,6 +144,7 @@ emitEvent('CHAT_MSG_CHANNEL_NOTICE','BANNED','','','',nil,nil,0,7,'Other')
 assert(A.ReportChannelID()==7)
 emitEvent('CHAT_MSG_CHANNEL_NOTICE','MUTED','','','',nil,nil,0,7,'TotalWarcraftReportComms')
 assert(not A.ReportChannelID() and not A.Report() and activeTimers()==0)
+advanceTimers(31); emitEvent('PLAYER_REGEN_ENABLED'); assert(not A.ReportChannelID() and activeTimers()==0)
 advanceTimers(31); emitEvent('PLAYER_ENTERING_WORLD'); assert(A.ReportChannelID()==7)
 emitEvent('PLAYER_LOGOUT'); assert(not A.ReportChannelID() and activeTimers()==0)
 """)
@@ -123,9 +152,9 @@ emitEvent('PLAYER_LOGOUT'); assert(not A.ReportChannelID() and activeTimers()==0
     failed=factory(root)
     failed.execute('sendFailure=true; assert(not A.Report()); assert(#A.List()==0 and A.db.lastSubmit==0); advanceTimers(5); sendFailure=false; assert(A.Report() and sends==1)')
 
-    # Persisted memberships are cleaned on a fresh UI session, not every zone change.
+    # Persisted valid membership is reused; only retired channels are cleaned.
     reload=factory(root,setup="channels[7]='TotalWarcraftReportComms'; channels[8]='TotalWarcraftLegacy'; nextChannel=9")
-    reload.execute("advanceTimers(1); assert(#channelLeaves==2 and channelJoins==1 and A.ReportChannelID()==9)")
+    reload.execute("advanceTimers(1); assert(#channelLeaves==1 and channelJoins==0 and A.ReportChannelID()==7)")
 
 
 check(ROOT)

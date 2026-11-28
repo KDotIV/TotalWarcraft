@@ -1,0 +1,79 @@
+TOTALWARCRAFT - 0.7.11 LIVE LOG / 0.7.12 CONNECTION FIX
+November 27, 2026. Local build; not published or live-validated.
+
+EVIDENCE
+The supplied 0.7.11 Release session uses Forever 1.60.1 build 71139 / Interface
+16001. No journal entries or issues were omitted. Of 567 journal rows, 343 are
+routine UI_ERROR_MESSAGE feedback; 313 say "Spell is not ready yet."
+
+Report-channel startup entered "clearing old TotalWarcraft channels" at +0.000
+and timed out at +30.562. World entries repeated this at +608.585/+638.877 and
++1784.110/+1814.924. None reached "joining report channel" or "connected".
+The old code stayed in cleanup while any prefixed membership remained listed,
+including the desired report channel itself. The export does not identify the
+retained membership or explain why the native leave requests did not clear it.
+
+The final battle on map 2548 began at +2305.410. Readable eligible player WOUND
+observations occurred at +2306.399, +2308.822 and +2308.843. At +2310.413:
+  REPORT_ACTIVITY_CHECK evidence=observed-flagged-damage recipient=player
+    attribution=unknown range=client-visible
+  REPORT_AUTO accepted=false evidence=observed-flagged-damage
+    Report channel unavailable; use /tw status.
+Death/combat end occurred at +2340.800. The five-second detector succeeded
+during combat; the send failed because the channel was unavailable. There was
+no successful local report to display. No evidence identifies the battle size
+or attacker from those recipient observations.
+
+CHANGES
+- Preserve exact, case-insensitive TotalWarcraftReportComms membership.
+- Snapshot legacy prefixed channels and request departure once per login.
+  Stuck legacy memberships or an unreadable list cannot block the exact-name
+  channel lookup/join. A join return alone never proves membership.
+- Keep three join attempts in a 30-second window, with no idle channel ticker.
+  Check actual membership before declaring a timeout. Log bounded cleanup
+  counts and native join call outcomes without dumping native error text.
+- Retry disconnected transport after combat, using the existing 30-second
+  throttle. Do not replay failed reports or retry MUTED/BANNED channels there.
+- Filter known routine UI_ERROR_MESSAGE types and exact localized messages
+  before consuming the journal throttle/budget. Exact observed English variants
+  cover missing localization globals. Do not discard generic error code 57:
+  ERR_SPELL_FAILED_S may carry unknown actionable messages too.
+- Count filtered UI messages in the existing header as uiErrorsFiltered.
+  Unknown/restricted UI messages, Lua errors and blocked addon actions remain
+  available. Other event listeners and native spell feedback are untouched.
+- Detection evidence, flagged NPC acceptance, strict fallback, two-minute
+  successful-send cooldown and one automatic attempt per combat are unchanged.
+
+NATIVE API REFERENCE
+GetGameMessageInfo returns the native error name for a numeric game error code:
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_APIDocumentationGenerated/GameErrorDocumentation.lua
+The native UI also classifies UI_ERROR_MESSAGE types through this API:
+https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/Blizzard_UIErrorsFrame/Mainline/UIErrorsFrame.lua
+This change only filters TotalWarcraft's journal; it does not modify that UI.
+
+OFFLINE VALIDATION
+All 20 suites passed via .venv/Scripts/python.exe tools/run_tests.py.
+Output: releases/validation-0.7.12.log.
+Package: releases/TotalWarcraft-0.7.12-release.zip.
+SHA256: 4dee20853c292b547e9692bfaea2d3296a0ec7329545d1e18e17e3aa62e5ddac
+Regression coverage includes retained current/legacy memberships, failed leave
+calls, missing/restricted/erroring channel lists, asynchronous membership, bounded
+join failures, after-combat recovery, native restriction handling and reload.
+Five-second live sends are exercised for both players and flagged NPCs with
+stuck legacy memberships, with and without an existing report channel.
+Journal tests cover a 1,010-message routine flood, localization, generic code 57,
+unknown/restricted/failed native lookups, preserved native listeners and addon
+errors. Shared scenarios run against source and the compiled production build.
+
+LIVE ACCEPTANCE
+1. Load 0.7.12 and check /tw status for "connected (channel N)" before fighting.
+   The journal should record REPORT_CHANNEL_CLEANUP followed by a connection;
+   a new connection also records REPORT_CHANNEL_JOIN attempt/result.
+2. In qualifying combat, look for REPORT_ACTIVITY recipient=player or pvp-npc,
+   then REPORT_ACTIVITY_CHECK evidence=observed-flagged-damage around five seconds
+   and REPORT_AUTO accepted=true while combat is still active.
+3. Check the map for your report and a second connected same-faction client for
+   receipt. Local send acceptance does not confirm delivery to another player.
+   Your own report intentionally has no popup.
+4. Routine spell messages should increase uiErrorsFiltered without filling the
+   journal. Export before /reload/logout, including startup and the full fight.

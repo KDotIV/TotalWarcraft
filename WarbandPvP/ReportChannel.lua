@@ -7,6 +7,15 @@ local function read(fn,...)
     if type(fn)~="function" then return end
     local ok,v=pcall(fn,...); if ok and not secret(v) then return v end
 end
+local function attempt(fn,...)
+    if type(fn)~="function" then return "missing API",true end
+    local ok,v=pcall(fn,...)
+    if not ok then return "API error",true end
+    if secret(v) then return "restricted result",true end
+    if v==nil then return "no result",false end
+    if type(v)=="boolean" or type(v)=="number" then return tostring(v),v==false end
+    return "returned "..type(v),false
+end
 local function index()
     local id=read(GetChannelName,NAME)
     if type(id)=="number" and id==math.floor(id) and id>0 and id<=100 then return id end
@@ -28,7 +37,8 @@ local function memberships()
     for i=1,#values,3 do
         local name=values[i+1]
         if secret(name) or type(name)~="string" then return end
-        if name:lower():sub(1,#"totalwarcraft")=="totalwarcraft" then names[#names+1]=name end
+        local lower=name:lower()
+        if lower~=NAME:lower() and lower:sub(1,#"totalwarcraft")=="totalwarcraft" then names[#names+1]=name end
     end
     return names
 end
@@ -61,27 +71,32 @@ local function step()
     if C.working or C.stopping then return end
     C.working=true
     local function work()
-        if GetTime()>=C.deadline then cancel(); state("unavailable; retry on next world entry"); return end
         if C.cleanup then
             local names=memberships()
-            if not names then state("waiting for channel list"); return end
-            if #names>0 then
-                if GetTime()>=C.nextAttempt and C.attempts<3 then
-                    C.attempts=C.attempts+1; C.nextAttempt=GetTime()+5
-                    -- Snapshot first: leaving channels can renumber the remaining list.
-                    for _,name in ipairs(names) do read(LeaveChannelByName,name) end
-                end
-                return
+            local failures=0
+            -- Best effort, once per login. Never leave the current report channel
+            -- or wait for unrelated legacy memberships to disappear before joining.
+            for _,name in ipairs(names or {}) do
+                local _,failed=attempt(LeaveChannelByName,name)
+                if failed then failures=failures+1 end
             end
-            C.cleanup=false; C.attempts=0; C.nextAttempt=0
+            C.cleanup=false
+            if A.Trace then
+                A.Trace("REPORT_CHANNEL_CLEANUP",names and ("legacy="..#names.." failedCalls="..failures.."; continuing")
+                    or "channel list unavailable; continuing")
+            end
         end
         local id=index()
         if id then cancel(); state("connected (channel "..id..")"); return end
+        if GetTime()>=C.deadline then
+            cancel(); state("unavailable after "..C.attempts.." join attempts; retry after combat or world entry"); return
+        end
         state("joining report channel")
         if GetTime()>=C.nextAttempt and C.attempts<3 then
             C.attempts=C.attempts+1; C.nextAttempt=GetTime()+5
             local join=JoinTemporaryChannel or JoinChannelByName
-            read(join,NAME)
+            local result=attempt(join,NAME)
+            if A.Trace then A.Trace("REPORT_CHANNEL_JOIN","attempt="..C.attempts.." result="..result.."; awaiting membership") end
             id=index()
             if id then cancel(); state("connected (channel "..id..")") end
         end
@@ -106,6 +121,9 @@ function A.OnReportChannelEvent(event,...)
             A.db.channelDiagnostics=nil
             connect(true)
         elseif not A.ReportChannelID() then connect(false) end
+    elseif event=="PLAYER_REGEN_ENABLED" then
+        -- A bounded retry window; no idle polling and no replay of failed reports.
+        if C.started and not C.blocked and not A.ReportChannelID() then connect(false) end
     elseif event=="CHAT_MSG_CHANNEL_NOTICE" then
         local notice,_,_,channelName,_,_,_,_,base=...
         if secret(notice) or secret(base) or secret(channelName) then return end
@@ -120,6 +138,6 @@ function A.OnReportChannelEvent(event,...)
 end
 function A.InitReportChannel()
     local frame=CreateFrame("Frame"); C.events=frame
-    for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","CHAT_MSG_CHANNEL_NOTICE","PLAYER_LOGOUT"}) do frame:RegisterEvent(event) end
+    for _,event in ipairs({"PLAYER_LOGIN","PLAYER_ENTERING_WORLD","PLAYER_REGEN_ENABLED","CHAT_MSG_CHANNEL_NOTICE","PLAYER_LOGOUT"}) do frame:RegisterEvent(event) end
     frame:SetScript("OnEvent",function(_,event,...) A.OnReportChannelEvent(event,...) end)
 end

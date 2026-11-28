@@ -2,6 +2,40 @@
 
 
 def check_session_ui(factory):
+    # Routine gameplay feedback must not consume the journal or its error throttle.
+    # Preserve unknown messages and the game's own UI_ERROR_MESSAGE listeners.
+    filtered=factory('Quiet Journal')
+    filtered.execute('''
+local native=CreateFrame('Frame'); native:RegisterEvent('UI_ERROR_MESSAGE')
+local shown=0; native:SetScript('OnEvent',function() shown=shown+1 end)
+ERR_BADATTACKFACING='Localized wrong facing'
+GetGameMessageInfo=function(code)
+ if code==61 then return 'ERR_SPELL_COOLDOWN' elseif code==57 then return 'ERR_SPELL_FAILED_S' end
+end
+emitEvent('PLAYER_LOGIN')
+for i=1,1000 do emitEvent('UI_ERROR_MESSAGE',61,'Localized cooldown') end
+emitEvent('UI_ERROR_MESSAGE',282,ERR_BADATTACKFACING)
+for _,msg in ipairs({'Spell is not ready yet.','You are facing the wrong way!',
+ 'Out of range.','Interrupted',"Can't do that while moving",'Another action is in progress',
+ 'Not enough mana','There is nothing to attack.',"Can't do that while stunned"}) do
+ emitEvent('UI_ERROR_MESSAGE',57,msg)
+end
+emitEvent('UI_ERROR_MESSAGE',57,'Unexpected protected operation')
+local log=A.SessionLogText()
+assert(shown==1011 and log:find('uiErrorsFiltered=1010',1,true))
+assert(not log:find('Localized cooldown',1,true) and not log:find('wrong way',1,true))
+assert(log:find('Unexpected protected operation',1,true) and log:find('omitted=0',1,true))
+CLOCK=CLOCK+1; emitEvent('UI_ERROR_MESSAGE','SECRET','SECRET')
+assert(A.SessionLogText():find('<restricted>',1,true))
+for _,lookup in ipairs({function() return 'SECRET' end, function() error('unavailable') end}) do
+ CLOCK=CLOCK+1; GetGameMessageInfo=lookup
+ emitEvent('UI_ERROR_MESSAGE',999,'Unknown native error '..CLOCK)
+ assert(A.SessionLogText():find('Unknown native error '..CLOCK,1,true))
+end
+emitEvent('ADDON_ACTION_BLOCKED','WarbandPvP','ProtectedCall')
+assert(A.SessionLogText():find('ProtectedCall',1,true))
+''')
+
     def pair():
         sender, recipient = factory('Reporter One'), factory('Observer Two')
         sender.execute("assert(A.Report()); assert(#A.List()==1 and not A.toast and not A.lastNotice)")

@@ -1,4 +1,4 @@
-TOTALWARCRAFT 0.7.11
+TOTALWARCRAFT 0.7.12
 World of Warcraft: Forever only (Interface 16001)
 
 Quickly form parties to seek out world PvP or rally your faction to retaliate
@@ -15,8 +15,8 @@ FEATURES
   target selection and damage to self alone do not. No native meter reads in combat.
   Strict post-combat player-damage verification remains a fallback, including
   death/short fights. Both paths share exclusions, cooldown and a single attempt.
-  Live 0.7.10 logs confirm the verified send path. The new 0.7.11 activity path
-  and delayed-session fix are tested offline and still need live acceptance.
+  A live 0.7.11 log confirms the five-second activity check, but startup channel
+  cleanup blocked delivery. The 0.7.12 connection fix still needs live acceptance.
   Manual reports remain available via /tw report or a keybind; shared cooldown.
 - Compact known-only tooltips and fading nearby-report clusters: scaled swords,
   pulsing red halo and native red weapons/raid skull for heavy reported activity.
@@ -61,6 +61,9 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
+Local 0.7.12 fixes channel startup and filters routine spell feedback from the
+journal. It is not published. See docs/REPORT_CHANNEL_FIX_0.7.12.txt for evidence
+and live acceptance checks.
 CurseForge accepted 0.7.11 as Release file 9811578 after all 20 suites passed in
 GitHub CI. All 30 uploaded files match the tested local build. Approval/client
 indexing remains unconfirmed. It adds five-second flagged-player/NPC activity

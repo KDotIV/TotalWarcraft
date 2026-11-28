@@ -7,6 +7,35 @@ local issueBudget,issueRefill=8,0
 local sequence=0
 local inventory,inventoryCount,environment={},0,"Client information unavailable"
 local errorHook,handlingError,lastAction
+local uiErrorsFiltered=0
+local routineNames={}
+for _,name in ipairs({"ERR_ABILITY_COOLDOWN","ERR_SPELL_COOLDOWN","ERR_ITEM_COOLDOWN",
+    "ERR_BADATTACKFACING","ERR_BADATTACKPOS","ERR_OUT_OF_RANGE","ERR_SPELL_OUT_OF_RANGE",
+    "ERR_SPELL_FAILED_ANOTHER_IN_PROGRESS","ERR_OUT_OF_MANA","ERR_OUT_OF_RAGE","ERR_OUT_OF_ENERGY","ERR_OUT_OF_FOCUS",
+    "ERR_NO_ATTACK_TARGET","ERR_GENERIC_NO_TARGET","SPELL_FAILED_NOT_READY","SPELL_FAILED_MOVING",
+    "SPELL_FAILED_STUNNED","SPELL_FAILED_INTERRUPTED","SPELL_FAILED_UNIT_NOT_INFRONT",
+    "SPELL_FAILED_OUT_OF_RANGE","SPELL_FAILED_SPELL_IN_PROGRESS"}) do routineNames[name]=true end
+local routineMessages={}
+local function refreshRoutineMessages()
+    routineMessages={}
+    for name in pairs(routineNames) do
+        local value=A.WB.Read(function() return _G[name] end)
+        if type(value)=="string" and value~="" then routineMessages[value]=true end
+    end
+    -- Exact observed English variants also cover clients missing those globals.
+    for _,message in ipairs({"Spell is not ready yet.","You are facing the wrong way!","Out of range.","Interrupted",
+        "Can't do that while moving","Another action is in progress","Not enough mana",
+        "There is nothing to attack.","Can't do that while stunned"}) do routineMessages[message]=true end
+end
+local function routineError(code,message)
+    if not (issecretvalue and issecretvalue(message)) and type(message)=="string" and routineMessages[message] then return true end
+    if issecretvalue and issecretvalue(code) then return false end
+    if type(code)~="number" or code<1 or code>100000 or code~=math.floor(code) then return false end
+    local name=A.WB.Read(GetGameMessageInfo,code)
+    -- Generic ERR_SPELL_FAILED_S (code 57 on this client) is deliberately excluded:
+    -- it carries multiple messages, including errors we still need to see.
+    return type(name)=="string" and routineNames[name]==true
+end
 local function clean(v,n)
     if issecretvalue and issecretvalue(v) then return "<restricted>" end
     if type(v)~="string" and type(v)~="number" and type(v)~="boolean" then return "unavailable" end
@@ -90,6 +119,7 @@ local function addonInfo(name)
 end
 local function sessionInfo()
     local P=A.WB
+    refreshRoutineMessages()
     local version,build=P.Read(GetBuildInfo)
     local interface=P.Read(function() return select(4,GetBuildInfo()) end)
     environment="Client="..clean(version,24).." build="..clean(build,24).." interface="..clean(interface,24)
@@ -103,7 +133,7 @@ end
 function A.SessionLogText()
     local addons={}; for name,version in pairs(inventory) do addons[#addons+1]=clean(name,100).."="..version end
     table.sort(addons)
-    local rows={"TotalWarcraft session log v2 | addon="..(A.release or "unknown").." | flavor="..(A.buildFlavor or "dev").." | omitted="..dropped.." | issuesOmitted="..issueDropped,
+    local rows={"TotalWarcraft session log v2 | addon="..(A.release or "unknown").." | flavor="..(A.buildFlavor or "dev").." | omitted="..dropped.." | issuesOmitted="..issueDropped.." | uiErrorsFiltered="..uiErrorsFiltered,
         "Local session only; resets on reload/login. Names and in-game locations may appear. No chat event capture or automatic upload. Error text may contain addon data.",
         "Bounded journal: latest 1500 activity / 64 issue entries. Observations do not prove PvP participation or a shared layer.",
         environment.." | Lua error observer="..(errorHook and "attached" or "unavailable; owned UI errors still captured"),
@@ -155,6 +185,8 @@ function A.InitSessionLog()
             A.TraceIssue(event,"namedAddon="..clean(unit,100).." function="..clean(detail,160)); return
         end
         if event=="LUA_WARNING" then A.TraceIssue(event,unit); return end
+        -- Filter only our journal, before its throttle/budget; native feedback stays intact.
+        if event=="UI_ERROR_MESSAGE" and routineError(unit,detail) then uiErrorsFiltered=uiErrorsFiltered+1; return end
         if event=="UNIT_PHASE" and unit~="player" then return end
         if (event=="UI_ERROR_MESSAGE" or event=="PLAYER_TARGET_CHANGED" or event=="UNIT_PHASE")
             and times[event] and GetTime()-times[event]<1 then return end

@@ -1,4 +1,13 @@
 TOTALWARCRAFT - BACKEND AND ADDON HANDOFF
+LOCAL 0.7.12 FOLLOW-UP, November 27: startup cleanup no longer gates connecting
+and preserves an existing report channel. The 0.7.11 battle log detected player
+activity at five seconds but could not send because cleanup never completed.
+Legacy leave requests are best effort once per login. Join work remains bounded
+to three attempts / 30 seconds; combat end can trigger a throttled recovery window.
+Routine gameplay UI errors are filtered from the journal, with a header count.
+Not published; details and acceptance: REPORT_CHANNEL_FIX_0.7.12.txt.
+
+HISTORICAL 0.7.7 RELEASE AND TRANSPORT DESIGN
 CURRENT RELEASE, November 22: 0.7.7 uploaded as Release, CurseForge file 9754372.
 Main CI 45044707905 and publication 45044707974 succeeded. Tag v0.7.7 points to
 ee33d7771863727f0f5d5e0d73bf981dbbe50452. All 30 uploaded files match the tested

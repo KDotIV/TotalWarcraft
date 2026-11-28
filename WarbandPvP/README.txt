@@ -1,4 +1,4 @@
-TOTALWARCRAFT - 0.7.11
+TOTALWARCRAFT - 0.7.12
 World of Warcraft: Forever 1.60.1 (Interface 16001)
 
 Formerly Warband-PvP. /tw is primary; /totalwarcraft and /wb also work.
@@ -35,8 +35,9 @@ Duels, same-faction players, instances and sanctuary/FFA rules remain excluded.
 A reload during combat waits for the next fresh fight. Manual reporting respects
 duel holds. No blanket city exclusion hides real city raids.
 Detection uses units exposed by the client, not a complete 100-yard scan or
-native minimap tracking. The five-second path and revised session handling need
-live testing. Reports do not prove a kill, exact team size or shared layer.
+native minimap tracking. Live logs confirm the five-second activity check; the
+channel connection fix still needs live testing. Reports do not prove a kill,
+exact team size or shared layer.
 
 An automatic attempt happens at most once per combat. Successful submissions
 share a two-minute cooldown with /tw report and the report keybind. Failed
@@ -130,7 +131,10 @@ Reports reach matching faction, ruleset and region users through this channel,
 including unguilded players. New reports are sent once; legacy guild reports
 remain readable and duplicate report IDs never create extra markers or heat.
 /tw status shows connectivity; /tw export includes connection and report events.
+Startup preserves an existing report channel; legacy channel cleanup is best effort.
 Automatic reconnect attempts are bounded and stop once connected or timed out.
+An unavailable connection can retry after combat or on world entry. Failed reports
+are not replayed. Native channel restrictions remain respected.
 
 SESSION JOURNAL
 /tw export opens a copyable local log of this UI session, including TotalWarcraft actions,
@@ -139,6 +143,9 @@ events. It includes blocked/forbidden action details and readable Lua errors del
 Blizzard's error frame, plus client and loaded-addon versions. Ctrl+A, Ctrl+C to copy.
 The journal keeps 1500 recent activity entries and a separate 64-entry issue buffer;
 omitted rows are counted. No chat event capture, automatic uploads or external backend.
+Routine spell cooldown, facing, range, resource and interruption messages are
+filtered from this journal and counted as uiErrorsFiltered in its header. Unknown
+UI errors and addon failures remain logged; the game's spell feedback is unchanged.
 Names, in-game locations and addon error text can appear. Review before sharing.
 Other addons' error handlers remain in control; errors they intercept may be unavailable.
 Your own reports stay on the map without a popup. Clicking another player's popup
