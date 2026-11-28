@@ -1,4 +1,4 @@
-TOTALWARCRAFT - 0.7.12
+TOTALWARCRAFT - 0.7.13
 World of Warcraft: Forever 1.60.1 (Interface 16001)
 
 Formerly Warband-PvP. /tw is primary; /totalwarcraft and /wb also work.
@@ -47,7 +47,25 @@ party is required.
 "Combatants" is the partial observed flagged-player count, not a confirmed fight
 size. Unknown counts, range gaps and absent scouting fields are hidden.
 
-CONFLICT PINS
+MINIMAP REPORT PINS
+Accepted reports appear on the minimap when their reported location is in view,
+including your own reports. The world map can stay closed. Markers stay at the
+reported spot as you move and disappear at report expiry, normally five minutes.
+They follow minimap zoom/rotation and group icons that overlap on screen. Hover
+for report age/details; clicking in combat defers details until combat ends.
+These are reported locations, not moving opponents or confirmation of a shared
+layer. Reports outside the visible area have no edge arrow. Other worlds and
+incompatible floors are hidden. Unknown positions never produce guessed pins.
+
+Minimap pins are on by default. Toggle on /tw or use /tw minimap on / off; this
+preference persists. The native renderer adds no library or network messages.
+It reuses markers and caches report coordinates, with one shared position loop
+at up to ten checks per second while visible pins exist, once per second for
+out-of-view candidates, and no position loop when empty, disabled or hidden.
+Round and square minimaps are supported; unknown shapes use a conservative circle.
+The first minimap build still requires in-game placement/performance validation.
+
+WORLD-MAP CONFLICT PINS
 Nearby reports share one crossed-swords pin at the newest report's position.
 Each unique recent reporter contributes once. More reports gradually increase
 its size from 22 to 32 pixels and deepen its red color; two fresh reporters can
@@ -167,6 +185,7 @@ SHORTCUTS
 /tw export              Copy session journal
 /tw clear               Clear only local field reports
 /tw auto on/off         Toggle automatic reporting
+/tw minimap on/off      Toggle minimap report pins
 /tw help                Guide, commands, map legend and support
 /tw status              Support and transport status
 

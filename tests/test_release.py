@@ -38,6 +38,8 @@ check_auto_reports(release_client)
 from live_activity_scenarios import check_live_activity
 check_live_activity(release_client)
 check_activity(release_client)
+from minimap_scenarios import check_minimap
+check_minimap(release_client)
 from session_log_scenarios import check_session_ui
 check_session_ui(release_client)
 from runtime_scenarios import check_runtime

@@ -92,6 +92,11 @@ local function combatIcon(owner,heavy,c)
     if owner.fallback then owner.fallback:SetShown(not loaded) end
 end
 
+function A.DrawReportMarker(owner,size,color)
+    if not owner.swordLines then drawSwords(owner) end
+    sizeSwords(owner,size); colorSwords(owner,color); combatIcon(owner,false,color)
+end
+
 WarbandPvPMapPinMixin = CreateFromMixins(MapCanvasPinMixin)
 function WarbandPvPMapPinMixin:OnLoad()
     -- WorldMap registers exploration and fog ABOVE DEFAULT. Use its POI layer

@@ -1,4 +1,4 @@
-TOTALWARCRAFT 0.7.12
+TOTALWARCRAFT 0.7.13
 World of Warcraft: Forever only (Interface 16001)
 
 Quickly form parties to seek out world PvP or rally your faction to retaliate
@@ -9,6 +9,12 @@ for warbands. One managed dialog is visible at a time, with Back navigation and
 a draggable military frame. No external backend or third-party library is needed.
 
 FEATURES
+- Native minimap markers for accepted reports, with the world map closed. Own
+  reports are included; markers follow the reported spot, zoom and rotation,
+  group overlapping icons and expire with the report. Toggle on /tw or with
+  /tw minimap on/off. Coordinates are cached and frames pooled; one bounded
+  positioning controller sleeps when empty, disabled or hidden. No added library
+  or network traffic. Live rendering and performance still need validation.
 - During your combat, automatic reports check every five seconds for recent
   damage to a visible, hostile, PvP-flagged player or NPC still in combat.
   Flagged faction NPCs intentionally qualify; ordinary unflagged mobs, pets,
@@ -52,7 +58,7 @@ are not cross-client layer keys. A UUID, map position, listing, native group joi
 or transfer event does not establish arrival at the original fight. Parties-only
 is a product choice, not proof that outdoor raids cannot share a layer.
 
-Twenty offline suites cover isolated Lua clients and the physically
+Twenty-one offline suites cover isolated Lua clients and the physically
 stripped release ZIP. The two-client 0.6.1 live simulation established messaging,
 member updates and teardown; it did not validate native grouping or layer arrival.
 Finder calls and the revised 0.7 UI/invitations still require live acceptance.
@@ -61,6 +67,8 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
+Local 0.7.13 adds native minimap report pins; it is not published.
+Design and acceptance: docs/MINIMAP_REPORT_PINS_0.7.13.txt.
 CurseForge accepted 0.7.12 as Release file 9862105 after all 20 suites passed
 locally and in GitHub CI. All 30 uploaded files match the tested local build.
 It fixes channel startup and filters routine spell feedback from the journal.

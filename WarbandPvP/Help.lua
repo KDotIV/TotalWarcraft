@@ -35,15 +35,14 @@ Manual report: your keybind or /tw report; duel holds still apply.
 "Combatants" is a partial flagged-player sample within 100yd.
 It is neither a complete scan nor a verified fight size.]]},
     {"Reading the map", [[Crimson crossed swords: a reported PvP location.
-Recent nearby reports strengthen the color and grow the pin
-slightly. Multiple reporters add a slow pulsing red glow.
-Heavy activity adds red crossed weapons and a small skull.
+World-map pins grow with recent reports from distinct players.
+Multiple reporters add a red glow; heavy activity adds a skull.
+Heat fades and does not confirm teams, kills or fight size.
 
-Reports must be in the same map area and recent to add heat.
-Each reporter counts once; overlapping player counts are
-never added together. Heat fades as reports age or expire.
-The strongest marker suggests activity, not confirmed teams,
-kills or a 10-versus-10 battle. Hover for a short activity label.
+The minimap shows reports within its current view, including
+your own. Icons follow the reported spot and expire after five
+minutes. Overlapping icons group; hover for report age/details.
+Toggle Minimap pins on /tw or use /tw minimap on / off.
 
 Gold axe / sword: a warband rally or organizer location.
 Numbered gold markers: your warband's party hosts.
@@ -105,6 +104,7 @@ Export before reload / logout; the journal resets each session.]]},
 /tw show                Warband board (start or join)
 /tw report              Report your current location
 /tw auto on / off       Enable / disable automatic reports
+/tw minimap on / off    Show / hide minimap report pins
 /tw finder              Recruitment settings and retries
 /tw find                Search recruitment listings
 /tw presence on / off   Enable / disable group location sharing
@@ -113,7 +113,6 @@ Export before reload / logout; the journal resets each session.]]},
 /tw clear               Clear local field reports only
 /tw help                Open this guide
 /tw status              Open support and transport status
-
 Keybindings: command board, manual report, warband board,
 session export. Set them on /tw > Keybindings or in WoW's
 Key Bindings menu. No keys are assigned by default.
@@ -172,6 +171,6 @@ function A.ShowHelp(page)
     f.link:SetText("https://github.com/KDotIV/TotalWarcraft/issues")
     f.status:SetText("Version: "..A.release.."\nScope: "..(A.scopeRuleset or "unavailable").." / region "..tostring(A.scopeRegion)
         .."\nReport channel: "..A.ReportChannelStatus().."\nWarband messaging: "..tostring(A.warbands.ready)
-        .."\nAuto reports: "..(A.db.autoReports and "on" or "off"))
+        .."\nAuto reports: "..(A.db.autoReports and "on" or "off").."\nMinimap pins: "..A.MinimapReportStatus())
     f:Show()
 end

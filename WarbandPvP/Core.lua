@@ -1,16 +1,18 @@
 local name, A = ...
-A.release = A.release or "0.7.12-dev"
+A.release = A.release or "0.7.13-dev"
 function A.Print(message) print("|cffedbf69TotalWarcraft:|r " .. message) end
 
 function A.Changed()
     if A.timer and not next(A.records) then A.timer:Cancel(); A.timer=nil end
     if A.RefreshReportSurfaces then A.RefreshReportSurfaces() end
     A.RefreshUI(); A.RefreshMap()
+    if A.RefreshMinimapReports then A.RefreshMinimapReports() end
     if not A.timer and next(A.records) then
         A.timer = C_Timer.NewTicker(15, function()
             A.Prune(GetServerTime())
             if A.RefreshReportSurfaces then A.RefreshReportSurfaces() end
             A.RefreshUI(); A.RefreshMap()
+            if A.RefreshMinimapReports then A.RefreshMinimapReports() end
             if not next(A.records) then A.timer:Cancel(); A.timer = nil end
         end)
     end
@@ -53,6 +55,7 @@ events:SetScript("OnEvent", function(_, event, addon)
         if A.InitWarbands then A.InitWarbands() end
         A.InitSessionLog()
         A.InitNotifications()
+        A.InitMinimapReports()
         A.InitReportChannel()
         A.InitFinder()
         A.InitScouting()
@@ -89,6 +92,8 @@ events:SetScript("OnEvent", function(_, event, addon)
             if command == "report" then A.RunReport()
             elseif command == "auto on" then A.SetAutoReportsEnabled(true)
             elseif command == "auto off" then A.SetAutoReportsEnabled(false)
+            elseif command == "minimap on" then A.SetMinimapReportsEnabled(true)
+            elseif command == "minimap off" then A.SetMinimapReportsEnabled(false)
             elseif command == "show" then A.ShowWarbands()
             elseif command == "finder" then A.ShowFinder()
             elseif command == "find" then local _,msg=A.FinderSearch(); A.Print(msg)

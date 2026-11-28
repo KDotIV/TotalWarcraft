@@ -1,0 +1,93 @@
+TOTALWARCRAFT - NATIVE MINIMAP REPORT PINS 0.7.13
+November 27, 2026. Local implementation; not published or tested in WoW.
+
+BEHAVIOR
+Accepted local and peer reports now appear on the minimap while their reported
+location is in view. The world map need not be open. Pins stay at that location
+as the observer moves, follow zoom/rotation and expire with the underlying report.
+Own reports remain visible even though own-report popups are suppressed.
+Markers are 18-pixel crossed swords using the existing native artwork/fallback.
+No edge arrows, live enemy tracking, additional combat scans or network sends.
+
+Clip individual reports to the visible area before grouping overlapping markers.
+The newest visible report anchors a group; no invented centroid or chaining.
+Tooltip grouping counts distinct normalized reporters, not combatants. Hover
+shows the existing report details plus age. Click uses A.ShowDetails(), retaining
+its combat deferral and expiry checks. Pins support round/square minimaps;
+unknown shapes use a conservative circular boundary with an icon-size margin.
+
+Enabled by default; saved preference WarbandPvPDB.minimapReports.
+Toggle via /tw > Minimap pins, or /tw minimap on/off.
+/tw status includes minimap availability and visible marker count.
+MINIMAP_REPORTS journal rows log bounded state changes, not individual ticks.
+
+IMPLEMENTATION
+MinimapReports.lua owns the native frames, cached projections and one timer.
+Core.lua refreshes it through the existing accepted-report change/expiry path.
+Map.lua exposes shared marker artwork; world-map clustering is unchanged.
+The source TOC and explicit production build manifest include the new module.
+UI/help/readme document the feature; no external dependency was introduced.
+
+Report coordinates use C_Map.GetWorldPosFromMapPos. Player coordinates use a
+guarded four-return UnitPosition read, with readable player map coordinates as
+a fallback. Native north/west axes are converted to screen offsets; minimap
+radius comes from C_Minimap.GetViewRadius. Rotation observes rotateMinimap and
+IsRotateMinimapIgnored where available. Invalid/restricted values hide pins.
+Compatible outdoor zones can share world coordinates; separate world IDs and
+incompatible dungeon/micro maps are excluded. World identity is not a layer ID.
+World transitions invalidate cached transforms even while the minimap is hidden.
+
+RUNTIME BOUNDS
+- At most 64 reports through the existing record store; frames/groups are pooled.
+- Report conversions occur on coordinate changes, failed-read retries or world
+  transitions. Normal positioning ticks reuse cached report coordinates.
+- A shared 0.1-second timer runs with visible markers; out-of-view candidates
+  and transient missing view/player data use one-second checks.
+- Geometry/artwork is rewritten only when relevant inputs change. There are no
+  per-marker update scripts. Hover age refreshes at most once per second.
+- Empty, disabled, hidden, loading, instanced or incompatible-world states stop
+  the positioning timer. Data/visibility/zone events wake it when appropriate.
+- Existing 15-second report maintenance continues its normal expiry work; the
+  renderer checks expiry itself so visible markers need not wait for that sweep.
+- Native minimap scripts/mask/tracking settings remain intact; hooks only observe
+  visibility/size. Clearing reports releases markers and their tooltip ownership.
+
+OFFLINE VALIDATION
+All 21 suites passed, including the compiled production package.
+Command: .venv/Scripts/python.exe tools/run_tests.py
+Output: releases/validation-0.7.13.log.
+New scenarios run against source and the physically stripped production build:
+- Cardinal directions, movement, zoom, rotation/ignored rotation, size and level.
+- Round/square clipping, ranges beyond 100 yards, slow wake-up on approach.
+- Off-screen newest anchors do not hide visible reports; grouping avoids chains
+  and duplicate-reporter amplification.
+- Adjacent outdoor maps, separate worlds, micro floors and hidden world changes.
+- Enabled/disabled UI and slash commands, hide/show, loading/shards, stale timer
+  callbacks, scope reset, frame reuse, clear, logout and exact report expiry.
+- Nil, restricted, erroring and non-finite API values; later readable recovery.
+- Tooltip cleanup, combat-deferred details and accepted local/peer reports.
+- Five-second automatic reporting produces a minimap marker during combat.
+- Rejected sends do not create local pins; positioning sends no extra messages.
+- 64-report bound; at most 11 position reads in a 1.01-second active test window,
+  zero extra report conversions/frame allocations during that window, no position
+  reads after hiding/disabling and no stationary placement writes.
+- Developer report classes remain isolated; production code has no dev controls.
+These checks measure mocked behavior/call bounds, not native-client CPU cost.
+
+PACKAGE
+releases/TotalWarcraft-0.7.13-release.zip (31 files).
+SHA256: c3960df7a1948c83e951c621f1598a14da6e7cd528879c107923b750a8d75465
+
+LIVE ACCEPTANCE STILL REQUIRED
+1. Confirm /tw status is connected, minimap pins on, and addon 0.7.13 loaded.
+2. With the world map closed, send/receive a nearby report and confirm a marker.
+   During eligible combat, verify REPORT_AUTO accepted=true and marker display.
+3. Move around its fixed spot, rotate, try every zoom, cross a zone boundary,
+   hide/show the minimap, and verify expiry/clear/off remove the marker.
+4. Hover/click in combat, then leave combat to check deferred details.
+5. Test default UI, the user's NodeSight/OpenMap combination and a square minimap.
+   Check layering, input, alignment and frame-time/memory cost while moving.
+6. Export before reload/logout if a pin fails; include minimap status and the
+   corresponding REPORT_AUTO / REPORT_RECEIVE / REPORT_CHANNEL entries.
+
+Native source references and earlier design: MINIMAP_REPORT_PINS_RESEARCH.txt.

@@ -1,3 +1,19 @@
+TotalWarcraft 0.7.13
+November 27, 2026 - Release - WoW Forever 1.60.1
+
+- Show accepted PvP reports on the minimap, including your own reports, without
+  opening the world map. Pins mark the reported location and expire with it.
+- Follow player movement, minimap zoom and rotation. Hide reports outside the
+  visible area or on incompatible maps; group icons that overlap on screen.
+- Hover for report age and details; clicking in combat defers details until safe.
+- Toggle Minimap pins on the command board or with /tw minimap on / off.
+  Enabled by default; the preference persists across sessions.
+- Use cached coordinates, pooled markers and one shared positioning controller.
+  Visible pins update at most ten times per second; out-of-view candidates use
+  one-second checks. Position updates stop when empty, disabled or hidden.
+- Use native APIs with no added library or network traffic. Missing/restricted
+  positions hide affected pins. In-game rendering and performance need validation.
+
 TotalWarcraft 0.7.12
 November 27, 2026 - Release - WoW Forever 1.60.1
 

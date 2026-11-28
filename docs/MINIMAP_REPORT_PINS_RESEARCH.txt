@@ -1,0 +1,130 @@
+TOTALWARCRAFT - MINIMAP REPORT PINS RESEARCH
+November 27, 2026. Research preceding the local 0.7.13 implementation.
+Implemented behavior, offline checks and live limits: MINIMAP_REPORT_PINS_0.7.13.txt.
+The design below records the research/recommendation, not a live acceptance claim.
+
+FINDING
+Existing accepted reports have enough data to show minimap markers: mapID,
+normalized x/y, reporter, updatedAt and expiresAt. Add a display of those report
+locations without changing the reporting protocol or collecting more combat data.
+The marker represents a reported location, not a moving enemy or confirmation
+that the fight continues. Current reports live for five minutes. Matching world
+coordinates do not establish a shared layer or phase.
+
+REPOSITORY INTEGRATION
+- Report.lua builds the coordinates/timestamps. Model.lua validates, deduplicates
+  and caps reports at 64; A.List() excludes expired records.
+- A.Receive() calls A.Changed(). Add a separate minimap refresh there so incoming
+  and local accepted reports appear even while WorldMapFrame is closed.
+- Map.lua currently uses MapCanvasDataProviderMixin/MapCanvasPinMixin on
+  WorldMapFrame. Those objects cannot simply be attached to Minimap; use small
+  pooled addon-owned frames positioned relative to Minimap's centre.
+- Reuse the swords artwork and report tooltips. Click through A.ShowDetails(),
+  which already defers details during combat and rechecks expiry afterward.
+- Keep own reports visible; their popup suppression is independent of markers.
+  Scope changes, clear, expiry and developer-data isolation must clear these pins.
+- Activity.lua clusters within 3.5% of zone-map dimensions. Do not directly reuse
+  that grouping for minimap positions: its newest anchor may lie outside the
+  visible radius while a constituent report lies inside it. First project/clip
+  individual records, then group icons that overlap in minimap pixels.
+
+NATIVE CAPABILITIES CONFIRMED IN THE FOREVER SOURCE
+- C_Map.GetWorldPosFromMapPos(uiMapID, vector2) returns a continent/world-space
+  identifier plus a world-position vector; it may return nothing. Cache the
+  converted point per report and invalidate when coordinates change. [1]
+- C_Map.GetMapWorldSize reports dimensions in yards; GetPlayerMapPosition works
+  for the player and party. UnitPosition("player") supplies local position and
+  world-map identity. GetPlayerFacing can be nil. [1, 3, 4]
+- C_Minimap.GetViewRadius() returns the current view radius in yards. This is the
+  rendering radius, not a fixed 100-yard detection limit. [2]
+- Forever's own minimap changes layout/mask for rotateMinimap. Account for
+  rotation, current dimensions/scale, zoom and round/square addon layouts. [5]
+- The inspected minimap APIs provide no general custom report-point insertion
+  function. Existing addon pin libraries implement this using child frames. [6, 7]
+
+PROPOSED COORDINATE PIPELINE
+1. Validate/cache each accepted report's world-space coordinates and identifier.
+2. Read the local player's position, current radius and (when needed) facing.
+   Use matching coordinate conventions; UI-map IDs and world IDs are different.
+   UnitPosition/world vectors have axes that differ from screen x/y. Explicitly
+   test north/east/south/west and heading changes before trusting projection.
+3. Subtract player position from report position; rotate offsets when the map
+   rotates. Scale yard offsets using radius and half the minimap width/height.
+4. Clip with an icon-size margin, group overlapping visible markers, and place
+   pooled frames. In version one, hide out-of-view reports. Edge direction arrows
+   can be a separate option later and must be visually distinct from exact pins.
+5. Discard incompatible worlds/floors and invalid, nil, restricted or non-finite
+   values. Hide stale positions on loading/zone changes. Do not infer a layer.
+
+Implementation detail: A.WB.Read only returns two native values. A UnitPosition
+path needs a dedicated guarded multi-return reader to retain/check the world ID;
+alternatively convert the player's map position with the same C_Map API as the
+reports. A restricted value must be rejected before arithmetic/comparison.
+Coordinates/readability during combat on build 71139 remain a live test item.
+
+LIGHTWEIGHT UPDATE PLAN (TARGETS TO MEASURE)
+- Convert report points on receipt/change, not every rendered frame.
+- One shared update controller for all markers; no per-pin timers or broadcasts.
+- Start with 0.1-second position checks while candidate reports and a visible
+  minimap exist. Reposition only after movement/facing/zoom/scale/data changes.
+- A slower range check can handle candidates currently outside the visible map;
+  do not stop discovering them merely because all their icons are hidden.
+- Stop continuous updates with no compatible candidates, when disabled, or when
+  the minimap is hidden. Wake on new reports, visibility and world/zone changes.
+- Filter by expiresAt before drawing, independent of the existing 15-second
+  cleanup ticker. Reuse frames and buffers; avoid repeated sorting/allocation.
+- Keep the existing 64-report bound. Screen-space clustering changes on data,
+  zoom or boundary membership changes; translation alone need not rebuild it.
+- Log only bounded state changes/failures, never each positioning tick.
+These are proposed budgets, not measured CPU/memory results.
+
+LIBRARY OPTION AND RECOMMENDATION
+HereBeDragons core minor 35 explicitly handles WOW_PROJECT_CAMELOT and its TOC
+includes Interface 16001. Pins minor 17 exposes AddMinimapIconMap and
+AddMinimapIconWorld, optional edge clamping, rotation and shape handling. [7, 8]
+The map-coordinate variant limits a pin to its specified map/optional parents;
+adjacent-zone visibility needs a deliberate choice of coordinate mode. [7]
+Its pin update frame has an OnUpdate handler and a periodic full refresh, with
+early returns for hidden minimaps/no active pins in the fast path. It is not
+automatically a zero-work-when-empty implementation. The inspected library also
+uses LibStub and CallbackHandler; its TOC declares BSD licensing. [7, 8]
+
+Recommend a small native MinimapReports.lua for this Forever-only, 64-report
+feature. It keeps dependency/load scope small and lets the addon own its idle
+budget and restricted-value handling. Use the library as a reference; consider
+embedding a pinned supported release if later map/shape compatibility warrants
+the dependency. Do not require users to install a separate helper addon or
+depend on a library incidentally loaded by another addon. If embedding, include
+its dependencies and required notices, and do not alter shared library globals.
+
+IMPLEMENTATION SCOPE
+New renderer/projection module; Core.lua lifecycle hooks; optional small shared
+art/heat helpers; TOC and explicit production build manifest entries; one minimap
+visibility setting/help entry; source and compiled-release regression scenarios.
+Keep the existing transport/detection protocol and report acceptance unchanged.
+
+ACCEPTANCE BEFORE RELEASE
+- Real manual/automatic local and peer reports, with the world map never opened.
+- Cardinal directions, movement, all zoom levels, rotated/unrotated map, scaling,
+  zone edges, city/subzone transitions, loading screens and incompatible worlds.
+- Reports outside view enter/leave correctly; a visible record is not swallowed
+  by an off-screen cluster anchor. Duplicate reporters do not amplify activity.
+- Expiry/clear/scope reset, own-report display, disabled mode and pooled cleanup.
+- Combat-time display, hover and deferred clicks; no native errors/protected calls.
+- Default minimap plus the user's NodeSight/OpenMap setup and a square minimap.
+- Nil/restricted/malformed API values hide affected pins without errors.
+- 64-report stress test; measure active cost and verify the controller sleeps
+  when empty/disabled/hidden. Repeat relevant scenarios in the compiled Release.
+No live minimap rendering or performance test was performed during this research.
+
+PRIMARY SOURCES (PINNED REVISIONS INSPECTED)
+Native Forever revision: d9c22e32cb240afb82bb2ecefbb78ef935333f59
+HereBeDragons revision: 90a7b2d8c065010dfb866e2b6bd56f5bc930029b
+[1] https://github.com/Gethe/wow-ui-source/blob/d9c22e32cb240afb82bb2ecefbb78ef935333f59/Interface/AddOns/Blizzard_APIDocumentationGenerated/MapDocumentation.lua
+[2] https://github.com/Gethe/wow-ui-source/blob/d9c22e32cb240afb82bb2ecefbb78ef935333f59/Interface/AddOns/Blizzard_APIDocumentationGenerated/MinimapDocumentation.lua
+[3] https://github.com/Gethe/wow-ui-source/blob/d9c22e32cb240afb82bb2ecefbb78ef935333f59/Interface/AddOns/Blizzard_APIDocumentationGenerated/UnitDocumentation.lua
+[4] https://github.com/Gethe/wow-ui-source/blob/d9c22e32cb240afb82bb2ecefbb78ef935333f59/Interface/AddOns/Blizzard_APIDocumentationGenerated/PlayerScriptDocumentation.lua
+[5] https://github.com/Gethe/wow-ui-source/blob/d9c22e32cb240afb82bb2ecefbb78ef935333f59/Interface/AddOns/Blizzard_Minimap/Camelot/Minimap.lua
+[6] https://github.com/Gethe/wow-ui-source/blob/d9c22e32cb240afb82bb2ecefbb78ef935333f59/Interface/AddOns/Blizzard_APIDocumentationGenerated/MinimapFrameAPIDocumentation.lua
+[7] https://github.com/Nevcairiel/HereBeDragons/blob/90a7b2d8c065010dfb866e2b6bd56f5bc930029b/HereBeDragons-Pins-2.0.lua
+[8] https://github.com/Nevcairiel/HereBeDragons/tree/90a7b2d8c065010dfb866e2b6bd56f5bc930029b
