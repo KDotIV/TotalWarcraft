@@ -67,7 +67,12 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
-Local 0.7.13 adds native minimap report pins; it is not published.
+CurseForge accepted 0.7.13 as Release file 9862628 after all 21 suites passed
+locally and in GitHub CI. All 31 uploaded files match the tested local build.
+It adds native minimap report pins. Public approval/client indexing and live
+minimap rendering/performance remain unconfirmed.
+Receipt: docs/CURSEFORGE_SUBMISSION_0.7.13.txt.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9862628
 Design and acceptance: docs/MINIMAP_REPORT_PINS_0.7.13.txt.
 CurseForge accepted 0.7.12 as Release file 9862105 after all 20 suites passed
 locally and in GitHub CI. All 30 uploaded files match the tested local build.

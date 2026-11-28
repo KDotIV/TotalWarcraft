@@ -1,5 +1,5 @@
 TOTALWARCRAFT - MINIMAP REPORT PINS RESEARCH
-November 27, 2026. Research preceding the local 0.7.13 implementation.
+November 27, 2026. Research preceding the 0.7.13 implementation.
 Implemented behavior, offline checks and live limits: MINIMAP_REPORT_PINS_0.7.13.txt.
 The design below records the research/recommendation, not a live acceptance claim.
 

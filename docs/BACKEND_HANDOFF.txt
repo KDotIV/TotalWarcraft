@@ -1,5 +1,14 @@
 TOTALWARCRAFT - BACKEND AND ADDON HANDOFF
-CURRENT 0.7.12 RELEASE, November 27: startup cleanup no longer gates connecting
+CURRENT 0.7.13 RELEASE, November 27: native minimap markers show accepted report
+locations with zoom/rotation, visible-area clipping, overlapping-icon grouping,
+expiry and combat-deferred details. Cached coordinates and pooled frames use
+one bounded positioning controller; no extra library or network traffic.
+CurseForge accepted Release file 9862628 after all 21 suites passed locally and
+in CI. All 31 uploaded files match the tested local build. Public approval/client
+indexing and in-game rendering/performance remain unconfirmed.
+Receipt: CURSEFORGE_SUBMISSION_0.7.13.txt. Design: MINIMAP_REPORT_PINS_0.7.13.txt.
+
+PREVIOUS 0.7.12 RELEASE, November 27: startup cleanup no longer gates connecting
 and preserves an existing report channel. The 0.7.11 battle log detected player
 activity at five seconds but could not send because cleanup never completed.
 Legacy leave requests are best effort once per login. Join work remains bounded

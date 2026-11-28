@@ -1,5 +1,7 @@
 TOTALWARCRAFT - NATIVE MINIMAP REPORT PINS 0.7.13
-November 27, 2026. Local implementation; not published or tested in WoW.
+November 27, 2026. Uploaded as CurseForge Release file 9862628.
+Public approval/client indexing and in-game validation remain unconfirmed.
+Receipt: CURSEFORGE_SUBMISSION_0.7.13.txt.
 
 BEHAVIOR
 Accepted local and peer reports now appear on the minimap while their reported
@@ -53,7 +55,8 @@ RUNTIME BOUNDS
   visibility/size. Clearing reports releases markers and their tooltip ownership.
 
 OFFLINE VALIDATION
-All 21 suites passed, including the compiled production package.
+All 21 suites passed locally and in Linux CI, including the compiled production
+package. All 31 uploaded files match the local tested build byte for byte.
 Command: .venv/Scripts/python.exe tools/run_tests.py
 Output: releases/validation-0.7.13.log.
 New scenarios run against source and the physically stripped production build:
@@ -74,7 +77,7 @@ New scenarios run against source and the physically stripped production build:
 - Developer report classes remain isolated; production code has no dev controls.
 These checks measure mocked behavior/call bounds, not native-client CPU cost.
 
-PACKAGE
+TESTED LOCAL PACKAGE
 releases/TotalWarcraft-0.7.13-release.zip (31 files).
 SHA256: c3960df7a1948c83e951c621f1598a14da6e7cd528879c107923b750a8d75465
 
