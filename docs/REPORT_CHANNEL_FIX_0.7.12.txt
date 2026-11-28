@@ -1,5 +1,7 @@
 TOTALWARCRAFT - 0.7.11 LIVE LOG / 0.7.12 CONNECTION FIX
-November 27, 2026. Local build; not published or live-validated.
+November 27, 2026. Uploaded as CurseForge Release file 9862105.
+Public approval/client indexing and in-game validation remain unconfirmed.
+Receipt: CURSEFORGE_SUBMISSION_0.7.12.txt.
 
 EVIDENCE
 The supplied 0.7.11 Release session uses Forever 1.60.1 build 71139 / Interface
@@ -52,7 +54,8 @@ https://raw.githubusercontent.com/Gethe/wow-ui-source/forever/Interface/AddOns/B
 This change only filters TotalWarcraft's journal; it does not modify that UI.
 
 OFFLINE VALIDATION
-All 20 suites passed via .venv/Scripts/python.exe tools/run_tests.py.
+All 20 suites passed via .venv/Scripts/python.exe tools/run_tests.py and in
+GitHub CI. All 30 uploaded files match the local tested build byte for byte.
 Output: releases/validation-0.7.12.log.
 Package: releases/TotalWarcraft-0.7.12-release.zip.
 SHA256: 4dee20853c292b547e9692bfaea2d3296a0ec7329545d1e18e17e3aa62e5ddac

@@ -1,12 +1,14 @@
 TOTALWARCRAFT - AUTOMATIC REPORTING LIVE RESULTS AND FIX
 
-0.7.11 LIVE FOLLOW-UP / LOCAL 0.7.12 FIX - November 27, 2026
+0.7.11 LIVE FOLLOW-UP / 0.7.12 RELEASE FIX - November 27, 2026
 The latest battle confirms the five-second flagged-player activity check. At
 +2310.413, REPORT_AUTO accepted=false reports the channel was unavailable.
-Startup cleanup never reached the joining phase. Local 0.7.12 preserves the
+Startup cleanup never reached the joining phase. Version 0.7.12 preserves the
 current report channel and no longer waits for legacy memberships to disappear.
-It also filters routine gameplay UI errors from the journal. Not published;
-see REPORT_CHANNEL_FIX_0.7.12.txt for evidence, checks and live acceptance.
+It also filters routine gameplay UI errors from the journal. CurseForge accepted
+Release file 9862105; public approval/client indexing and in-game acceptance are
+unconfirmed. Receipt: CURSEFORGE_SUBMISSION_0.7.12.txt. See
+REPORT_CHANNEL_FIX_0.7.12.txt for evidence, checks and live acceptance.
 
 CURRENT 0.7.11 RELEASE BEHAVIOR - November 25, 2026
 The owner broadened the rule to accept PvP-flagged NPC activity. A new five-second

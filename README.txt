@@ -61,9 +61,13 @@ loss, sender/nonce validation, bounded hostile traffic and expiration. Cross-fac
 addon delivery still needs live verification; no reply means unknown, never an
 inferred absence of a warband. See docs/ENEMY_SCOUTING_0.7.1.txt.
 Public packages use the production build flavor and CurseForge Release stage.
-Local 0.7.12 fixes channel startup and filters routine spell feedback from the
-journal. It is not published. See docs/REPORT_CHANNEL_FIX_0.7.12.txt for evidence
-and live acceptance checks.
+CurseForge accepted 0.7.12 as Release file 9862105 after all 20 suites passed
+locally and in GitHub CI. All 30 uploaded files match the tested local build.
+It fixes channel startup and filters routine spell feedback from the journal.
+Approval/client indexing and in-game acceptance remain unconfirmed.
+Receipt: docs/CURSEFORGE_SUBMISSION_0.7.12.txt.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9862105
+Evidence and live acceptance: docs/REPORT_CHANNEL_FIX_0.7.12.txt.
 CurseForge accepted 0.7.11 as Release file 9811578 after all 20 suites passed in
 GitHub CI. All 30 uploaded files match the tested local build. Approval/client
 indexing remains unconfirmed. It adds five-second flagged-player/NPC activity

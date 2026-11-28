@@ -1,0 +1,49 @@
+TOTALWARCRAFT 0.7.12 - RELEASE UPLOAD RECEIPT
+November 27, 2026 (America/New_York). CurseForge upload accepted.
+
+CurseForge project 1819796, file 9862105, releaseType=release, Forever 1.60.1.
+https://www.curseforge.com/wow/addons/total-warcraft/files/9862105
+Automatic publication after moderation requested. Public approval and client
+indexing remain unconfirmed: the public file page was inaccessible to the web
+tool. This is not evidence of rejection. Do not repeat the successful upload.
+
+Immutable tag v0.7.12 -> b1ad2bd6ce90fde712b04950fd043c3d03a28b6a.
+https://github.com/KDotIV/TotalWarcraft/tree/v0.7.12
+Publish run 46104488701: success. Publish job 140854064868: success.
+https://github.com/KDotIV/TotalWarcraft/actions/runs/46104488701
+Main CI 46104488705: success. Test job 140854064502: success.
+https://github.com/KDotIV/TotalWarcraft/actions/runs/46104488705
+All 20 offline suites passed locally and in Linux CI, including the physically
+compiled Release. Final package/tag checks passed before publication.
+Only this version's changelog section was submitted to CurseForge.
+
+RELEASE CONTENT
+- Preserve the current report-channel connection; old channel cleanup no longer
+  blocks joining or detected activity reports when a membership remains listed.
+- Keep bounded join retries and add recovery after combat without replaying
+  failed reports. Journal entries expose cleanup results and native join outcomes.
+- Filter routine cooldown, facing, range, resource and interruption feedback from
+  the session journal. Count filtered entries in the header; preserve unknown UI
+  messages, Lua errors and blocked addon actions. Native feedback stays intact.
+- Five-second flagged-player/NPC activity detection, strict post-combat fallback,
+  shared cooldown and one automatic attempt per combat are unchanged.
+- In-game delivery after this connection fix still requires validation.
+Evidence and live checks: REPORT_CHANNEL_FIX_0.7.12.txt.
+
+ARTIFACT VERIFICATION
+Artifact 15245824924, release-receipt, downloaded and SHA256 verified:
+98dc8fdd397ed54a0cef6a0a500eb5c904462ced62d3e6bba29b60b7695c9331.
+Uploaded ZIP SHA256 (matches the CurseForge receipt):
+8ae976294078a510dbbe94de629b2b6db87974f94998bf495a59b88139ed204d.
+Tested local ZIP SHA256:
+4dee20853c292b547e9692bfaea2d3296a0ec7329545d1e18e17e3aa62e5ddac.
+All 30 ZIP entries match byte for byte; only ZIP create_system metadata differs.
+Local ZIP: releases/TotalWarcraft-0.7.12-release.zip.
+Uploaded ZIP: releases/TotalWarcraft-0.7.12-uploaded-release.zip.
+Artifact: releases/TotalWarcraft-0.7.12-release-receipt.zip.
+Receipt: releases/curseforge-receipt-0.7.12.json.
+Local test output: releases/validation-0.7.12.log.
+
+GitHub connector jobs, logs and artifact download verified the successful upload.
+The receipt artifact's digest matched GitHub metadata before its contents were
+compared. No local WoW installation or saved settings were changed.
